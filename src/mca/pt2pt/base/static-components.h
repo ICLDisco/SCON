@@ -1,0 +1,18 @@
+/*
+ * $HEADER$
+ */
+#if defined(c_plusplus) || defined(__cplusplus)
+extern "C" {
+#endif
+
+
+
+const scon_mca_base_component_t *mca_pt2pt_base_static_components[] = {
+
+  NULL
+};
+
+#if defined(c_plusplus) || defined(__cplusplus)
+}
+#endif
+
