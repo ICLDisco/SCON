@@ -28,7 +28,7 @@
  * Global variables
  */
 scon_common_base_t scon_common_base = {{{0}}};
-scon_common_module_t *scon_common = NULL;
+scon_common_module_t scon_common = {0};
 scon_common_base_component_t *scon_common_base_selected_component = NULL;
 static int scon_common_base_register(scon_mca_base_register_flag_t flags)
 {

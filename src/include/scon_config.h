@@ -80,9 +80,6 @@
 /* Define to 1 if you have the <hostLib.h> header file. */
 /* #undef HAVE_HOSTLIB_H */
 
-/* Define to 1 if you have the <hwloc.h> header file. */
-/* #undef HAVE_HWLOC_H */
-
 /* Define to 1 if the system has the type `int16_t'. */
 #define HAVE_INT16_T 1
 
@@ -311,7 +308,7 @@
 #define PACKAGE_NAME "scon"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "scon 2.0.0a1"
+#define PACKAGE_STRING "scon 1.0.0a1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "scon"
@@ -320,7 +317,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.0.0a1"
+#define PACKAGE_VERSION "1.0.0a1"
 
 /* Alignment of type bool */
 #define SCON_ALIGNMENT_BOOL 1
@@ -508,9 +505,6 @@
 /* whether dirname is found and available */
 #define SCON_HAVE_DIRNAME 1
 
-/* Whether we have hwloc support or not */
-#define SCON_HAVE_HWLOC 0
-
 /* Whether the SCON PDL framework is functional or not */
 #define SCON_HAVE_PDL_SUPPORT 1
 
@@ -526,14 +520,11 @@
 /* Whether we have va_copy or not */
 #define SCON_HAVE_VA_COPY 1
 
-/* Location of hwloc.h */
-#define SCON_HWLOC_HEADER <hwloc.h>
-
 /* ident string for SCON */
 #define SCON_IDENT_STRING ""
 
 /* The library major version is always available, contrary to VERSION */
-#define SCON_MAJOR_VERSION 2
+#define SCON_MAJOR_VERSION 1
 
 /* The library minor version is always available, contrary to VERSION */
 #define SCON_MINOR_VERSION 0
@@ -558,7 +549,7 @@
 #define SCON_USE_STDBOOL_H 1
 
 /* The library version is always available, contrary to VERSION */
-#define SCON_VERSION "2.0.0a1"
+#define SCON_VERSION "1.0.0a1"
 
 /* Enable per-user config files */
 #define SCON_WANT_HOME_CONFIG_FILES 1

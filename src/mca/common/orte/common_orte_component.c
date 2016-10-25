@@ -30,18 +30,18 @@
 //#include "orte/util/proc_info.h"
 //#include "orte/util/session_dir.h"
 #include "src/mca/pt2pt/pt2pt.h"
-//#include "src/mca/topology/base/base.h"
+#include "src/mca/topology/base/base.h"
 #include "src/mca/topology/topology.h"
-//#include "src/mca/pt2pt/base/base.h"
+#include "src/mca/pt2pt/base/base.h"
 #include "src/mca/collectives/collectives.h"
-//#include "src/mca/collectives/base/base.h"
+#include "src/mca/collectives/base/base.h"
 //#include "src/mca/errmgr/errmgr.h"
 //#include "src/mca/dfs/base/base.h"
 //#include "src/mca/errmgr/base/base.h"
 //#include "orte/mca/state/base/base.h"
 
 static int common_orte_open(void);
-static void common_orte_close(void);
+static int common_orte_close(void);
 static scon_common_module_t* common_orte_get_module();
 
 /**
@@ -82,9 +82,9 @@ static int common_orte_open()
     return SCON_SUCCESS;
 }
 
-static void common_orte_close()
+static int common_orte_close()
 {
-    return;
+    return SCON_SUCCESS;
 }
 
 static scon_common_module_t* common_orte_get_module()
@@ -98,7 +98,6 @@ static bool progress_thread_running = false;
  * orte (orte) init
  */
 int common_orte_init(scon_info_t info[], size_t ninfo) {
-#if 0
     int ret ;
     uint32_t u32, i, *u32ptr;
     uint16_t u16, *u16ptr;
@@ -116,9 +115,8 @@ int common_orte_init(scon_info_t info[], size_t ninfo) {
             return SCON_ERR_INFO_KEY_UNSUPPORTED;
         }
     }
-    opal_output_verbose(1, orte_scon_base_framework.framework_output,
-                        "%s scon_orte_init - opening required frameworks",
-                        ORTE_NAME_PRINT(ORTE_PROC_MY_NAME));
+    scon_output_verbose(1, scon_common_base_framework.framework_output,
+                        "common_orte_init - opening required frameworks");
     /****  TO DO  *****
      * Need to process all the info keys and open only requested frameworks and
      * return error if requested modules are not available
@@ -328,8 +326,6 @@ error:
         return SCON_ERROR;
     }
     return ret;
-#endif
-    return SCON_SUCCESS;
 }
 
 /**

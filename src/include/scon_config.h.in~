@@ -79,9 +79,6 @@
 /* Define to 1 if you have the <hostLib.h> header file. */
 #undef HAVE_HOSTLIB_H
 
-/* Define to 1 if you have the <hwloc.h> header file. */
-#undef HAVE_HWLOC_H
-
 /* Define to 1 if the system has the type `int16_t'. */
 #undef HAVE_INT16_T
 
@@ -507,9 +504,6 @@
 /* whether dirname is found and available */
 #undef SCON_HAVE_DIRNAME
 
-/* Whether we have hwloc support or not */
-#undef SCON_HAVE_HWLOC
-
 /* Whether the SCON PDL framework is functional or not */
 #undef SCON_HAVE_PDL_SUPPORT
 
@@ -524,9 +518,6 @@
 
 /* Whether we have va_copy or not */
 #undef SCON_HAVE_VA_COPY
-
-/* Location of hwloc.h */
-#undef SCON_HWLOC_HEADER
 
 /* ident string for SCON */
 #undef SCON_IDENT_STRING

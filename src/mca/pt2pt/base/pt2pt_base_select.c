@@ -41,7 +41,7 @@ int scon_pt2pt_base_select(void)
     }
     /* Save the winner */
     scon_pt2pt_base_selected_component = best_component;
-    scon_pt2pt = best_module;
+    scon_pt2pt = *best_module;
 
 cleanup:
     return exit_status;

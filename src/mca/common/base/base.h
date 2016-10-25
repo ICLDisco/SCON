@@ -36,7 +36,7 @@
  */
 extern scon_mca_base_framework_t scon_common_base_framework;
 extern scon_common_base_component_t* scon_common_base_selected_component;
-extern scon_common_module_t *scon_common;
+extern scon_common_module_t scon_common;
 /* select a component */
 int scon_common_base_select(void);
 

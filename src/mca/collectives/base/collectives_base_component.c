@@ -15,7 +15,7 @@
 /*
  * Globals
  */
-scon_collectives_base_module_t *scon_collectives = NULL;
+scon_collectives_base_module_t scon_collectives = {0};
 scon_collectives_base_component_t *scon_collectives_base_selected_component = NULL;
 
 

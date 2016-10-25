@@ -25,7 +25,7 @@
 
 extern scon_mca_base_framework_t scon_collectives_base_framework;
 extern scon_collectives_base_component_t* scon_collectives_base_selected_component;
-extern scon_collectives_base_module_t *scon_collectives;
+extern scon_collectives_base_module_t scon_collectives;
 /* select a component */
 int scon_collectives_base_select(void);
 

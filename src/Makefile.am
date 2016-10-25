@@ -71,12 +71,7 @@ include buffer_ops/Makefile.am
 include include/Makefile.include
 include mca/Makefile.include
 include util/Makefile.include
-#include client/Makefile.include
-#include server/Makefile.include
-#include usock/Makefile.include
-#include runtime/Makefile.include
-#include tool/Makefile.include
-#include common/Makefile.include
+include runtime/Makefile.include
 
 MAINTAINERCLEANFILES = Makefile.in config.h config.h.in
 DISTCLEANFILES = Makefile

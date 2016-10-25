@@ -37,7 +37,7 @@
 #ifndef SCON_INST_DIRS_H
 #define SCON_INST_DIRS_H
 
-#define SCON_INSTALL_PREFIX "/Users/adasari/mca_pmix/pmix-master/build"
+#define SCON_INSTALL_PREFIX "/Users/adasari/working_dir/scon/build"
 #define SCON_EXEC_PREFIX "${prefix}"
 
 /* The directory for installing executable programs that users can

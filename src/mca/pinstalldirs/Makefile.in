@@ -130,7 +130,6 @@ am__aclocal_m4_deps = $(top_srcdir)/config/c_get_alignment.m4 \
 	$(top_srcdir)/config/scon_mca.m4 \
 	$(top_srcdir)/config/scon_search_libs.m4 \
 	$(top_srcdir)/config/scon_setup_cc.m4 \
-	$(top_srcdir)/config/scon_setup_hwloc.m4 \
 	$(top_srcdir)/config/scon_setup_libevent.m4 \
 	$(top_srcdir)/config/autogen_found_items.m4 \
 	$(top_srcdir)/src/mca/pdl/configure.m4 \

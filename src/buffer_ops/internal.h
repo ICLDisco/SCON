@@ -363,15 +363,10 @@ scon_status_t scon_bfrop_unpack_array(scon_buffer_t *buffer, void *dest,
  * Internal copy functions
  */
 
- scon_status_t scon_bfrop_std_copy(void **dest, void *src, scon_data_type_t type);
+scon_status_t scon_bfrop_std_copy(void **dest, void *src, scon_data_type_t type);
 
- scon_status_t scon_bfrop_copy_string(char **dest, char *src, scon_data_type_t type);
+scon_status_t scon_bfrop_copy_string(char **dest, char *src, scon_data_type_t type);
 
-#if SCON_HAVE_HWLOC
- scon_status_t scon_bfrop_copy_topo(hwloc_topology_t *dest,
-                          hwloc_topology_t src,
-                          scon_data_type_t type);
-#endif
 scon_status_t scon_bfrop_copy_value(scon_value_t **dest, scon_value_t *src,
                                     scon_data_type_t type);
 scon_status_t scon_bfrop_copy_proc(scon_proc_t **dest, scon_proc_t *src,

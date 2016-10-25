@@ -54,8 +54,6 @@ typedef struct {
     int debug_output;
     scon_list_t scons;                 // list of scons that this process is a member of
 } scon_globals_t;
-
-
 extern scon_globals_t scon_globals;
 
 END_C_DECLS

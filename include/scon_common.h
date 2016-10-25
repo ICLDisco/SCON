@@ -133,15 +133,16 @@ typedef int scon_status_t;
 #define SCON_ERR_INVALID_SIZE                   (SCON_ERR_BASE - 18)
 #define SCON_ERR_INIT                           (SCON_ERR_BASE - 19)
 #define SCON_ERR_TOPO_UNSUPPORTED               (SCON_ERR_BASE - 20)
+#define SCON_ERR_NOT_IMPLEMENTED                (SCON_ERR_BASE - 21)
 /* system failures */
-#define SCON_ERR_NODE_DOWN                      (SCON_ERR_BASE - 21)
-#define SCON_ERR_NODE_OFFLINE                   (SCON_ERR_BASE - 22)
+#define SCON_ERR_NODE_DOWN                      (SCON_ERR_BASE - 22)
+#define SCON_ERR_NODE_OFFLINE                   (SCON_ERR_BASE - 23)
 
-#define SCON_ERR_CONFIG_MISMATCH                (SCON_ERR_BASE - 23)
-#define SCON_ERR_MULTI_JOB_NOT_SUPPORTED        (SCON_ERR_BASE - 24)
+#define SCON_ERR_CONFIG_MISMATCH                (SCON_ERR_BASE - 24)
+#define SCON_ERR_MULTI_JOB_NOT_SUPPORTED        (SCON_ERR_BASE - 25)
 
 /* used by the query system */
-#define SCON_QUERY_PARTIAL_SUCCESS              (SCON_ERR_BASE - 25)
+#define SCON_QUERY_PARTIAL_SUCCESS              (SCON_ERR_BASE - 26)
 
 
 /* define a starting point for SCON internal error codes
@@ -576,6 +577,8 @@ typedef struct {
 
 /* SCON INFO KEYS */
 /* define strings for key - comments contain hints of value type */
+#define SCON_EVENT_BASE            "scon.evbase"           /* (struct event_base *) pointer to libevent event_base to use in place
+                                                             of the internal progress thread */
 /*  JOB and PROC keys*/
 #define SCON_JOB_NAME              "scon.job.name"   /* job name key, value type char * - name of participating job. */
 #define SCON_JOB_ALL               "scon.job.all"  /* value type bool, set to true if all ranks of job participate in scon

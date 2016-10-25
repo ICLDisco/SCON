@@ -15,7 +15,7 @@
 /*
  * Globals
  */
-scon_pt2pt_base_module_t *scon_pt2pt = NULL;
+scon_pt2pt_base_module_t scon_pt2pt = {0};
 scon_pt2pt_base_component_t *scon_pt2pt_base_selected_component = NULL;
 
 

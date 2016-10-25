@@ -25,7 +25,7 @@
 
 extern scon_mca_base_framework_t scon_pt2pt_base_framework;
 extern scon_pt2pt_base_component_t* scon_pt2pt_base_selected_component;
-extern scon_pt2pt_base_module_t *scon_pt2pt;
+extern scon_pt2pt_base_module_t scon_pt2pt;
 /* select a component */
 int scon_pt2pt_base_select(void);
 

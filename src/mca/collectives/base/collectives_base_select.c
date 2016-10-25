@@ -41,7 +41,7 @@ int scon_collectives_base_select(void)
     }
     /* Save the winner */
     scon_collectives_base_selected_component = best_component;
-    scon_collectives = best_module;
+    scon_collectives = *best_module;
 
 cleanup:
     return exit_status;
