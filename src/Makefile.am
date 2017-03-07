@@ -42,7 +42,6 @@ sources =
 nodist_headers =
 EXTRA_DIST =
 dist_scondata_DATA =
-include test/Makefile.include
 
 libscon_la_LIBADD = \
 	mca/base/libscon_mca_base.la \
@@ -73,6 +72,7 @@ include include/Makefile.include
 include mca/Makefile.include
 include util/Makefile.include
 include runtime/Makefile.include
+
 
 MAINTAINERCLEANFILES = Makefile.in config.h config.h.in
 DISTCLEANFILES = Makefile

@@ -31,6 +31,7 @@ sources =
 nodist_headers =
 EXTRA_DIST = AUTHORS README INSTALL VERSION LICENSE autogen.pl
 
+
 # Only install the valgrind suppressions file and man pages
 # if we're building in standalone mode
 #dist_scondata_DATA =
