@@ -1,0 +1,22 @@
+# -*- text -*-
+# Copyright (c) 2016     Intel, Inc. All rights reserved.
+#
+# $COPYRIGHT$
+#
+# Additional copyrights may follow
+#
+# $HEADER$
+#
+# This is the US/English general help file for SCON.
+#
+[scon_init:startup:internal-failure]
+It looks like scon_init failed for some reason;  There are many reasons for
+scon_init to fail some of which are due to configuration or
+environment problems.  This failure appears to be an internal failure;
+here's some additional information (which may only be relevant to an
+SCON developer):
+
+  %s failed
+  --> Returned value %d instead of SCON_SUCCESS
+#
+
