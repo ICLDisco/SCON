@@ -7,15 +7,15 @@
 # $HEADER$
 #
 # main library setup
-noinst_LTLIBRARIES = libmca_scon_topology.la
-libmca_scon_topology_la_SOURCES =
+noinst_LTLIBRARIES = libmca_topology.la
+libmca_topology_la_SOURCES =
 
 # pkgdata setup
 dist_scondata_DATA =
 
 # local files
 headers = topology.h
-libmca_scon_topology_la_SOURCES += $(headers)
+libmca_topology_la_SOURCES += $(headers)
 
 # Conditionally install the header files
 if WANT_INSTALL_HEADERS

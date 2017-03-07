@@ -27,7 +27,7 @@
 #include <locale.h>
 #include <errno.h>
 
-#include "src/mca/pinstalldirs/pinstalldirs.h"
+#include "src/mca/sinstalldirs/sinstalldirs.h"
 #include "src/util/show_help.h"
 #include "src/util/show_help_lex.h"
 #include "src/util/printf.h"
@@ -65,7 +65,7 @@ int scon_show_help_init(void)
     lds.lds_want_stderr = true;
     output_stream = scon_output_open(&lds);
 
-    scon_argv_append_nosize(&search_dirs, scon_pinstall_dirs.scondatadir);
+    scon_argv_append_nosize(&search_dirs, scon_sinstall_dirs.scondatadir);
 
     return SCON_SUCCESS;
 }

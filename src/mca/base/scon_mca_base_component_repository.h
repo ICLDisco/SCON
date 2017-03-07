@@ -34,13 +34,13 @@
  * (i.e., have a separate header file just for retain()).
  */
 
-#ifndef MCA_BASE_COMPONENT_REPOSITORY_H
-#define MCA_BASE_COMPONENT_REPOSITORY_H
+#ifndef SCON_MCA_BASE_COMPONENT_REPOSITORY_H
+#define SCON_MCA_BASE_COMPONENT_REPOSITORY_H
 
 #include <src/include/scon_config.h>
 
-#include "src/mca/pdl/pdl.h"
-#include "src/mca/pdl/base/base.h"
+#include "src/mca/sdl/sdl.h"
+#include "src/mca/sdl/base/base.h"
 
 BEGIN_C_DECLS
 struct scon_mca_base_component_repository_item_t {
@@ -52,7 +52,7 @@ struct scon_mca_base_component_repository_item_t {
     char *ri_path;
     char *ri_base;
 
-    scon_pdl_handle_t *ri_dlhandle;
+    scon_sdl_handle_t *ri_dlhandle;
     const scon_mca_base_component_t *ri_component_struct;
 
     int ri_refcnt;

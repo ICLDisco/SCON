@@ -23,9 +23,8 @@
  * $HEADER$
  */
 
-#include <src/include/scon_config.h>
-
-#include <src/include/types.h>
+#include <scon_config.h>
+#include <scon_types.h>
 
 #ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
@@ -692,7 +691,7 @@ scon_status_t scon_bfrop_pack_proc(scon_buffer_t *buffer, const void *src,
 
 
 
-/*
+#if 0
 scon_status_t scon_bfrop_pack_kval(scon_buffer_t *buffer, const void *src,
                                    int32_t num_vals, scon_data_type_t type)
 {
@@ -705,18 +704,18 @@ scon_status_t scon_bfrop_pack_kval(scon_buffer_t *buffer, const void *src,
 
     for (i = 0; i < num_vals; ++i) {
         /* pack the key */
-   //     st = ptr[i].key;
-   //     if (SCON_SUCCESS != (ret = scon_bfrop_pack_string(buffer, &st, 1, SCON_STRING))) {
-     //       return ret;
-      //  }
+       st = ptr[i].key;
+       if (SCON_SUCCESS != (ret = scon_bfrop_pack_string(buffer, &st, 1, SCON_STRING))) {
+            return ret;
+       }
         /* pack the value */
-       // if (SCON_SUCCESS != (ret = scon_bfrop_pack_value(buffer, ptr[i].value, 1, SCON_VALUE))) {
-       //     return ret;
-        //}
-    //}
-
-    //return SCON_SUCCESS;
-//}*/
+       if (SCON_SUCCESS != (ret = scon_bfrop_pack_value(buffer, ptr[i].value, 1, SCON_VALUE))) {
+           return ret;
+       }
+    }
+    return SCON_SUCCESS;
+}
+#endif
 
 scon_status_t scon_bfrop_pack_range(scon_buffer_t *buffer, const void *src,
                                     int32_t num_vals, scon_data_type_t type)
@@ -794,64 +793,97 @@ scon_status_t scon_bfrop_pack_rank(scon_buffer_t *buffer, const void *src,
     return scon_bfrop_pack_int32(buffer, src, num_vals, SCON_UINT32);
 }
 
+scon_status_t scon_bfrop_pack_coll_sig(scon_buffer_t *buffer,
+                                       const void *src, int32_t num_vals,
+                                       scon_data_type_t type)
+{
+    scon_collectives_signature_t **ptr;
+    int32_t i;
+    int rc;
+
+    ptr = (scon_collectives_signature_t **) src;
+
+    for (i = 0; i < num_vals; ++i) {
+        /* pack the #procs */
+        if (SCON_SUCCESS != (rc = scon_bfrop_pack_datatype(buffer, &ptr[i]->nprocs, 1, SCON_SIZE))) {
+            return rc;
+        }
+        /* pack the sequence number */
+        if (SCON_SUCCESS != (rc = scon_bfrop_pack_datatype(buffer, &ptr[i]->seq_num, 1, SCON_UINT32))) {
+            return rc;
+        }
+        if (0 < ptr[i]->nprocs) {
+            /* pack the array */
+            if (SCON_SUCCESS != (rc = scon_bfrop_pack_proc(buffer, ptr[i]->procs, ptr[i]->nprocs, SCON_PROC))) {
+                return rc;
+            }
+        }
+    }
+
+    return SCON_SUCCESS;
+}
+
+#if 0
 scon_status_t scon_bfrop_pack_query(scon_buffer_t *buffer, const void *src,
                                     int32_t num_vals, scon_data_type_t type)
 {
- /*   scon_query_t *pq = (scon_query_t*)src;
+    scon_query_t *pq = (scon_query_t*)src;
     scon_status_t ret;
     int32_t i;
     int32_t nkeys;
 
     for (i=0; i < num_vals; i++) {
- */       /* pack the number of keys */
-/*        nkeys = scon_argv_count(pq[i].keys);
+        /* pack the number of keys */
+       nkeys = scon_argv_count(pq[i].keys);
         if (SCON_SUCCESS != (ret = scon_bfrop_pack_int32(buffer, &nkeys, 1, SCON_INT32))) {
             return ret;
         }
         if (0 < nkeys) {
             /* pack the keys */
-  /*          if (SCON_SUCCESS != (ret = scon_bfrop_pack_string(buffer, pq[i].keys, nkeys, SCON_STRING))) {
+            if (SCON_SUCCESS != (ret = scon_bfrop_pack_string(buffer, pq[i].keys, nkeys, SCON_STRING))) {
                 return ret;
             }
-        }*/
+        }
         /* pack the number of qualifiers */
-  /*      if (SCON_SUCCESS != (ret = scon_bfrop_pack_sizet(buffer, &pq[i].nqual, 1, SCON_SIZE))) {
+        if (SCON_SUCCESS != (ret = scon_bfrop_pack_sizet(buffer, &pq[i].nqual, 1, SCON_SIZE))) {
             return ret;
         }
         if (0 < pq[i].nqual) {
-    */        /* pack any provided qualifiers */
-      /*      if (SCON_SUCCESS != (ret = scon_bfrop_pack_info(buffer, pq[i].qualifiers, pq[i].nqual, SCON_INFO))) {
+           /* pack any provided qualifiers */
+           if (SCON_SUCCESS != (ret = scon_bfrop_pack_info(buffer, pq[i].qualifiers, pq[i].nqual, SCON_INFO))) {
                 return ret;
             }
         }
-    }*/
+    }
     return SCON_SUCCESS;
 }
+
 
 
 /**** DEPRECATED ****/
 scon_status_t scon_bfrop_pack_array(scon_buffer_t *buffer, const void *src,
                           int32_t num_vals, scon_data_type_t type)
 {
-  /*  scon_info_array_t *ptr;
+    scon_info_array_t *ptr;
     int32_t i;
     scon_status_t ret;
 
     ptr = (scon_info_array_t *) src;
 
     for (i = 0; i < num_vals; ++i) {
-      */  /* pack the size */
-       /* if (SCON_SUCCESS != (ret = scon_bfrop_pack_sizet(buffer, &ptr[i].size, 1, SCON_SIZE))) {
+        /* pack the size */
+        if (SCON_SUCCESS != (ret = scon_bfrop_pack_sizet(buffer, &ptr[i].size, 1, SCON_SIZE))) {
             return ret;
         }
         if (0 < ptr[i].size) {
-*/            /* pack the values */
- /*           if (SCON_SUCCESS != (ret = scon_bfrop_pack_info(buffer, ptr[i].array, ptr[i].size, SCON_INFO))) {
+            /* pack the values */
+          if (SCON_SUCCESS != (ret = scon_bfrop_pack_info(buffer, ptr[i].array, ptr[i].size, SCON_INFO))) {
                 return ret;
             }
         }
     }
-*/
+
     return SCON_SUCCESS;
 }
 /********************/
+#endif

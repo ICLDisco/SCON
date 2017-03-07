@@ -51,9 +51,9 @@
 #ifndef SCON_HOTEL_H
 #define SCON_HOTEL_H
 
-#include <src/include/scon_config.h>
-#include "src/include/types.h"
-#include "src/include/prefetch.h"
+#include <scon_config.h>
+#include <scon_types.h>
+#include <prefetch.h>
 #include "scon_common.h"
 #include "src/class/scon_object.h"
 #include SCON_EVENT_HEADER
@@ -131,7 +131,7 @@ typedef struct scon_hotel_t {
     int *unoccupied_rooms;
     int last_unoccupied_room;
 } scon_hotel_t;
-SCON_CLASS_DECLARATION(scon_hotel_t);
+SCON_EXPORT SCON_CLASS_DECLARATION(scon_hotel_t);
 
 /**
  * Initialize the hotel.

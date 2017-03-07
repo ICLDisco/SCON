@@ -8,17 +8,21 @@
 
 extern scon_mca_base_framework_t scon_src_base_framework;
 extern scon_mca_base_framework_t scon_collectives_base_framework;
-extern scon_mca_base_framework_t scon_pdl_base_framework;
-extern scon_mca_base_framework_t scon_pinstalldirs_base_framework;
+extern scon_mca_base_framework_t scon_comm_base_framework;
+extern scon_mca_base_framework_t scon_if_base_framework;
 extern scon_mca_base_framework_t scon_pt2pt_base_framework;
+extern scon_mca_base_framework_t scon_sdl_base_framework;
+extern scon_mca_base_framework_t scon_sinstalldirs_base_framework;
 extern scon_mca_base_framework_t scon_topology_base_framework;
 
 static scon_mca_base_framework_t *scon_frameworks[] = {
     &scon_src_base_framework,
     &scon_collectives_base_framework,
-    &scon_pdl_base_framework,
-    &scon_pinstalldirs_base_framework,
+    &scon_comm_base_framework,
+    &scon_if_base_framework,
     &scon_pt2pt_base_framework,
+    &scon_sdl_base_framework,
+    &scon_sinstalldirs_base_framework,
     &scon_topology_base_framework,
     NULL
 };

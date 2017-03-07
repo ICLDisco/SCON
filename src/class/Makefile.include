@@ -30,6 +30,7 @@ headers += \
         class/scon_hash_table.h \
         class/scon_hotel.h \
         class/scon_ring_buffer.h \
+		class/scon_bitmap.h \
         class/scon_value_array.h
 
 sources += \
@@ -39,4 +40,5 @@ sources += \
         class/scon_hash_table.c \
         class/scon_hotel.c \
         class/scon_ring_buffer.c \
+		class/scon_bitmap.c \
         class/scon_value_array.c

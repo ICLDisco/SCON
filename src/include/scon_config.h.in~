@@ -79,6 +79,9 @@
 /* Define to 1 if you have the <hostLib.h> header file. */
 #undef HAVE_HOSTLIB_H
 
+/* Define to 1 if you have the <ifaddrs.h> header file. */
+#undef HAVE_IFADDRS_H
+
 /* Define to 1 if the system has the type `int16_t'. */
 #undef HAVE_INT16_T
 
@@ -118,11 +121,23 @@
 /* Define to 1 if the system has the type `long long'. */
 #undef HAVE_LONG_LONG
 
+/* Define to 1 if you have the <ltdl.h> header file. */
+#undef HAVE_LTDL_H
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the <netdb.h> header file. */
+#undef HAVE_NETDB_H
+
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #undef HAVE_NETINET_IN_H
+
+/* Define to 1 if you have the <netinet/tcp.h> header file. */
+#undef HAVE_NETINET_TCP_H
+
+/* Define to 1 if you have the <net/if.h> header file. */
+#undef HAVE_NET_IF_H
 
 /* Define to 1 if you have the <net/uio.h> header file. */
 #undef HAVE_NET_UIO_H
@@ -190,6 +205,12 @@
 /* Define to 1 if `d_type' is a member of `struct dirent'. */
 #undef HAVE_STRUCT_DIRENT_D_TYPE
 
+/* Define to 1 if `ifr_hwaddr' is a member of `struct ifreq'. */
+#undef HAVE_STRUCT_IFREQ_IFR_HWADDR
+
+/* Define to 1 if `ifr_mtu' is a member of `struct ifreq'. */
+#undef HAVE_STRUCT_IFREQ_IFR_MTU
+
 /* Define to 1 if the system has the type `struct sockaddr_in'. */
 #undef HAVE_STRUCT_SOCKADDR_IN
 
@@ -229,6 +250,9 @@
 /* Define to 1 if you have the <syslog.h> header file. */
 #undef HAVE_SYSLOG_H
 
+/* Define to 1 if you have the <sys/ioctl.h> header file. */
+#undef HAVE_SYS_IOCTL_H
+
 /* Define to 1 if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
 
@@ -237,6 +261,9 @@
 
 /* Define to 1 if you have the <sys/socket.h> header file. */
 #undef HAVE_SYS_SOCKET_H
+
+/* Define to 1 if you have the <sys/sockio.h> header file. */
+#undef HAVE_SYS_SOCKIO_H
 
 /* Define to 1 if you have the <sys/statfs.h> header file. */
 #undef HAVE_SYS_STATFS_H
@@ -504,14 +531,17 @@
 /* whether dirname is found and available */
 #undef SCON_HAVE_DIRNAME
 
-/* Whether the SCON PDL framework is functional or not */
-#undef SCON_HAVE_PDL_SUPPORT
-
 /* Whether we have SA_RESTART in <signal.h> or not */
 #undef SCON_HAVE_SA_RESTART
 
+/* Whether the SCON SDL framework is functional or not */
+#undef SCON_HAVE_SDL_SUPPORT
+
 /* whether socket is found and available */
 #undef SCON_HAVE_SOCKET
+
+/* Whether or not we have solaris */
+#undef SCON_HAVE_SOLARIS
 
 /* Whether we have __va_copy or not */
 #undef SCON_HAVE_UNDERSCORE_VA_COPY
@@ -534,6 +564,9 @@
 
 /* Whether libraries can be configured with destructor functions */
 #undef SCON_NO_LIB_DESTRUCTOR
+
+/* Whether we have lt_dladvise or not */
+#undef SCON_PDL_PLIBLTDL_HAVE_LT_DLADVISE
 
 /* type to use for ptrdiff_t */
 #undef SCON_PTRDIFF_TYPE

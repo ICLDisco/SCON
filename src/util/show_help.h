@@ -131,7 +131,7 @@ int scon_show_help_finalize(void);
  */
 typedef int (*scon_show_help_fn_t)(const char *filename, const char *topic,
                                    bool want_error_header, ...);
-extern scon_show_help_fn_t scon_show_help;
+SCON_EXPORT extern scon_show_help_fn_t scon_show_help;
 
 /**
  * This function does the same thing as scon_show_help(), but accepts
@@ -139,7 +139,7 @@ extern scon_show_help_fn_t scon_show_help;
  */
 typedef int (*scon_show_vhelp_fn_t)(const char *filename, const char *topic,
                                     bool want_error_header, va_list ap);
-extern scon_show_vhelp_fn_t scon_show_vhelp;
+SCON_EXPORT extern scon_show_vhelp_fn_t scon_show_vhelp;
 
 /**
  * This function does the same thing as scon_show_help(), but returns

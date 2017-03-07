@@ -259,7 +259,7 @@ bool scon_value_cmp(scon_value_t *p, scon_value_t *p1)
  * use the regular copy functions */
 SCON_EXPORT scon_status_t scon_value_xfer(scon_value_t *p, scon_value_t *src)
 {
-    size_t n, m;
+    size_t n;
     scon_status_t rc;
     char **prarray, **strarray;
     scon_value_t *pv, *sv;
@@ -523,7 +523,7 @@ SCON_EXPORT scon_status_t scon_value_xfer(scon_value_t *p, scon_value_t *src)
                 pb = (scon_buffer_t*)p->data.darray->array;
                 sb = (scon_buffer_t*)src->data.darray->array;
                 for (n=0; n < src->data.darray->size; n++) {
-                    SCON_CONSTRUCT(&pb[n], scon_buffer_t);
+                   // SCON_CONSTRUCT(&pb[n], scon_buffer_t);
                     scon_bfrop.copy_payload(&pb[n], &sb[n]);
                 }
                 break;
@@ -694,30 +694,32 @@ scon_status_t scon_bfrop_copy_info(scon_info_t **dest, scon_info_t *src,
 scon_status_t scon_bfrop_copy_buf(scon_buffer_t **dest, scon_buffer_t *src,
                                   scon_data_type_t type)
 {
-    *dest = SCON_NEW(scon_buffer_t);
+    //*dest = SCON_NEW(scon_buffer_t);
+    *dest = (scon_buffer_t*) malloc(sizeof(scon_buffer_t));
     scon_bfrop.copy_payload(*dest, src);
     return SCON_SUCCESS;
 }
 
 //revisit key val
-/*scon_status_t scon_bfrop_copy_kval(scon_kval_t **dest, scon_kval_t *src,
+#if 0
+scon_status_t scon_bfrop_copy_kval(scon_kval_t **dest, scon_kval_t *src,
                                    scon_data_type_t type)
 {
     scon_kval_t *p;
 
     /* create the new object */
-/*    *dest = SCON_NEW(scon_kval_t);
+   *dest = SCON_NEW(scon_kval_t);
     if (NULL == *dest) {
         return SCON_ERR_OUT_OF_RESOURCE;
     }
     p = *dest;
 
     /* copy the type */
- //   p->value->type = src->value->type;
+    p->value->type = src->value->type;
     /* copy the data */
- /*   return scon_value_xfer(p->value, src->value);
-}*/
-
+    return scon_value_xfer(p->value, src->value);
+}
+#endif
 
 scon_status_t scon_bfrop_copy_proc(scon_proc_t **dest, scon_proc_t *src,
                                    scon_data_type_t type)
@@ -764,7 +766,7 @@ scon_status_t scon_bfrop_copy_darray(scon_data_array_t **dest,
                                      scon_data_type_t type)
 {
     scon_data_array_t *p;
-    size_t n, m;
+    size_t n;
     scon_status_t rc;
     char **prarray, **strarray;
     scon_value_t *pv, *sv;
@@ -964,7 +966,7 @@ scon_status_t scon_bfrop_copy_darray(scon_data_array_t **dest,
             pb = (scon_buffer_t*)p->array;
             sb = (scon_buffer_t*)src->array;
             for (n=0; n < src->size; n++) {
-                SCON_CONSTRUCT(&pb[n], scon_buffer_t);
+                //SCON_CONSTRUCT(&pb[n], scon_buffer_t);
                 scon_bfrop.copy_payload(&pb[n], &sb[n]);
             }
             break;
@@ -1068,6 +1070,26 @@ scon_status_t scon_bfrop_copy_darray(scon_data_array_t **dest,
     }
 
     (*dest) = p;
+    return SCON_SUCCESS;
+}
+
+int scon_bfrop_copy_coll_sig(scon_collectives_signature_t **dest,
+                             scon_collectives_signature_t *src, scon_data_type_t type)
+{
+    *dest = SCON_NEW(scon_collectives_signature_t);
+    if (NULL == *dest) {
+        SCON_ERROR_LOG(SCON_ERR_OUT_OF_RESOURCE);
+        return SCON_ERR_OUT_OF_RESOURCE;
+    }
+    (*dest)->nprocs = src->nprocs;
+    (*dest)->procs = (scon_proc_t*)malloc(src->nprocs * sizeof(scon_proc_t));
+    (*dest)->seq_num = src->seq_num;
+    if (NULL == (*dest)->procs) {
+        SCON_ERROR_LOG(SCON_ERR_OUT_OF_RESOURCE);
+        SCON_RELEASE(*dest);
+        return SCON_ERR_OUT_OF_RESOURCE;
+    }
+    memcpy((*dest)->procs, src->procs, src->nprocs * sizeof(scon_proc_t));
     return SCON_SUCCESS;
 }
 

@@ -23,8 +23,8 @@
  * $HEADER$
  */
 
-#ifndef MCA_BASE_H
-#define MCA_BASE_H
+#ifndef SCON_MCA_BASE_H
+#define SCON_MCA_BASE_H
 
 #include <src/include/scon_config.h>
 

@@ -13,7 +13,7 @@
  * Copyright (c) 2008-2015 Cisco Systems, Inc.  All rights reserved.
  * Copyright (c) 2012-2015 Los Alamos National Security, LLC. All rights
  *                         reserved.
- * Copyright (c) 2014-2016 Intel, Inc. All rights reserved.
+ * Copyright (c) 2014-2017 Intel, Inc.  All rights reserved.
  * Copyright (c) 2015      Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
  * $COPYRIGHT$
@@ -37,7 +37,7 @@
 #include <errno.h>
 
 #include "src/include/scon_stdint.h"
-#include "src/mca/pinstalldirs/pinstalldirs.h"
+#include "src/mca/sinstalldirs/sinstalldirs.h"
 #include "src/util/os_path.h"
 #include "src/util/path.h"
 #include "src/util/show_help.h"
@@ -79,7 +79,7 @@ static int scon_mca_base_var_count = 0;
 
 static scon_hash_table_t scon_mca_base_var_index_hash;
 
-const char *var_type_names[] = {
+const char *scon_var_type_names[] = {
     "int",
     "unsigned_int",
     "unsigned_long",
@@ -91,7 +91,7 @@ const char *var_type_names[] = {
     "double"
 };
 
-const size_t var_type_sizes[] = {
+const size_t scon_var_type_sizes[] = {
     sizeof (int),
     sizeof (unsigned),
     sizeof (unsigned long),
@@ -103,7 +103,7 @@ const size_t var_type_sizes[] = {
     sizeof (double)
 };
 
-const char *var_source_names[] = {
+const char *scon_var_source_names[] = {
     "default",
     "command line",
     "environment",
@@ -430,10 +430,10 @@ int scon_mca_base_var_cache_files(bool rel_path_search)
 #if SCON_WANT_HOME_CONFIG_FILES
     asprintf(&scon_mca_base_var_files, "%s"SCON_PATH_SEP".scon" SCON_PATH_SEP
              "mca-params.conf%c%s" SCON_PATH_SEP "scon-mca-params.conf",
-             home, SCON_ENV_SEP, scon_pinstall_dirs.sysconfdir);
+             home, SCON_ENV_SEP, scon_sinstall_dirs.sysconfdir);
 #else
     asprintf(&scon_mca_base_var_files, "%s" SCON_PATH_SEP "scon-mca-params.conf",
-             scon_pinstall_dirs.sysconfdir);
+             scon_sinstall_dirs.sysconfdir);
 #endif
 
     /* Initialize a parameter that says where MCA param files can be found.
@@ -454,7 +454,7 @@ int scon_mca_base_var_cache_files(bool rel_path_search)
                                           SCON_MCA_BASE_VAR_SYN_FLAG_DEPRECATED);
 
     ret = asprintf(&scon_mca_base_var_override_file, "%s" SCON_PATH_SEP "scon-mca-params-override.conf",
-                   scon_pinstall_dirs.sysconfdir);
+                   scon_sinstall_dirs.sysconfdir);
     if (0 > ret) {
         return SCON_ERR_OUT_OF_RESOURCE;
     }
@@ -508,7 +508,7 @@ int scon_mca_base_var_cache_files(bool rel_path_search)
     }
 
     ret = asprintf(&scon_mca_base_param_file_path, "%s" SCON_PATH_SEP "amca-param-sets%c%s",
-                   scon_pinstall_dirs.scondatadir, SCON_ENV_SEP, cwd);
+                   scon_sinstall_dirs.scondatadir, SCON_ENV_SEP, cwd);
     if (0 > ret) {
         return SCON_ERR_OUT_OF_RESOURCE;
     }
@@ -563,7 +563,7 @@ int scon_mca_base_var_cache_files(bool rel_path_search)
 /*
  * Look up an integer MCA parameter.
  */
-int scon_mca_base_var_get_value (int vari, const void *value,
+int scon_mca_base_var_get_value (int vari, void *value,
                             scon_mca_base_var_source_t *source,
                             const char **source_file)
 {
@@ -680,16 +680,22 @@ static int int_from_string(const char *src, scon_mca_base_var_enum_t *enumerator
 
     /* Check for an integer value */
     value = strtoull (src, &tmp, 0);
-    is_int = tmp[0] == '\0';
+    if (tmp[0] == '\0') {
+        is_int = true;
+    } else {
+        is_int = false;
+    }
 
     if (!is_int && tmp != src) {
         switch (tmp[0]) {
         case 'G':
         case 'g':
-            value <<= 10;
+            value <<= 30;
+            break;
         case 'M':
         case 'm':
-            value <<= 10;
+            value <<= 20;
+            break;
         case 'K':
         case 'k':
             value <<= 10;
@@ -800,7 +806,7 @@ int scon_mca_base_var_set_value (int vari, const void *value, size_t size, scon_
     }
 
     if (SCON_MCA_BASE_VAR_TYPE_STRING != var->mbv_type && SCON_MCA_BASE_VAR_TYPE_VERSION_STRING != var->mbv_type) {
-        memmove (var->mbv_storage, value, var_type_sizes[var->mbv_type]);
+        memmove (var->mbv_storage, value, scon_var_type_sizes[var->mbv_type]);
     } else {
         var_set_string (var, (char *) value);
     }
@@ -1330,6 +1336,9 @@ static int register_variable (const char *project_name, const char *framework_na
 #endif
 
     if (flags & SCON_MCA_BASE_VAR_FLAG_SYNONYM) {
+        if (synonym_for < 0) {
+            return SCON_ERR_BAD_PARAM;
+        }
         original = scon_pointer_array_get_item (&scon_mca_base_vars, synonym_for);
         if (NULL == original) {
             /* Attempting to create a synonym for a non-existent variable. probably a
@@ -1912,18 +1921,18 @@ static char *source_name(scon_mca_base_var_t *var)
         return strdup ("unknown(!!)");
     }
 
-    return strdup (var_source_names[var->mbv_source]);
+    return strdup (scon_var_source_names[var->mbv_source]);
 }
 
 static int var_value_string (scon_mca_base_var_t *var, char **value_string)
 {
-    const scon_mca_base_var_storage_t *value;
+    scon_mca_base_var_storage_t *value=NULL;
     int ret;
 
     assert (SCON_MCA_BASE_VAR_TYPE_MAX > var->mbv_type);
 
     ret = scon_mca_base_var_get_value(var->mbv_index, &value, NULL, NULL);
-    if (SCON_SUCCESS !=ret) {
+    if (SCON_SUCCESS != ret || NULL == value) {
         return ret;
     }
 
@@ -1977,7 +1986,7 @@ static int var_value_string (scon_mca_base_var_t *var, char **value_string)
     return ret;
 }
 
-int scon_mca_base_var_check_exclusive (const char *project,
+SCON_EXPORT int scon_mca_base_var_check_exclusive (const char *project,
                                   const char *type_a,
                                   const char *component_a,
                                   const char *param_a,
@@ -2144,7 +2153,7 @@ int scon_mca_base_var_dump(int vari, char ***out, scon_mca_base_var_dump_type_t 
         /* Is this variable deprecated? */
         asprintf(out[0] + line++, "%sdeprecated:%s", tmp, SCON_VAR_IS_DEPRECATED(var[0]) ? "yes" : "no");
 
-        asprintf(out[0] + line++, "%stype:%s", tmp, var_type_names[var->mbv_type]);
+        asprintf(out[0] + line++, "%stype:%s", tmp, scon_var_type_names[var->mbv_type]);
 
         /* Does this parameter have any synonyms or is it a synonym? */
         if (SCON_VAR_IS_SYNONYM(var[0])) {
@@ -2175,7 +2184,7 @@ int scon_mca_base_var_dump(int vari, char ***out, scon_mca_base_var_dump_type_t 
         asprintf (out[0], "%s \"%s\" (current value: \"%s\", data source: %s, level: %d %s, type: %s",
                   SCON_VAR_IS_DEFAULT_ONLY(var[0]) ? "informational" : "parameter",
                   full_name, value_string, source_string, var->mbv_info_lvl + 1,
-                  info_lvl_strings[var->mbv_info_lvl], var_type_names[var->mbv_type]);
+                  info_lvl_strings[var->mbv_info_lvl], scon_var_type_names[var->mbv_type]);
 
         tmp = out[0][0];
         if (SCON_VAR_IS_DEPRECATED(var[0])) {
@@ -2244,4 +2253,3 @@ int scon_mca_base_var_dump(int vari, char ***out, scon_mca_base_var_dump_type_t 
 
     return SCON_SUCCESS;
 }
-

@@ -12,7 +12,20 @@
 #define SCON_PROGRESS_THREADS_H
 
 #include "scon_config.h"
-#include "types.h"
+#include "scon_common.h"
+#include "scon_types.h"
+
+/* define a thread object */
+#define SCON_THREAD_CANCELLED   ((void*)1);
+typedef void *(*scon_thread_fn_t) (scon_object_t *);
+
+typedef struct scon_thread_t {
+    scon_object_t super;
+    scon_thread_fn_t t_run;
+    void* t_arg;
+    pthread_t t_handle;
+} scon_thread_t;
+SCON_CLASS_DECLARATION(scon_thread_t);
 /**
  * Initialize a progress thread name; if a progress thread is not
  * already associated with that name, start a progress thread.

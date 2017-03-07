@@ -83,13 +83,13 @@ BEGIN_C_DECLS
  *
  * The class for the list container.
  */
-SCON_CLASS_DECLARATION(scon_list_t);
+SCON_EXPORT SCON_CLASS_DECLARATION(scon_list_t);
 /**
  * \internal
  *
  * Base class for items that are put in list (scon_list_t) containers.
  */
-SCON_CLASS_DECLARATION(scon_list_item_t);
+SCON_EXPORT SCON_CLASS_DECLARATION(scon_list_item_t);
 
 
 /**

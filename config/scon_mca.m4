@@ -207,7 +207,7 @@ AC_DEFUN([SCON_MCA],[
     AC_MSG_RESULT([$msg])
     unset msg
 
-    # now configure the PMIx project.  Most
+    # now configure the SCON project.  Most
     # of the hard stuff is in here
     MCA_PROJECT_SUBDIRS=
 
@@ -256,7 +256,7 @@ AC_DEFUN([SCON_MCA],[
                                  MCA_scon_FRAMEWORK_COMPONENT_ALL_SUBDIRS="$MCA_scon_FRAMEWORK_COMPONENT_ALL_SUBDIRS [\$(MCA_scon_]mca_framework[_ALL_SUBDIRS)]"
                                  MCA_scon_FRAMEWORK_COMPONENT_DSO_SUBDIRS="$MCA_scon_FRAMEWORK_COMPONENT_DSO_SUBDIRS [\$(MCA_]scon[_]mca_framework[_DSO_SUBDIRS)]"
                                  MCA_scon_FRAMEWORK_COMPONENT_STATIC_SUBDIRS="$MCA_scon_FRAMEWORK_COMPONENT_STATIC_SUBDIRS [\$(MCA_scon_]mca_framework[_STATIC_SUBDIRS)]"
-                                 MCA_scon_FRAMEWORK_LIBS="$MCA_scon_FRAMEWORK_LIBS [mca/]mca_framework[/libmca_scon_]mca_framework[.la]"])
+                                 MCA_scon_FRAMEWORK_LIBS="$MCA_scon_FRAMEWORK_LIBS [mca/]mca_framework[/libmca_]mca_framework[.la]"])
                           MCA_scon_FRAMEWORK_LIBS="$MCA_scon_FRAMEWORK_LIBS [\$(MCA_scon_]mca_framework[_STATIC_LTLIBS)]"
                           m4_ifdef([MCA_scon_]mca_framework[_CONFIG],
                                    [MCA_scon_]mca_framework[_CONFIG](mca_framework),
@@ -715,7 +715,7 @@ AC_DEFUN([MCA_PROCESS_COMPONENT],[
         else
             # Other frameworks do not have to obey the
             # $FRAMEWORK_LIB_PREFIX prefix.
-            $6="mca/$1/$2/libmca_scon_$1_$2.la $$6"
+            $6="mca/$1/$2/libmca_$1_$2.la $$6"
         fi
         echo "extern const scon_mca_base_component_t mca_$1_$2_component;" >> $outfile.extern
         echo "  &mca_$1_$2_component, " >> $outfile.struct
@@ -729,7 +729,7 @@ AC_DEFUN([MCA_PROCESS_COMPONENT],[
     dnl BWB: FIX ME: We still use the post_configure.sh for frameworks that use the direct call infrastructure.
     dnl All other uses we can ignore here, because config_components will have read it in and set all the
     dnl proper environment variables.  At some point, we should handle the direct call stuff the same way we
-    dnl handle the headers for static components like timers in PMIx, ie, have a framework level configure.m4 that
+    dnl handle the headers for static components like timers in SCON, ie, have a framework level configure.m4 that
     dnl does the right thing
     if test -f $infile; then
         # check for direct call header to include.  This will be
@@ -781,7 +781,7 @@ AC_MSG_ERROR([*** $1 component $2 was supposed to be direct-called, but
     # don't have to implement the else clause in the literal check...
     AS_LITERAL_IF([$2],
         [AS_IF([test "$$1_$2_WRAPPER_EXTRA_CPPFLAGS" != ""],
-           [m4_if(scon_EVAL_ARG([MCA_scon_$1_CONFIGURE_MODE]), [STOP_AT_FIRST], [stop_at_first=1], [stop_at_first=0])
+           [m4_if(SCON_EVAL_ARG([MCA_scon_$1_CONFIGURE_MODE]), [STOP_AT_FIRST], [stop_at_first=1], [stop_at_first=0])
             AS_IF([test "$7" = "static" && test "$stop_at_first" = "1"],
               [AS_IF([test "$with_devel_headers" = "yes"],
                      [SCON_FLAGS_APPEND_UNIQ([mca_wrapper_extra_cppflags], [$$1_$2_WRAPPER_EXTRA_CPPFLAGS])])],
@@ -898,12 +898,12 @@ AC_DEFUN([MCA_SETUP_DIRECT_CALL],[
 
     AC_SUBST(MCA_scon_$1_DIRECT_CALL_HEADER)
     AC_DEFINE_UNQUOTED([MCA_scon_$2_DIRECT_CALL], [$MCA_scon_$1_DIRECT_CALL],
-            [Defined to 1 if PMIx:$1 should use direct calls instead of components])
+            [Defined to 1 if SCON:$1 should use direct calls instead of components])
     AC_DEFINE_UNQUOTED([MCA_scon_$1_DIRECT_CALL_COMPONENT], [$MCA_scon_$1_DIRECT_CALL_COMPONENT],
             [name of component to use for direct calls, if MCA_scon_$1_DIRECT_CALL is 1])
     AC_DEFINE_UNQUOTED([MCA_scon_$1_DIRECT_CALL_HEADER],
                        ["[$MCA_scon_]$1[_DIRECT_CALL_HEADER]"],
-                       [Header PMIx:$1 includes to be direct called])
+                       [Header SCON:$1 includes to be direct called])
 ])
 
 

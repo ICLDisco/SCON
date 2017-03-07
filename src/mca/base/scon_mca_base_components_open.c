@@ -101,6 +101,9 @@ static int open_components(scon_mca_base_framework_t *framework)
     if (SCON_SUCCESS != ret) {
         return ret;
     }
+    scon_output ( 0,
+                         "mca: base: components_open: opening %s components",
+                         framework->framework_name);
 
     /* Announce */
     scon_output_verbose (SCON_MCA_BASE_VERBOSE_COMPONENT, output_id,
@@ -110,52 +113,57 @@ static int open_components(scon_mca_base_framework_t *framework)
     /* Traverse the list of components */
     SCON_LIST_FOREACH_SAFE(cli, next, components, scon_mca_base_component_list_item_t) {
         const scon_mca_base_component_t *component = cli->cli_component;
-
+        scon_output (0,
+                             "mca: base: components_open: found loaded component %s",
+                             component->scon_mca_component_name);
         scon_output_verbose (SCON_MCA_BASE_VERBOSE_COMPONENT, output_id,
                              "mca: base: components_open: found loaded component %s",
                              component->scon_mca_component_name);
 
-    if (NULL != component->scon_mca_open_component) {
-        /* Call open if register didn't call it already */
+        if (NULL != component->scon_mca_open_component) {
+            /* Call open if register didn't call it already */
             ret = component->scon_mca_open_component();
-
+            scon_output (0,
+                                 "mca: base: components_open: "
+                                 "component %s open function returned %d",
+                                 component->scon_mca_component_name, ret);
             if (SCON_SUCCESS == ret) {
                 scon_output_verbose (SCON_MCA_BASE_VERBOSE_COMPONENT, output_id,
                                      "mca: base: components_open: "
                                      "component %s open function successful",
                                      component->scon_mca_component_name);
             } else {
-        if (SCON_ERR_NOT_AVAILABLE != ret) {
-            /* If the component returns SCON_ERR_NOT_AVAILABLE,
-               it's a cue to "silently ignore me" -- it's not a
-               failure, it's just a way for the component to say
-               "nope!".
+                if (SCON_ERR_NOT_AVAILABLE != ret) {
+                    /* If the component returns SCON_ERR_NOT_AVAILABLE,
+                       it's a cue to "silently ignore me" -- it's not a
+                       failure, it's just a way for the component to say
+                       "nope!".
 
-               Otherwise, however, display an error.  We may end
-               up displaying this twice, but it may go to separate
-               streams.  So better to be redundant than to not
-               display the error in the stream where it was
-               expected. */
+                       Otherwise, however, display an error.  We may end
+                       up displaying this twice, but it may go to separate
+                       streams.  So better to be redundant than to not
+                       display the error in the stream where it was
+                       expected. */
 
-            if (scon_mca_base_component_show_load_errors) {
-            scon_output_verbose (SCON_MCA_BASE_VERBOSE_ERROR, output_id,
+                    if (scon_mca_base_component_show_load_errors) {
+                        scon_output_verbose (SCON_MCA_BASE_VERBOSE_ERROR, output_id,
                                              "mca: base: components_open: component %s "
                                              "/ %s open function failed",
                                              component->scon_mca_type_name,
                                              component->scon_mca_component_name);
-            }
-            scon_output_verbose (SCON_MCA_BASE_VERBOSE_COMPONENT, output_id,
+                    }
+                    scon_output_verbose (SCON_MCA_BASE_VERBOSE_COMPONENT, output_id,
                                          "mca: base: components_open: "
                                          "component %s open function failed",
                                          component->scon_mca_component_name);
-        }
+                }
 
                 scon_mca_base_component_close (component, output_id);
 
-        scon_list_remove_item (components, &cli->super);
-        SCON_RELEASE(cli);
+                scon_list_remove_item (components, &cli->super);
+                SCON_RELEASE(cli);
+            }
         }
-    }
     }
 
     /* All done */

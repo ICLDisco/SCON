@@ -39,12 +39,12 @@
 #include "src/mca/mca.h"
 #include "src/mca/base/base.h"
 #include "src/mca/base/scon_mca_base_component_repository.h"
-#include "src/mca/pdl/base/base.h"
+#include "src/mca/sdl/base/base.h"
 #include "scon_common.h"
 #include "src/class/scon_hash_table.h"
 #include "src/util/basename.h"
 
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
 
 /*
  * Private types
@@ -54,7 +54,7 @@ static void ri_destructor(scon_mca_base_component_repository_item_t *ri);
 SCON_CLASS_INSTANCE(scon_mca_base_component_repository_item_t, scon_list_item_t,
                     ri_constructor, ri_destructor);
 
-#endif /* SCON_HAVE_PDL_SUPPORT */
+#endif /* SCON_HAVE_SDL_SUPPORT */
 
 
 /*
@@ -63,7 +63,7 @@ SCON_CLASS_INSTANCE(scon_mca_base_component_repository_item_t, scon_list_item_t,
 static bool initialized = false;
 
 
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
 
 static scon_hash_table_t scon_mca_base_component_repository;
 
@@ -175,11 +175,11 @@ static int file_exists(const char *filename, const char *ext)
     return (0 == ret);
 }
 
-#endif /* SCON_HAVE_PDL_SUPPORT */
+#endif /* SCON_HAVE_SDL_SUPPORT */
 
 int scon_mca_base_component_repository_add (const char *path)
 {
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
     char *path_to_use = NULL, *dir, *ctx;
     const char sep[] = {SCON_ENV_SEP, '\0'};
 
@@ -200,14 +200,14 @@ int scon_mca_base_component_repository_add (const char *path)
             dir = scon_mca_base_system_default_path;
         }
 
-        if (0 != scon_pdl_foreachfile(dir, process_repository_item, NULL)) {
+        if (0 != scon_sdl_foreachfile(dir, process_repository_item, NULL)) {
             break;
         }
     } while (NULL != (dir = strtok_r (NULL, sep, &ctx)));
 
     free (path_to_use);
 
-#endif /* SCON_HAVE_PDL_SUPPORT */
+#endif /* SCON_HAVE_SDL_SUPPORT */
 
     return SCON_SUCCESS;
 }
@@ -221,28 +221,28 @@ int scon_mca_base_component_repository_init(void)
   /* Setup internal structures */
 
   if (!initialized) {
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
 
     /* Initialize the dl framework */
-    int ret = scon_mca_base_framework_open(&scon_pdl_base_framework, 0);
+    int ret = scon_mca_base_framework_open(&scon_sdl_base_framework, 0);
     if (SCON_SUCCESS != ret) {
         scon_output(0, "%s %d:%s failed -- process will likely abort (open the dl framework returned %d instead of SCON_SUCCESS)\n",
                     __FILE__, __LINE__, __func__, ret);
         return ret;
     }
-    scon_pdl_base_select();
+    scon_sdl_base_select();
 
     SCON_CONSTRUCT(&scon_mca_base_component_repository, scon_hash_table_t);
     ret = scon_hash_table_init (&scon_mca_base_component_repository, 128);
     if (SCON_SUCCESS != ret) {
-        (void) scon_mca_base_framework_close(&scon_pdl_base_framework);
+        (void) scon_mca_base_framework_close(&scon_sdl_base_framework);
         return ret;
     }
 
     ret = scon_mca_base_component_repository_add(scon_mca_base_component_path);
     if (SCON_SUCCESS != ret) {
         SCON_DESTRUCT(&scon_mca_base_component_repository);
-        (void) scon_mca_base_framework_close(&scon_pdl_base_framework);
+        (void) scon_mca_base_framework_close(&scon_sdl_base_framework);
         return ret;
     }
 #endif
@@ -259,14 +259,14 @@ int scon_mca_base_component_repository_get_components (scon_mca_base_framework_t
                                                        scon_list_t **framework_components)
 {
     *framework_components = NULL;
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
     return scon_hash_table_get_value_ptr (&scon_mca_base_component_repository, framework->framework_name,
                                           strlen (framework->framework_name), (void **) framework_components);
 #endif
     return SCON_ERR_NOT_FOUND;
 }
 
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
 static void scon_mca_base_component_repository_release_internal(scon_mca_base_component_repository_item_t *ri) {
     int group_id;
 
@@ -278,13 +278,13 @@ static void scon_mca_base_component_repository_release_internal(scon_mca_base_co
 
     /* Close the component (and potentially unload it from memory */
     if (ri->ri_dlhandle) {
-        scon_pdl_close(ri->ri_dlhandle);
+        scon_sdl_close(ri->ri_dlhandle);
         ri->ri_dlhandle = NULL;
     }
 }
 #endif
 
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
 static scon_mca_base_component_repository_item_t *find_component(const char *type, const char *name)
 {
     scon_mca_base_component_repository_item_t *ri;
@@ -310,7 +310,7 @@ static scon_mca_base_component_repository_item_t *find_component(const char *typ
 
 void scon_mca_base_component_repository_release(const scon_mca_base_component_t *component)
 {
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
     scon_mca_base_component_repository_item_t *ri;
 
     ri = find_component (component->scon_mca_type_name, component->scon_mca_component_name);
@@ -322,7 +322,7 @@ void scon_mca_base_component_repository_release(const scon_mca_base_component_t 
 
 int scon_mca_base_component_repository_retain_component(const char *type, const char *name)
 {
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
     scon_mca_base_component_repository_item_t *ri = find_component(type, name);
 
     if (NULL != ri) {
@@ -339,7 +339,7 @@ int scon_mca_base_component_repository_retain_component(const char *type, const 
 int scon_mca_base_component_repository_open(scon_mca_base_framework_t *framework,
                                             scon_mca_base_component_repository_item_t *ri)
 {
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
     scon_mca_base_component_t *component_struct;
     scon_mca_base_component_list_item_t *mitem = NULL;
     char *struct_name = NULL;
@@ -390,7 +390,7 @@ int scon_mca_base_component_repository_open(scon_mca_base_framework_t *framework
     /* Now try to load the component */
 
     char *err_msg = NULL;
-    if (SCON_SUCCESS != scon_pdl_open(ri->ri_path, true, false, &ri->ri_dlhandle, &err_msg)) {
+    if (SCON_SUCCESS != scon_sdl_open(ri->ri_path, true, false, &ri->ri_dlhandle, &err_msg)) {
         if (NULL == err_msg) {
             err_msg = "scon_dl_open() error message was NULL!";
         }
@@ -416,7 +416,7 @@ int scon_mca_base_component_repository_open(scon_mca_base_framework_t *framework
        Malloc out enough space for it. */
 
     do {
-        ret = asprintf (&struct_name, "mca_%s_%s_component", ri->ri_type, ri->ri_name);
+        ret = asprintf (&struct_name, "scon_%s_%s_component", ri->ri_type, ri->ri_name);
         if (0 > ret) {
             ret = SCON_ERR_OUT_OF_RESOURCE;
             break;
@@ -429,7 +429,7 @@ int scon_mca_base_component_repository_open(scon_mca_base_framework_t *framework
         }
 
         err_msg = NULL;
-        ret = scon_pdl_lookup(ri->ri_dlhandle, struct_name, (void**) &component_struct, &err_msg);
+        ret = scon_sdl_lookup(ri->ri_dlhandle, struct_name, (void**) &component_struct, &err_msg);
         if (SCON_SUCCESS != ret || NULL == component_struct) {
             if (NULL == err_msg) {
                 err_msg = "scon_dl_loookup() error message was NULL!";
@@ -491,7 +491,7 @@ int scon_mca_base_component_repository_open(scon_mca_base_framework_t *framework
         free (struct_name);
     }
 
-    scon_pdl_close (ri->ri_dlhandle);
+    scon_sdl_close (ri->ri_dlhandle);
     ri->ri_dlhandle = NULL;
 
     return ret;
@@ -513,7 +513,7 @@ void scon_mca_base_component_repository_finalize(void)
 
     initialized = false;
 
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
     scon_list_t *component_list;
     void *node, *key;
     size_t key_size;
@@ -528,12 +528,12 @@ void scon_mca_base_component_repository_finalize(void)
                                                 node, &node);
     }
 
-    (void) scon_mca_base_framework_close(&scon_pdl_base_framework);
+    (void) scon_mca_base_framework_close(&scon_sdl_base_framework);
     SCON_DESTRUCT(&scon_mca_base_component_repository);
 #endif
 }
 
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
 
 /*
  * Basic sentinel values, and construct the inner list
@@ -569,4 +569,4 @@ static void ri_destructor (scon_mca_base_component_repository_item_t *ri)
     }
 }
 
-#endif /* SCON_HAVE_PDL_SUPPORT */
+#endif /* SCON_HAVE_SDL_SUPPORT */

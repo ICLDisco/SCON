@@ -40,7 +40,15 @@ headers += \
         util/show_help.h \
         util/show_help_lex.h \
         util/path.h \
-        util/strnlen.h
+        util/strnlen.h\
+		util/if.h \
+		util/net.h\
+		util/parse_options.h \
+		util/tsd.h \
+		util/scon_pmix.h \
+		util/bit_ops.h \
+		util/getid.h \
+		util/name_fns.h
 
 sources += \
         util/argv.c \
@@ -56,7 +64,13 @@ sources += \
         util/keyval_parse.c \
         util/show_help.c \
         util/show_help_lex.l \
-        util/path.c
+        util/path.c \
+		util/if.c \
+		util/net.c\
+		util/parse_options.c \
+		util/scon_pmix.c \
+		util/getid.c \
+		util/name_fns.c
 
 libscon_la_LIBADD += \
         util/keyval/libsconutilkeyval.la

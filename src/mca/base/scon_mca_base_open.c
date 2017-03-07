@@ -32,7 +32,7 @@
 #include <unistd.h>
 #endif
 
-#include "src/mca/pinstalldirs/pinstalldirs.h"
+#include "src/mca/sinstalldirs/sinstalldirs.h"
 #include "src/util/output.h"
 #include "src/util/printf.h"
 #include "src/mca/mca.h"
@@ -76,10 +76,10 @@ int scon_mca_base_open(void)
 
     /* define the system and user default paths */
 #if SCON_WANT_HOME_CONFIG_FILES
-    scon_mca_base_system_default_path = strdup(scon_pinstall_dirs.sconlibdir);
+    scon_mca_base_system_default_path = strdup(scon_sinstall_dirs.sconlibdir);
     asprintf(&scon_mca_base_user_default_path, "%s"SCON_PATH_SEP".scon"SCON_PATH_SEP"components", scon_home_directory());
 #else
-    asprintf(&scon_mca_base_system_default_path, "%s", scon_pinstall_dirs.sconlibdir);
+    asprintf(&scon_mca_base_system_default_path, "%s", scon_sinstall_dirs.sconlibdir);
 #endif
 
     /* see if the user wants to override the defaults */
@@ -111,7 +111,7 @@ int scon_mca_base_open(void)
     (void) scon_mca_base_var_register_synonym(var_id, "scon", "mca", NULL, "component_show_load_errors",
                                               SCON_MCA_BASE_VAR_SYN_FLAG_DEPRECATED);
 
-    scon_mca_base_component_disable_dlopen = false;
+/*    scon_mca_base_component_disable_dlopen = false;
     var_id = scon_mca_base_var_register("scon", "mca", "base", "component_disable_dlopen",
                                    "Whether to attempt to disable opening dynamic components or not",
                                    SCON_MCA_BASE_VAR_TYPE_BOOL, NULL, 0, 0,
@@ -119,7 +119,7 @@ int scon_mca_base_open(void)
                                    SCON_MCA_BASE_VAR_SCOPE_READONLY,
                                    &scon_mca_base_component_disable_dlopen);
     (void) scon_mca_base_var_register_synonym(var_id, "scon", "mca", NULL, "component_disable_dlopen",
-                                              SCON_MCA_BASE_VAR_SYN_FLAG_DEPRECATED);
+                                              SCON_MCA_BASE_VAR_SYN_FLAG_DEPRECATED);*/
 
     /* What verbosity level do we want for the default 0 stream? */
     scon_mca_base_verbose = "stderr";

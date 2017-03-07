@@ -33,7 +33,7 @@
 #endif
 
 #include "src/class/scon_pointer_array.h"
-
+#include "src/mca/collectives/collectives.h"
 #include "buffer_ops.h"
 
 #ifdef HAVE_STRING_H
@@ -166,6 +166,9 @@ BEGIN_C_DECLS
     free(tmpbuf);                                                       \
 } while (0)
 
+/* define internal only data types that are always private */
+#define    SCON_DATATYPE_INTERNAL                  (scon_data_type_t) 200
+#define    SCON_COLLECTIVES_SIGNATURE              (scon_data_type_t)  201
 
 /**
  * Internal struct used for holding registered bfrop functions
@@ -297,6 +300,9 @@ scon_status_t scon_bfrop_pack_query(scon_buffer_t *buffer, const void *src,
                                     int32_t num_vals, scon_data_type_t type);
 scon_status_t scon_bfrop_pack_rank(scon_buffer_t *buffer, const void *src,
                                    int32_t num_vals, scon_data_type_t type);
+scon_status_t scon_bfrop_pack_coll_sig(scon_buffer_t *buffer,
+                                       const void *src, int32_t num_vals,
+                                       scon_data_type_t type);
 /*
  * Internal unpack functions
  */
@@ -354,6 +360,8 @@ scon_status_t scon_bfrop_unpack_query(scon_buffer_t *buffer, void *dest,
                                       int32_t *num_vals, scon_data_type_t type);
 scon_status_t scon_bfrop_unpack_rank(scon_buffer_t *buffer, void *dest,
                                      int32_t *num_vals, scon_data_type_t type);
+int scon_bfrop_unpack_coll_sig(scon_buffer_t *buffer, void *dest, int32_t *num_vals,
+                               scon_data_type_t type);
 /**** DEPRECATED ****/
 scon_status_t scon_bfrop_unpack_array(scon_buffer_t *buffer, void *dest,
                                       int32_t *num_vals, scon_data_type_t type);
@@ -381,6 +389,8 @@ scon_status_t scon_bfrop_copy_bo(scon_byte_object_t **dest, scon_byte_object_t *
                                  scon_data_type_t type);
 scon_status_t scon_bfrop_copy_darray(scon_data_array_t **dest, scon_data_array_t *src,
                                      scon_data_type_t type);
+int scon_bfrop_copy_coll_sig(scon_collectives_signature_t **dest,
+                             scon_collectives_signature_t *src, scon_data_type_t type);
 
 /**** DEPRECATED ****/
 scon_status_t scon_bfrop_copy_array(scon_info_array_t **dest,
@@ -437,7 +447,9 @@ scon_status_t scon_bfrop_print_darray(char **output, char *prefix,
                                       scon_data_array_t *src, scon_data_type_t type);
 scon_status_t scon_bfrop_print_rank(char **output, char *prefix,
                                     scon_rank_t *src, scon_data_type_t type);
-
+int scon_bfrop_print_coll_sig(char **output, char *prefix,
+                              scon_collectives_signature_t *src,
+                              scon_data_type_t type);
 /*
  * Internal helper functions
  */

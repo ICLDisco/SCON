@@ -54,7 +54,7 @@ scon_status_t scon_argv_append(int *argc, char ***argv, const char *arg)
     return SCON_SUCCESS;
 }
 
-scon_status_t scon_argv_append_nosize(char ***argv, const char *arg)
+SCON_EXPORT scon_status_t scon_argv_append_nosize(char ***argv, const char *arg)
 {
     int argc;
 
@@ -263,7 +263,7 @@ char **scon_argv_split_with_empty(const char *src_string, int delimiter)
 /*
  * Return the length of a NULL-terminated argv array.
  */
-int scon_argv_count(char **argv)
+SCON_EXPORT int scon_argv_count(char **argv)
 {
   char **p;
   int i;
@@ -282,7 +282,7 @@ int scon_argv_count(char **argv)
  * Join all the elements of an argv array into a single
  * newly-allocated string.
  */
-char *scon_argv_join(char **argv, int delimiter)
+SCON_EXPORT char *scon_argv_join(char **argv, int delimiter)
 {
   char **p;
   char *pp;

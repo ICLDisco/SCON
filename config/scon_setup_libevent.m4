@@ -60,7 +60,7 @@ AC_DEFUN([_SCON_LIBEVENT_EXTERNAL],[
 
     # Bozo check
     AS_IF([test "$with_libevent" = "no"],
-          [AC_MSG_WARN([It is not possible to configure PMIx --without-libevent])
+          [AC_MSG_WARN([It is not possible to configure SCON --without-libevent])
            AC_MSG_ERROR([Cannot continue])])
 
     AC_ARG_WITH([libevent-libdir],
@@ -107,13 +107,13 @@ AC_DEFUN([_SCON_LIBEVENT_EXTERNAL],[
     AC_CHECK_LIB([event], [evthread_set_lock_callbacks],
                  [],
                  [AC_MSG_WARN([External libevent does not have thread support])
-                  AC_MSG_WARN([PMIx requires libevent to be compiled with])
+                  AC_MSG_WARN([SCON requires libevent to be compiled with])
                   AC_MSG_WARN([thread support enabled])
                   AC_MSG_ERROR([Cannot continue])])
     AC_CHECK_LIB([event_pthreads], [evthread_use_pthreads],
                  [],
                  [AC_MSG_WARN([External libevent does not have thread support])
-                  AC_MSG_WARN([PMIx requires libevent to be compiled with])
+                  AC_MSG_WARN([SCON requires libevent to be compiled with])
                   AC_MSG_WARN([thread support enabled])
                   AC_MSG_ERROR([Cannot continue])])
     # Chck if this libevent has the symbol

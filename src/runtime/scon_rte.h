@@ -37,16 +37,10 @@
 
 BEGIN_C_DECLS
 
-#if SCON_ENABLE_TIMING
-extern char *scon_timing_sync_file;
-extern char *scon_timing_output;
-extern bool scon_timing_overhead;
-#endif
-
-extern int scon_initialized;
-
+SCON_EXPORT extern int scon_initialized;
+SCON_EXPORT extern char* scon_net_private_ipv4;
 /** version string of scon */
-extern const char scon_version_string[];
+SCON_EXPORT extern const char scon_version_string[];
 
 /**
  * Initialize the SCON layer, including the MCA system.
@@ -63,7 +57,31 @@ scon_status_t scon_rte_init(scon_info_t info[], size_t ninfo);
  */
 void scon_rte_finalize(void);
 
+/* internal functions do not call */
+scon_status_t scon_register_params(void);
+scon_status_t scon_deregister_params(void);
 
+/* In a few places, we need to barrier until something happens
+ * that changes a flag to indicate we can release - e.g., waiting
+ * for a specific message to arrive. If no progress thread is running,
+ * we cycle across scon_progress - however, if a progress thread
+ * is active, then we need to just nanosleep to avoid cross-thread
+ * confusion
+ */
+#define SCON_WAIT_FOR_COMPLETION(flg)                                   \
+    do {                                                                \
+        scon_output_verbose(1, scon_globals.debug_output,              \
+                            "%s waiting on progress thread at %s:%d",   \
+                            SCON_PRINT_PROC(SCON_PROC_MY_NAME),         \
+                            __FILE__, __LINE__);                        \
+        while ((flg)) {                                                 \
+            /* provide a short quiet period so we                       \
+             * don't hammer the cpu while waiting                       \
+             */                                                         \
+            struct timespec tp = {0, 100000};                           \
+            nanosleep(&tp, NULL);                                       \
+        }                                                               \
+    }while(0);
 
 END_C_DECLS
 

@@ -50,6 +50,8 @@ typedef void (*scon_xcast_cbfunc_t) (scon_status_t status,
                                      size_t nprocs,
                                      scon_buffer_t *buf,
                                      scon_msg_tag_t tag,
+                                     scon_info_t info[],
+                                     size_t ninfo,
                                      void *cbdata);
 
 /* scon barrier callback function */
@@ -57,6 +59,17 @@ typedef void (*scon_barrier_cbfunc_t) (scon_status_t status,
                                        scon_handle_t scon_handle,
                                        scon_proc_t procs[],
                                        size_t nprocs,
+                                       scon_info_t info[],
+                                       size_t ninfo,
+                                       void *cbdata);
+/* scon barrier callback function */
+typedef void (*scon_allgather_cbfunc_t) (scon_status_t status,
+                                       scon_handle_t scon_handle,
+                                       scon_proc_t procs[],
+                                       size_t nprocs,
+                                       scon_buffer_t *buf,
+                                       scon_info_t info[],
+                                       size_t ninfo,
                                        void *cbdata);
 /**
  * @func scon_init initializes the scon library.
@@ -146,6 +159,16 @@ scon_status_t scon_barrier(scon_handle_t scon_handle,
                            scon_proc_t procs[],
                            size_t nprocs,
                            scon_barrier_cbfunc_t cbfunc,
+                           void *cbdata,
+                           scon_info_t info[],
+                           size_t ninfo);
+
+
+scon_status_t scon_allgather(scon_handle_t scon_handle,
+                           scon_proc_t procs[],
+                           size_t nprocs,
+                           scon_buffer_t *buf,
+                           scon_allgather_cbfunc_t cbfunc,
                            void *cbdata,
                            scon_info_t info[],
                            size_t ninfo);

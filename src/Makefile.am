@@ -42,6 +42,7 @@ sources =
 nodist_headers =
 EXTRA_DIST =
 dist_scondata_DATA =
+include test/Makefile.include
 
 libscon_la_LIBADD = \
 	mca/base/libscon_mca_base.la \

@@ -47,7 +47,7 @@
 
 BEGIN_C_DECLS
 
-SCON_CLASS_DECLARATION(scon_hash_table_t);
+SCON_EXPORT SCON_CLASS_DECLARATION(scon_hash_table_t);
 
 struct scon_hash_table_t
 {
@@ -75,10 +75,10 @@ typedef struct scon_hash_table_t scon_hash_table_t;
  *
  */
 
-int scon_hash_table_init(scon_hash_table_t* ht, size_t table_size);
+SCON_EXPORT int scon_hash_table_init(scon_hash_table_t* ht, size_t table_size);
 
 /* this could be the new init if people wanted a more general API */
-int scon_hash_table_init2(scon_hash_table_t* ht, size_t estimated_max_size,
+SCON_EXPORT int scon_hash_table_init2(scon_hash_table_t* ht, size_t estimated_max_size,
                                         int density_numer, int density_denom,
                                         int growth_numer, int growth_denom);
 
@@ -103,7 +103,7 @@ static inline size_t scon_hash_table_get_size(scon_hash_table_t *ht)
  *
  */
 
-int scon_hash_table_remove_all(scon_hash_table_t *ht);
+SCON_EXPORT int scon_hash_table_remove_all(scon_hash_table_t *ht);
 
 /**
  *  Retrieve value via uint32_t key.
@@ -118,7 +118,7 @@ int scon_hash_table_remove_all(scon_hash_table_t *ht);
  *
  */
 
-int scon_hash_table_get_value_uint32(scon_hash_table_t* table, uint32_t key,
+SCON_EXPORT int scon_hash_table_get_value_uint32(scon_hash_table_t* table, uint32_t key,
                                                    void** ptr);
 
 /**
@@ -131,7 +131,7 @@ int scon_hash_table_get_value_uint32(scon_hash_table_t* table, uint32_t key,
  *
  */
 
-int scon_hash_table_set_value_uint32(scon_hash_table_t* table, uint32_t key, void* value);
+SCON_EXPORT int scon_hash_table_set_value_uint32(scon_hash_table_t* table, uint32_t key, void* value);
 
 /**
  *  Remove value based on uint32_t key.
@@ -142,7 +142,7 @@ int scon_hash_table_set_value_uint32(scon_hash_table_t* table, uint32_t key, voi
  *
  */
 
-int scon_hash_table_remove_value_uint32(scon_hash_table_t* table, uint32_t key);
+SCON_EXPORT int scon_hash_table_remove_value_uint32(scon_hash_table_t* table, uint32_t key);
 
 /**
  *  Retrieve value via uint64_t key.
@@ -157,7 +157,7 @@ int scon_hash_table_remove_value_uint32(scon_hash_table_t* table, uint32_t key);
  *
  */
 
-int scon_hash_table_get_value_uint64(scon_hash_table_t *table, uint64_t key,
+SCON_EXPORT int scon_hash_table_get_value_uint64(scon_hash_table_t *table, uint64_t key,
                                                    void **ptr);
 
 /**
@@ -170,7 +170,7 @@ int scon_hash_table_get_value_uint64(scon_hash_table_t *table, uint64_t key,
  *
  */
 
-int scon_hash_table_set_value_uint64(scon_hash_table_t *table, uint64_t key, void* value);
+SCON_EXPORT int scon_hash_table_set_value_uint64(scon_hash_table_t *table, uint64_t key, void* value);
 
 /**
  *  Remove value based on uint64_t key.
@@ -181,7 +181,7 @@ int scon_hash_table_set_value_uint64(scon_hash_table_t *table, uint64_t key, voi
  *
  */
 
-int scon_hash_table_remove_value_uint64(scon_hash_table_t *table, uint64_t key);
+SCON_EXPORT int scon_hash_table_remove_value_uint64(scon_hash_table_t *table, uint64_t key);
 
 /**
  *  Retrieve value via arbitrary length binary key.
@@ -196,7 +196,7 @@ int scon_hash_table_remove_value_uint64(scon_hash_table_t *table, uint64_t key);
  *
  */
 
-int scon_hash_table_get_value_ptr(scon_hash_table_t *table, const void* key,
+SCON_EXPORT int scon_hash_table_get_value_ptr(scon_hash_table_t *table, const void* key,
                                                 size_t keylen, void **ptr);
 
 /**
@@ -209,7 +209,7 @@ int scon_hash_table_get_value_ptr(scon_hash_table_t *table, const void* key,
  *
  */
 
-int scon_hash_table_set_value_ptr(scon_hash_table_t *table, const void* key, size_t keylen, void* value);
+SCON_EXPORT int scon_hash_table_set_value_ptr(scon_hash_table_t *table, const void* key, size_t keylen, void* value);
 
 /**
  *  Remove value based on arbitrary length binary key.
@@ -220,7 +220,7 @@ int scon_hash_table_set_value_ptr(scon_hash_table_t *table, const void* key, siz
  *
  */
 
-int scon_hash_table_remove_value_ptr(scon_hash_table_t *table, const void* key, size_t keylen);
+SCON_EXPORT int scon_hash_table_remove_value_ptr(scon_hash_table_t *table, const void* key, size_t keylen);
 
 
 /** The following functions are only for allowing iterating through
@@ -245,7 +245,7 @@ int scon_hash_table_remove_value_ptr(scon_hash_table_t *table, const void* key, 
  *
  */
 
-int scon_hash_table_get_first_key_uint32(scon_hash_table_t *table, uint32_t *key,
+SCON_EXPORT int scon_hash_table_get_first_key_uint32(scon_hash_table_t *table, uint32_t *key,
                                         void **value, void **node);
 
 
@@ -263,7 +263,7 @@ int scon_hash_table_get_first_key_uint32(scon_hash_table_t *table, uint32_t *key
  *
  */
 
-int scon_hash_table_get_next_key_uint32(scon_hash_table_t *table, uint32_t *key,
+SCON_EXPORT int scon_hash_table_get_next_key_uint32(scon_hash_table_t *table, uint32_t *key,
                                        void **value, void *in_node,
                                        void **out_node);
 
@@ -281,7 +281,7 @@ int scon_hash_table_get_next_key_uint32(scon_hash_table_t *table, uint32_t *key,
  *
  */
 
-int scon_hash_table_get_first_key_uint64(scon_hash_table_t *table, uint64_t *key,
+SCON_EXPORT int scon_hash_table_get_first_key_uint64(scon_hash_table_t *table, uint64_t *key,
                                        void **value, void **node);
 
 
@@ -299,7 +299,7 @@ int scon_hash_table_get_first_key_uint64(scon_hash_table_t *table, uint64_t *key
  *
  */
 
-int scon_hash_table_get_next_key_uint64(scon_hash_table_t *table, uint64_t *key,
+SCON_EXPORT int scon_hash_table_get_next_key_uint64(scon_hash_table_t *table, uint64_t *key,
                                        void **value, void *in_node,
                                        void **out_node);
 
@@ -318,7 +318,7 @@ int scon_hash_table_get_next_key_uint64(scon_hash_table_t *table, uint64_t *key,
  *
  */
 
-int scon_hash_table_get_first_key_ptr(scon_hash_table_t *table, void* *key,
+SCON_EXPORT int scon_hash_table_get_first_key_ptr(scon_hash_table_t *table, void* *key,
                                         size_t *key_size, void **value, void **node);
 
 
@@ -337,39 +337,33 @@ int scon_hash_table_get_first_key_ptr(scon_hash_table_t *table, void* *key,
  *
  */
 
-int scon_hash_table_get_next_key_ptr(scon_hash_table_t *table, void* *key,
+SCON_EXPORT int scon_hash_table_get_next_key_ptr(scon_hash_table_t *table, void* *key,
                                        size_t *key_size, void **value,
                                        void *in_node, void **out_node);
 
 
 /**
- * @brief Returns next power-of-two of the given value.
+ * Loop over a hash table.
  *
- * @param value The integer value to return power of 2
+ * @param[in] key Key for each item
+ * @param[in] type Type of key (ui32|ui64|ptr)
+ * @param[in] value Storage for each item
+ * @param[in] ht Hash table to iterate over
  *
- * @returns The next power of two
+ * This macro provides a simple way to loop over the items in an opal_hash_table_t. It
+ * is not safe to call scon_hash_table_remove* from within the loop.
  *
- * WARNING: *NO* error checking is performed.  This is meant to be a
- * fast inline function.
- * Using __builtin_clz (count-leading-zeros) uses 4 cycles instead of 77
- * compared to the loop-version (on Intel Nehalem -- with icc-12.1.0 -O2).
+ * Example Usage:
+ *
+ * uint64_t key;
+ * void * value;
+ * SCON_HASH_TABLE_FOREACH(key, uint64, value, ht) {
+ *    do_something(key, value);
+ * }
  */
-static inline int scon_next_poweroftwo(int value)
-{
-    int power2;
-
-#if SCON_C_HAVE_BUILTIN_CLZ
-    if (SCON_UNLIKELY (0 == value)) {
-        return 1;
-    }
-    power2 = 1 << (8 * sizeof (int) - __builtin_clz(value));
-#else
-    for (power2 = 1; value > 0; value >>= 1, power2 <<= 1) /* empty */;
-#endif
-
-    return power2;
-}
-
+#define SCON_HASH_TABLE_FOREACH(key, type, value, ht) \
+  for (void *_nptr=NULL;                                   \
+       SCON_SUCCESS == scon_hash_table_get_next_key_##type(ht, &key, (void **)&value, _nptr, &_nptr);)
 
 END_C_DECLS
 

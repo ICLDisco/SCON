@@ -55,7 +55,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include "src/class/scon_object.h"
+#include <time.h>
+//#include "src/class/scon_object.h"
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h> /* for struct timeval */
 #endif
@@ -79,6 +80,9 @@ extern "C" {
 #define SCON_MAX_JOBLEN  255
 #define SCON_MAX_NSLEN  255
 #define SCON_MAX_KEYLEN  511
+#define SCON_MAX_SEL_STRING_VALUELEN  1023
+#define SCON_MAX_STRING_VALUELEN 255
+
 #if defined(MAXHOSTNAMELEN)
 #define SCON_MAXHOSTNAMELEN (MAXHOSTNAMELEN + 1)
 #elif defined(HOST_NAME_MAX)
@@ -103,6 +107,7 @@ typedef int32_t scon_handle_t;
 
 /* define a *wildcard* value for requests involving any process */
 #define SCON_RANK_WILDCARD  INT32_MAX-1
+#define SCON_JOBNAME_WILDCARD "XXXX"
 
 /****    SCON ERROR CONSTANTS    ****/
 /* SCON errors are always negative, with 0 reserved for success */
@@ -140,7 +145,7 @@ typedef int scon_status_t;
 
 #define SCON_ERR_CONFIG_MISMATCH                (SCON_ERR_BASE - 24)
 #define SCON_ERR_MULTI_JOB_NOT_SUPPORTED        (SCON_ERR_BASE - 25)
-
+#define SCON_ERR_WILD_CARD_NOT_SUPPORTED        (SCON_ERR_BASE - 25)
 /* used by the query system */
 #define SCON_QUERY_PARTIAL_SUCCESS              (SCON_ERR_BASE - 26)
 
@@ -259,6 +264,7 @@ typedef uint8_t  scon_data_type_t;  /** data type indicators */
 #define    SCON_FLOAT_ARRAY         (scon_data_type_t)   50
 #define    SCON_NAME_SPACE          (scon_data_type_t)   51
 #define    SCON_STATUS              (scon_data_type_t)   52
+
 /* SCON Dynamic */
 #define    SCON_DSS_ID_DYNAMIC      (scon_data_type_t)  100
 
@@ -536,7 +542,7 @@ typedef struct {
 #define SCON_VALUE1_GREATER  +1
 #define SCON_VALUE2_GREATER  -1
 #define SCON_EQUAL            0
-
+#define SCON_NOT_EQUAL        2
 /**
  * buffer type
  */
@@ -554,7 +560,7 @@ typedef enum scon_bfrop_buffer_type_t scon_bfrop_buffer_type_t;
  * Structure for holding a buffer */
 typedef struct {
     /** First member must be the object's parent */
-    scon_object_t parent;
+  //  scon_object_t parent;
     /** type of buffer */
     scon_bfrop_buffer_type_t type;
     /** Start of my memory */
@@ -579,12 +585,17 @@ typedef struct {
 /* define strings for key - comments contain hints of value type */
 #define SCON_EVENT_BASE            "scon.evbase"           /* (struct event_base *) pointer to libevent event_base to use in place
                                                              of the internal progress thread */
+/* SCON IDENTITY KEYS */
+#define SCON_MY_ID                 "scon.my.id"       /* my process identity scon_proc_t */
+#define SCON_NAME                  "scon.name"        /* string char * well known name given by the user to reference
+                                                        this scon */
 /*  JOB and PROC keys*/
 #define SCON_JOB_NAME              "scon.job.name"   /* job name key, value type char * - name of participating job. */
 #define SCON_JOB_ALL               "scon.job.all"  /* value type bool, set to true if all ranks of job participate in scon
                                                            users can set this key instead of listing all ranks in job*/
 #define SCON_JOB_RANKS             "scon.job.ranks" /* array of job ranks participating in scon. value - scon_job_rank_info_t */
 #define SCON_NUM_JOBS              "scon.numjobs"  /* number of jobs participating in scon */
+
 
 /* SCON Topology keys */
 #define SCON_TOPO_TYPE             "scon.topo.type"     /* topology type  value is enum  scon_topo_type */
@@ -599,10 +610,25 @@ typedef struct {
 #define SCON_TRANSPORT             "scon.transport"     /*  enum - SCON_SUPPORTED_TRANSPORTS (TCP/IP, UD,  */
 #define SCON_SELECTED_FABRICS      "scon.fabrics.sel"   /* value - string - a selection string specifying the physical fabrics
                                                                  that are allowed to exchange msgs */
-#define SCON_TOPO_MASTER_PROC      "scon.topo.master"   /* master process for the scon - topology root
+#define SCON_MASTER_PROC           "scon.master"        /* master process for the scon - topology root
                                                                value is scon_proc_t */
-
-
+#define SCON_RECV_QUEUE_LENGTH     "scon.recv.queue.length"  /* unsigned int length of the queue for unmatched received messages
+                                                              */
+#define SCON_CREATE_TIMEOUT        "scon.create.timeout"    /* Time out in secs for the create operation
+                                                               value is unsigned int   master process must specify this value.*/
+#define SCON_OPERATIONAL_QUORUM    "scon.operational.quorum"  /* minimum number of members that must be up
+                                                                before completing create i.e. making the SCON operational.
+                                                                master process must specify this.Value is unsigned int >1
+                                                                Default behavior is to wait for all members to come up*/
+#define SCON_COLL_MOD_LIST         "scon.coll.mod.list"       /* list of collectives modules requested at SCON lib init.
+                                                                 value is a comma separated list of collectives modules
+                                                                 (refer to module MCA names) */
+#define SCON_PT2PT_MOD_LIST         "scon.pt2pt.mod.list"       /* list of pt2pt modules requested at SCON lib init.
+                                                                  value is a comma separated list of pt2pt modules
+                                                                (refer to module MCA names) */
+#define SCON_TOPO_MOD_LIST         "scon.topo.mod.list"       /* list of topology modules requested at SCON lib init.
+                                                              value is a comma separated list of topology modules
+                                                               (refer to module MCA names) */
 
 /* define a set of bit-mask flags for specifying behavior of
  * command directives via scon_info_t arrays */
@@ -618,7 +644,8 @@ typedef uint32_t scon_info_directives_t;
  */
 void scon_value_load(scon_value_t *v, void *data, scon_data_type_t type);
 scon_status_t scon_value_xfer(scon_value_t *kv, scon_value_t *src);
-
+scon_status_t scon_value_unload(scon_value_t *kv, void **data,
+                                size_t *sz, scon_data_type_t type);
 
 
 

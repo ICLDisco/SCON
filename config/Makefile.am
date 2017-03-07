@@ -43,6 +43,7 @@ EXTRA_DIST = \
 	scon_setup_cc.m4 \
 	scon_setup_hwloc.m4 \
 	scon_setup_libevent.m4 \
+	scon_setup_libpmix.m4 \
 	scon_mca_priority_sort.pl
 
 

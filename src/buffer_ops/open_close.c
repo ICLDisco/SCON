@@ -375,19 +375,25 @@ scon_status_t scon_bfrop_open(void)
                        scon_bfrop_std_copy,
                        scon_bfrop_print_rank);
 
+    SCON_REGISTER_TYPE("SCON_COLLECTIVES_SIGNATURE", SCON_COLLECTIVES_SIGNATURE,
+                       scon_bfrop_pack_coll_sig,
+                       scon_bfrop_unpack_coll_sig,
+                       scon_bfrop_copy_coll_sig,
+                       scon_bfrop_print_coll_sig);
+
   /*  SCON_REGISTER_TYPE("SCON_QUERY", SCON_QUERY,
                        scon_bfrop_pack_query,
                        scon_bfrop_unpack_query,
                        scon_bfrop_copy_query,
                        scon_bfrop_print_query);
 */
-    /**** DEPRECATED ****/
- /*   SCON_REGISTER_TYPE("SCON_INFO_ARRAY", SCON_INFO_ARRAY,
+    /**** DEPRECATED ***
+    SCON_REGISTER_TYPE("SCON_INFO_ARRAY", SCON_INFO_ARRAY,
                        scon_bfrop_pack_array,
                        scon_bfrop_unpack_array,
                        scon_bfrop_copy_array,
                        scon_bfrop_print_array);
-    /********************/
+    *******************/
 
     /* All done */
     scon_bfrop_initialized = true;
@@ -488,6 +494,14 @@ SCON_EXPORT void scon_value_load(scon_value_t *v, void *data,
         case SCON_STATUS:
             memcpy(&(v->data.status), data, sizeof(scon_status_t));
             break;
+        case SCON_PROC:
+            SCON_PROC_CREATE(v->data.proc, 1);
+            if (NULL == v->data.proc) {
+                SCON_ERROR_LOG(SCON_ERR_NOMEM);
+                return;
+            }
+            memcpy(v->data.proc, data, sizeof(scon_proc_t));
+            break;
         case SCON_BYTE_OBJECT:
             bo = (scon_byte_object_t*)data;
             v->data.bo.bytes = bo->bytes;
@@ -503,11 +517,11 @@ SCON_EXPORT void scon_value_load(scon_value_t *v, void *data,
     }
 }
 
-scon_status_t scon_value_unload(scon_value_t *kv, void **data,
+SCON_EXPORT scon_status_t scon_value_unload(scon_value_t *kv, void **data,
                                 size_t *sz, scon_data_type_t type)
 {
     scon_status_t rc;
-
+    scon_proc_t *pc;
     rc = SCON_SUCCESS;
     if (type != kv->type) {
         rc = SCON_ERR_TYPE_MISMATCH;
@@ -597,6 +611,17 @@ scon_status_t scon_value_unload(scon_value_t *kv, void **data,
             memcpy(*data, &(kv->data.status), sizeof(scon_status_t));
             *sz = sizeof(scon_status_t);
             break;
+        case SCON_PROC:;
+            SCON_PROC_CREATE(pc, 1);
+            if (NULL == pc) {
+                SCON_ERROR_LOG(SCON_ERR_NOMEM);
+                rc = SCON_ERR_NOMEM;
+                break;
+            }
+            memcpy(pc, kv->data.proc, sizeof(scon_proc_t));
+            *sz = sizeof(scon_proc_t);
+            *data = pc;
+            break;
         case SCON_BYTE_OBJECT:
             if (NULL != kv->data.bo.bytes && 0 < kv->data.bo.size) {
                 *data = kv->data.bo.bytes;
@@ -619,3 +644,90 @@ scon_status_t scon_value_unload(scon_value_t *kv, void **data,
     return rc;
 }
 
+int scon_buffer_unload(scon_buffer_t *buffer, void **payload,
+                    int32_t *bytes_used)
+{
+    /* check that buffer is not null */
+    if (!buffer) {
+        return SCON_ERR_BAD_PARAM;
+    }
+
+    /* were we given someplace to point to the payload */
+    if (NULL == payload) {
+        return SCON_ERR_BAD_PARAM;
+    }
+
+    /* anything in the buffer - if not, nothing to do */
+    if (NULL == buffer->base_ptr || 0 == buffer->bytes_used) {
+        *payload = NULL;
+        *bytes_used = 0;
+        return SCON_SUCCESS;
+    }
+
+    /* if nothing has been unpacked, we can pass the entire
+     * region back and protect it - no need to copy. This is
+     * an optimization */
+    if (buffer->unpack_ptr == buffer->base_ptr) {
+        *payload = buffer->base_ptr;
+        *bytes_used = buffer->bytes_used;
+        buffer->base_ptr = NULL;
+        buffer->unpack_ptr = NULL;
+        buffer->pack_ptr = NULL;
+        buffer->bytes_used = 0;
+        return SCON_SUCCESS;
+    }
+
+    /* okay, we have something to provide - pass it back */
+    *bytes_used = buffer->bytes_used - (buffer->unpack_ptr - buffer->base_ptr);
+    if (0 == (*bytes_used)) {
+        *payload = NULL;
+    } else {
+        /* we cannot just set the pointer as it might be
+         * partway in a malloc'd region */
+        *payload = (void*)malloc(*bytes_used);
+        memcpy(*payload, buffer->unpack_ptr, *bytes_used);
+    }
+
+    /* All done */
+
+    return SCON_SUCCESS;
+}
+
+
+int scon_buffer_load(scon_buffer_t *buffer, void *payload,
+                  int32_t bytes_used)
+{
+    /* check to see if the buffer has been initialized */
+    if (NULL == buffer) {
+        return SCON_ERR_BAD_PARAM;
+    }
+
+    /* check if buffer already has payload - free it if so */
+    if (NULL != buffer->base_ptr) {
+        free(buffer->base_ptr);
+    }
+
+    /* if it's a NULL payload, just set things and return */
+    if (NULL == payload) {
+        buffer->base_ptr = NULL;
+        buffer->pack_ptr = buffer->base_ptr;
+        buffer->unpack_ptr = buffer->base_ptr;
+        buffer->bytes_used = 0;
+        buffer->bytes_allocated = 0;
+        return SCON_SUCCESS;
+    }
+
+    /* populate the buffer */
+    buffer->base_ptr = (char*)payload;
+
+    /* set pack/unpack pointers */
+    buffer->pack_ptr = ((char*)buffer->base_ptr) + bytes_used;
+    buffer->unpack_ptr = buffer->base_ptr;
+
+    /* set counts for size and space */
+    buffer->bytes_allocated = buffer->bytes_used = bytes_used;
+
+    /* All done */
+
+    return SCON_SUCCESS;
+}

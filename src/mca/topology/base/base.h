@@ -23,12 +23,20 @@
 #include "src/mca/topology/topology.h"
 #include "src/mca/base/base.h"
 
-extern scon_mca_base_framework_t scon_topology_base_framework;
-extern scon_topology_component_t* scon_topology_base_selected_component;
+SCON_EXPORT extern scon_mca_base_framework_t scon_topology_base_framework;
+SCON_EXPORT extern scon_topology_component_t* scon_topology_base_selected_component;
 
 /* select a component */
 int scon_topology_base_select(void);
 
+/* return module of the requested component */
+scon_topology_module_t * scon_topology_base_get_module(char *component_name);
+
+void scon_topology_base_convert_topoid_to_procid( scon_proc_t *route,
+        unsigned int route_rank,
+        scon_proc_t *target);
+
+#define SCON_TOPO_ID_INVALID INT_MAX;
 END_C_DECLS
 
 #endif /* SSCON_TOPOLOGY_BASE_H */

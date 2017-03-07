@@ -12,6 +12,6 @@
 headers += \
 	base/base.h
 
-libmca_scon_topology_la_SOURCES += \
+libmca_topology_la_SOURCES += \
         base/topology_base_component.c\
         base/topology_base_select.c

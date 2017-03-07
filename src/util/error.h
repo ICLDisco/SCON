@@ -40,7 +40,7 @@
 #define SCON_ERR_PACK_MISMATCH                          (SCON_INTERNAL_ERR_BASE -  9)
 #define SCON_ERR_PROC_ENTRY_NOT_FOUND                   (SCON_INTERNAL_ERR_BASE - 10)
 #define SCON_ERR_UNPACK_READ_PAST_END_OF_BUFFER         (SCON_INTERNAL_ERR_BASE - 11)
-#define SCON_ERR_INVALID_KEYVALP                        (SCON_INTERNAL_ERR_BASE - 13)
+#define SCON_ERR_INVALID_KEYVAL                        (SCON_INTERNAL_ERR_BASE - 13)
 #define SCON_ERR_INVALID_NUM_PARSED                     (SCON_INTERNAL_ERR_BASE - 14)
 #define SCON_ERR_INVALID_ARGS                           (SCON_INTERNAL_ERR_BASE - 15)
 #define SCON_ERR_INVALID_NUM_ARGS                       (SCON_INTERNAL_ERR_BASE - 16)
@@ -60,6 +60,19 @@
 #define SCON_ERR_VALUE_OUT_OF_BOUNDS                    (SCON_INTERNAL_ERR_BASE - 30)
 #define SCON_ERR_PERM                                   (SCON_INTERNAL_ERR_BASE - 31)
 #define SCON_ERR_OPERATION_IN_PROGRESS                  (SCON_INTERNAL_ERR_BASE - 32)
+#define SCON_ERR_INVALID_HANDLE                         (SCON_INTERNAL_ERR_BASE - 33)
+#define SCON_ERR_NETWORK_NOT_PARSEABLE                  (SCON_INTERNAL_ERR_BASE - 34)
+#define SCON_ERR_TAKE_NEXT_OPTION                       (SCON_INTERNAL_ERR_BASE - 35)
+#define SCON_ERR_SOCKET_NOT_AVAILABLE                   (SCON_INTERNAL_ERR_BASE - 36)
+#define SCON_ERR_SYS_LIMITS_SOCKETS                     (SCON_INTERNAL_ERR_BASE - 37)
+#define SCON_ERR_CONNECTION_REFUSED                     (SCON_INTERNAL_ERR_BASE - 38)
+#define SCON_ERR_COMM_FAILURE                           (SCON_INTERNAL_ERR_BASE - 39)
+#define SCON_ERR_CONFIG_NOT_SUPPORTED                   (SCON_INTERNAL_ERR_BASE - 40)
+#define SCON_ERR_WOULD_BLOCK                            (SCON_INTERNAL_ERR_BASE - 41)
+#define SCON_ERR_PMIXINIT_FAILED                        (SCON_INTERNAL_ERR_BASE - 42)
+#define SCON_ERR_PMIXGET_FAILED                         (SCON_INTERNAL_ERR_BASE - 43)
+#define SCON_ERR_CREATE_XCAST_SEND_FAIL                 (SCON_INTERNAL_ERR_BASE - 44)
+
 
 #define SCON_ERROR_LOG(r)                                           \
  do {                                                               \

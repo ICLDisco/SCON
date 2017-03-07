@@ -114,9 +114,11 @@ am__aclocal_m4_deps = $(top_srcdir)/config/c_get_alignment.m4 \
 	$(top_srcdir)/config/scon_check_compiler_version.m4 \
 	$(top_srcdir)/config/scon_check_icc.m4 \
 	$(top_srcdir)/config/scon_check_ident.m4 \
+	$(top_srcdir)/config/scon_check_os_flavors.m4 \
 	$(top_srcdir)/config/scon_check_package.m4 \
 	$(top_srcdir)/config/scon_check_vendor.m4 \
 	$(top_srcdir)/config/scon_check_visibility.m4 \
+	$(top_srcdir)/config/scon_check_withdir.m4 \
 	$(top_srcdir)/config/scon_config_subdir.m4 \
 	$(top_srcdir)/config/scon_config_subdir_args.m4 \
 	$(top_srcdir)/config/scon_ensure_contains_optflags.m4 \
@@ -126,12 +128,20 @@ am__aclocal_m4_deps = $(top_srcdir)/config/c_get_alignment.m4 \
 	$(top_srcdir)/config/scon_search_libs.m4 \
 	$(top_srcdir)/config/scon_setup_cc.m4 \
 	$(top_srcdir)/config/scon_setup_libevent.m4 \
+	$(top_srcdir)/config/scon_setup_libpmix.m4 \
 	$(top_srcdir)/config/autogen_found_items.m4 \
-	$(top_srcdir)/src/mca/pdl/configure.m4 \
-	$(top_srcdir)/src/mca/pinstalldirs/configure.m4 \
-	$(top_srcdir)/src/mca/pdl/pdlopen/configure.m4 \
-	$(top_srcdir)/src/mca/pinstalldirs/config/configure.m4 \
-	$(top_srcdir)/src/mca/pinstalldirs/env/configure.m4 \
+	$(top_srcdir)/src/mca/sdl/configure.m4 \
+	$(top_srcdir)/src/mca/sinstalldirs/configure.m4 \
+	$(top_srcdir)/src/mca/if/bsdx_ipv4/configure.m4 \
+	$(top_srcdir)/src/mca/if/bsdx_ipv6/configure.m4 \
+	$(top_srcdir)/src/mca/if/linux_ipv6/configure.m4 \
+	$(top_srcdir)/src/mca/if/posix_ipv4/configure.m4 \
+	$(top_srcdir)/src/mca/if/solaris_ipv6/configure.m4 \
+	$(top_srcdir)/src/mca/pt2pt/tcp/configure.m4 \
+	$(top_srcdir)/src/mca/sdl/sdlopen/configure.m4 \
+	$(top_srcdir)/src/mca/sdl/slibltdl/configure.m4 \
+	$(top_srcdir)/src/mca/sinstalldirs/config/configure.m4 \
+	$(top_srcdir)/src/mca/sinstalldirs/env/configure.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -281,27 +291,20 @@ MCA_scon_collectives_DSO_SUBDIRS = @MCA_scon_collectives_DSO_SUBDIRS@
 MCA_scon_collectives_STATIC_COMPONENTS = @MCA_scon_collectives_STATIC_COMPONENTS@
 MCA_scon_collectives_STATIC_LTLIBS = @MCA_scon_collectives_STATIC_LTLIBS@
 MCA_scon_collectives_STATIC_SUBDIRS = @MCA_scon_collectives_STATIC_SUBDIRS@
-MCA_scon_common_ALL_COMPONENTS = @MCA_scon_common_ALL_COMPONENTS@
-MCA_scon_common_ALL_SUBDIRS = @MCA_scon_common_ALL_SUBDIRS@
-MCA_scon_common_DSO_COMPONENTS = @MCA_scon_common_DSO_COMPONENTS@
-MCA_scon_common_DSO_SUBDIRS = @MCA_scon_common_DSO_SUBDIRS@
-MCA_scon_common_STATIC_COMPONENTS = @MCA_scon_common_STATIC_COMPONENTS@
-MCA_scon_common_STATIC_LTLIBS = @MCA_scon_common_STATIC_LTLIBS@
-MCA_scon_common_STATIC_SUBDIRS = @MCA_scon_common_STATIC_SUBDIRS@
-MCA_scon_pdl_ALL_COMPONENTS = @MCA_scon_pdl_ALL_COMPONENTS@
-MCA_scon_pdl_ALL_SUBDIRS = @MCA_scon_pdl_ALL_SUBDIRS@
-MCA_scon_pdl_DSO_COMPONENTS = @MCA_scon_pdl_DSO_COMPONENTS@
-MCA_scon_pdl_DSO_SUBDIRS = @MCA_scon_pdl_DSO_SUBDIRS@
-MCA_scon_pdl_STATIC_COMPONENTS = @MCA_scon_pdl_STATIC_COMPONENTS@
-MCA_scon_pdl_STATIC_LTLIBS = @MCA_scon_pdl_STATIC_LTLIBS@
-MCA_scon_pdl_STATIC_SUBDIRS = @MCA_scon_pdl_STATIC_SUBDIRS@
-MCA_scon_pinstalldirs_ALL_COMPONENTS = @MCA_scon_pinstalldirs_ALL_COMPONENTS@
-MCA_scon_pinstalldirs_ALL_SUBDIRS = @MCA_scon_pinstalldirs_ALL_SUBDIRS@
-MCA_scon_pinstalldirs_DSO_COMPONENTS = @MCA_scon_pinstalldirs_DSO_COMPONENTS@
-MCA_scon_pinstalldirs_DSO_SUBDIRS = @MCA_scon_pinstalldirs_DSO_SUBDIRS@
-MCA_scon_pinstalldirs_STATIC_COMPONENTS = @MCA_scon_pinstalldirs_STATIC_COMPONENTS@
-MCA_scon_pinstalldirs_STATIC_LTLIBS = @MCA_scon_pinstalldirs_STATIC_LTLIBS@
-MCA_scon_pinstalldirs_STATIC_SUBDIRS = @MCA_scon_pinstalldirs_STATIC_SUBDIRS@
+MCA_scon_comm_ALL_COMPONENTS = @MCA_scon_comm_ALL_COMPONENTS@
+MCA_scon_comm_ALL_SUBDIRS = @MCA_scon_comm_ALL_SUBDIRS@
+MCA_scon_comm_DSO_COMPONENTS = @MCA_scon_comm_DSO_COMPONENTS@
+MCA_scon_comm_DSO_SUBDIRS = @MCA_scon_comm_DSO_SUBDIRS@
+MCA_scon_comm_STATIC_COMPONENTS = @MCA_scon_comm_STATIC_COMPONENTS@
+MCA_scon_comm_STATIC_LTLIBS = @MCA_scon_comm_STATIC_LTLIBS@
+MCA_scon_comm_STATIC_SUBDIRS = @MCA_scon_comm_STATIC_SUBDIRS@
+MCA_scon_if_ALL_COMPONENTS = @MCA_scon_if_ALL_COMPONENTS@
+MCA_scon_if_ALL_SUBDIRS = @MCA_scon_if_ALL_SUBDIRS@
+MCA_scon_if_DSO_COMPONENTS = @MCA_scon_if_DSO_COMPONENTS@
+MCA_scon_if_DSO_SUBDIRS = @MCA_scon_if_DSO_SUBDIRS@
+MCA_scon_if_STATIC_COMPONENTS = @MCA_scon_if_STATIC_COMPONENTS@
+MCA_scon_if_STATIC_LTLIBS = @MCA_scon_if_STATIC_LTLIBS@
+MCA_scon_if_STATIC_SUBDIRS = @MCA_scon_if_STATIC_SUBDIRS@
 MCA_scon_pt2pt_ALL_COMPONENTS = @MCA_scon_pt2pt_ALL_COMPONENTS@
 MCA_scon_pt2pt_ALL_SUBDIRS = @MCA_scon_pt2pt_ALL_SUBDIRS@
 MCA_scon_pt2pt_DSO_COMPONENTS = @MCA_scon_pt2pt_DSO_COMPONENTS@
@@ -309,6 +312,20 @@ MCA_scon_pt2pt_DSO_SUBDIRS = @MCA_scon_pt2pt_DSO_SUBDIRS@
 MCA_scon_pt2pt_STATIC_COMPONENTS = @MCA_scon_pt2pt_STATIC_COMPONENTS@
 MCA_scon_pt2pt_STATIC_LTLIBS = @MCA_scon_pt2pt_STATIC_LTLIBS@
 MCA_scon_pt2pt_STATIC_SUBDIRS = @MCA_scon_pt2pt_STATIC_SUBDIRS@
+MCA_scon_sdl_ALL_COMPONENTS = @MCA_scon_sdl_ALL_COMPONENTS@
+MCA_scon_sdl_ALL_SUBDIRS = @MCA_scon_sdl_ALL_SUBDIRS@
+MCA_scon_sdl_DSO_COMPONENTS = @MCA_scon_sdl_DSO_COMPONENTS@
+MCA_scon_sdl_DSO_SUBDIRS = @MCA_scon_sdl_DSO_SUBDIRS@
+MCA_scon_sdl_STATIC_COMPONENTS = @MCA_scon_sdl_STATIC_COMPONENTS@
+MCA_scon_sdl_STATIC_LTLIBS = @MCA_scon_sdl_STATIC_LTLIBS@
+MCA_scon_sdl_STATIC_SUBDIRS = @MCA_scon_sdl_STATIC_SUBDIRS@
+MCA_scon_sinstalldirs_ALL_COMPONENTS = @MCA_scon_sinstalldirs_ALL_COMPONENTS@
+MCA_scon_sinstalldirs_ALL_SUBDIRS = @MCA_scon_sinstalldirs_ALL_SUBDIRS@
+MCA_scon_sinstalldirs_DSO_COMPONENTS = @MCA_scon_sinstalldirs_DSO_COMPONENTS@
+MCA_scon_sinstalldirs_DSO_SUBDIRS = @MCA_scon_sinstalldirs_DSO_SUBDIRS@
+MCA_scon_sinstalldirs_STATIC_COMPONENTS = @MCA_scon_sinstalldirs_STATIC_COMPONENTS@
+MCA_scon_sinstalldirs_STATIC_LTLIBS = @MCA_scon_sinstalldirs_STATIC_LTLIBS@
+MCA_scon_sinstalldirs_STATIC_SUBDIRS = @MCA_scon_sinstalldirs_STATIC_SUBDIRS@
 MCA_scon_topology_ALL_COMPONENTS = @MCA_scon_topology_ALL_COMPONENTS@
 MCA_scon_topology_ALL_SUBDIRS = @MCA_scon_topology_ALL_SUBDIRS@
 MCA_scon_topology_DSO_COMPONENTS = @MCA_scon_topology_DSO_COMPONENTS@
@@ -397,7 +414,10 @@ program_transform_name = @program_transform_name@
 psdir = @psdir@
 sbindir = @sbindir@
 scon_have_pandoc = @scon_have_pandoc@
-scon_pdl_pdlopen_LIBS = @scon_pdl_pdlopen_LIBS@
+scon_sdl_sdlopen_LIBS = @scon_sdl_sdlopen_LIBS@
+scon_sdl_slibltdl_CPPFLAGS = @scon_sdl_slibltdl_CPPFLAGS@
+scon_sdl_slibltdl_LDFLAGS = @scon_sdl_slibltdl_LDFLAGS@
+scon_sdl_slibltdl_LIBS = @scon_sdl_slibltdl_LIBS@
 scondatadir = @scondatadir@
 sconincludedir = @sconincludedir@
 sconlibdir = @sconlibdir@

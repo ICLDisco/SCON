@@ -8,8 +8,8 @@
  * $HEADER$
  */
 
-#include <src/include/scon_config.h>
-#include "src/include/types.h"
+#include <scon_config.h>
+#include <scon_types.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -24,16 +24,9 @@
 
 #include "src/runtime/scon_progress_threads.h"
 
-/* define a thread object */
-#define SCON_THREAD_CANCELLED   ((void*)1);
-typedef void *(*scon_thread_fn_t) (scon_object_t *);
 
-typedef struct scon_thread_t {
-    scon_object_t super;
-    scon_thread_fn_t t_run;
-    void* t_arg;
-    pthread_t t_handle;
-} scon_thread_t;
+
+
 static void ptcon(scon_thread_t *p)
 {
     p->t_arg = NULL;

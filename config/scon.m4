@@ -289,14 +289,14 @@ AC_DEFUN([SCON_SETUP_CORE],[
     scon_show_title "Header file tests"
 
     AC_CHECK_HEADERS([arpa/inet.h \
-                      fcntl.h inttypes.h libgen.h \
-                      netinet/in.h \
+                      fcntl.h ifaddrs.h inttypes.h libgen.h \
+                      net/if.h net/uio.h netinet/in.h \
                       stdint.h stddef.h \
                       stdlib.h string.h strings.h \
-                      sys/param.h \
-                      sys/select.h sys/socket.h \
+                      sys/ioctl.h sys/param.h \
+                      sys/select.h sys/socket.h sys/sockio.h \
                       stdarg.h sys/stat.h sys/time.h \
-                      sys/types.h sys/un.h sys/uio.h net/uio.h \
+                      sys/types.h sys/un.h sys/uio.h \
                       sys/wait.h syslog.h \
                       time.h unistd.h dirent.h \
                       crt_externs.h signal.h \
@@ -585,11 +585,11 @@ AC_DEFUN([SCON_SETUP_CORE],[
     SCON_LIBEVENT_CONFIG
 
     ##################################
-    # HWLOC
+    # PMIx
     ##################################
-    scon_show_title "HWLOC"
+    scon_show_title "PMIx"
 
-    SCON_HWLOC_CONFIG
+    SCON_PMIX_CONFIG
 
     ##################################
     # MCA
@@ -651,6 +651,7 @@ AC_DEFUN([SCON_SETUP_CORE],[
         scon_config_prefix[src/Makefile]
         scon_config_prefix[src/util/keyval/Makefile]
         scon_config_prefix[src/mca/base/Makefile]
+        scon_config_prefix[src/test/Makefile]
         )
 
     # Success
@@ -662,7 +663,7 @@ AC_DEFUN([SCON_DEFINE_ARGS],[
     AC_MSG_CHECKING([if embedded mode is enabled])
     AC_ARG_ENABLE([embedded-mode],
         [AC_HELP_STRING([--enable-embedded-mode],
-                [Using --enable-embedded-mode causes PMIx to skip a few configure checks and install nothing.  It should only be used when building PMIx within the scope of a larger package.])])
+                [Using --enable-embedded-mode causes SCON to skip a few configure checks and install nothing.  It should only be used when building SCON within the scope of a larger package.])])
     AS_IF([test ! -z "$enable_embedded_mode" && test "$enable_embedded_mode" = "yes"],
           [scon_mode=embedded
            AC_MSG_RESULT([yes])],
@@ -672,7 +673,7 @@ AC_DEFUN([SCON_DEFINE_ARGS],[
     # Rename symbols?
     AC_ARG_WITH([scon-symbol-rename],
                 AC_HELP_STRING([--with-scon-symbol-rename=FILE],
-                               [Provide an include file that contains directives to rename PMIx symbols]))
+                               [Provide an include file that contains directives to rename SCON symbols]))
     AS_IF([test ! -z "$with_scon_symbol_rename" && test "$with_scon_symbol_rename" != "yes"],
           [scon_symbol_rename="$with_scon_symbol_rename"],
           [scon_symbol_rename=\"src/include/rename.h\"])
@@ -708,7 +709,7 @@ fi
 AC_MSG_CHECKING([if want developer-level compiler pickyness])
 AC_ARG_ENABLE(picky,
     AC_HELP_STRING([--enable-picky],
-                   [enable developer-level compiler pickyness when building PMIx (default: disabled)]))
+                   [enable developer-level compiler pickyness when building SCON (default: disabled)]))
 if test "$enable_picky" = "yes"; then
     AC_MSG_RESULT([yes])
     WANT_PICKY_COMPILER=1
@@ -730,7 +731,7 @@ fi
 AC_MSG_CHECKING([if want developer-level debugging code])
 AC_ARG_ENABLE(debug,
     AC_HELP_STRING([--enable-debug],
-                   [enable developer-level debugging code (not for general PMIx users!) (default: disabled)]))
+                   [enable developer-level debugging code (not for general SCON users!) (default: disabled)]))
 if test "$enable_debug" = "yes"; then
     AC_MSG_RESULT([yes])
     WANT_DEBUG=1
@@ -761,7 +762,7 @@ AC_ARG_ENABLE(debug-symbols,
 AC_MSG_CHECKING([if want to install project-internal header files])
 AC_ARG_WITH(devel-headers,
     AC_HELP_STRING([--with-devel-headers],
-                   [normal PMIx users/applications do not need this (scon.h and friends are ALWAYS installed).  Developer headers are only necessary for authors doing deeper integration (default: disabled).]))
+                   [normal SCON users/applications do not need this (scon.h and friends are ALWAYS installed).  Developer headers are only necessary for authors doing deeper integration (default: disabled).]))
 if test "$with_devel_headers" = "yes"; then
     AC_MSG_RESULT([yes])
     WANT_INSTALL_HEADERS=1
@@ -830,7 +831,7 @@ AM_CONDITIONAL([WANT_DSTORE],[test "x$enable_dstore" = "xyes"])
 AC_MSG_CHECKING([if want ident string])
 AC_ARG_WITH([ident-string],
             [AC_HELP_STRING([--with-ident-string=STRING],
-                            [Embed an ident string into PMIx object files])])
+                            [Embed an ident string into SCON object files])])
 if test "$with_ident_string" = "" || test "$with_ident_string" = "no"; then
     with_ident_string="%VERSION%"
 fi
@@ -872,7 +873,7 @@ AC_DEFINE_UNQUOTED([SCON_ENABLE_TIMING], [$WANT_TIMING],
 AC_MSG_CHECKING([if want to head developer-level header files])
 AC_ARG_WITH(devel-headers,
               AC_HELP_STRING([--with-devel-headers],
-                             [also install developer-level header files (only for internal PMIx developers, default: disabled)]))
+                             [also install developer-level header files (only for internal SCON developers, default: disabled)]))
 if test "$with_devel_headers" = "yes"; then
     AC_MSG_RESULT([yes])
     WANT_INSTALL_HEADERS=1
@@ -889,7 +890,6 @@ AM_CONDITIONAL([WANT_INSTALL_HEADERS], [test $WANT_INSTALL_HEADERS -eq 1])
 AC_DEFUN([SCON_DO_AM_CONDITIONALS],[
     AS_IF([test "$scon_did_am_conditionals" != "yes"],[
         AM_CONDITIONAL([SCON_EMBEDDED_MODE], [test "x$scon_mode" = "xembedded"])
-        AM_CONDITIONAL([SCON_TESTS_EXAMPLES], [test "x$scon_tests" = "xyes"])
         AM_CONDITIONAL([SCON_COMPILE_TIMING], [test "$WANT_TIMING" = "1"])
         AM_CONDITIONAL([SCON_WANT_MUNGE], [test "$scon_munge_support" = "1"])
         AM_CONDITIONAL([SCON_WANT_SASL], [test "$scon_sasl_support" = "1"])

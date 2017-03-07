@@ -7,15 +7,15 @@
 # $HEADER$
 #
 # main library setup
-noinst_LTLIBRARIES = libmca_scon_pt2pt.la
-libmca_scon_pt2pt_la_SOURCES =
+noinst_LTLIBRARIES = libmca_pt2pt.la
+libmca_pt2pt_la_SOURCES =
 
 # pkgdata setup
 dist_scondata_DATA =
 
 # local files
 headers = pt2pt.h
-libmca_scon_pt2pt_la_SOURCES += $(headers)
+libmca_pt2pt_la_SOURCES += $(headers)
 
 # Conditionally install the header files
 if WANT_INSTALL_HEADERS

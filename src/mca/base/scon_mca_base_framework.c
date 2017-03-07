@@ -137,7 +137,7 @@ int scon_mca_base_framework_register (struct scon_mca_base_framework_t *framewor
     return SCON_SUCCESS;
 }
 
-int scon_mca_base_framework_open (struct scon_mca_base_framework_t *framework,
+SCON_EXPORT int scon_mca_base_framework_open (struct scon_mca_base_framework_t *framework,
                              scon_mca_base_open_flag_t flags) {
     int ret;
 

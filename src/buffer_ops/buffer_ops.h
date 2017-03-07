@@ -31,9 +31,8 @@
 #ifndef SCON_BFROP_H_
 #define SCON_BFROP_H_
 
-#include <src/include/scon_config.h>
-
-#include <src/include/types.h>
+#include <scon_config.h>
+#include <scon_types.h>
 
 //#include "src/include/scon_globals.h"
 #include "scon_common.h"
@@ -50,7 +49,10 @@ void scon_value_load(scon_value_t *v, void *data,
 scon_status_t scon_value_unload(scon_value_t *kv, void **data,
                                               size_t *sz, scon_data_type_t type);
 bool scon_value_cmp(scon_value_t *p, scon_value_t *p1);
-
+int scon_buffer_unload(scon_buffer_t *buffer, void **payload,
+                       int32_t *bytes_used);
+int scon_buffer_load(scon_buffer_t *buffer, void *payload,
+                     int32_t bytes_used);
 
 
 #define SCON_LOAD_BUFFER(b, d, s)                       \
@@ -309,8 +311,9 @@ struct scon_bfrop_t {
 };
 typedef struct scon_bfrop_t scon_bfrop_t;
 
-extern scon_bfrop_t scon_bfrop;  /* holds bfrop function pointers */
+SCON_EXPORT extern scon_bfrop_t scon_bfrop;  /* holds bfrop function pointers */
 
+#define SCON_STD_CTR  SCON_UINT16
 END_C_DECLS
 
 #endif /* SCON_BFROP_H */

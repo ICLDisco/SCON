@@ -43,9 +43,6 @@ EXTRA_DIST = AUTHORS README INSTALL VERSION LICENSE autogen.pl
 
 #endif
 
-#if SCON_TESTS_EXAMPLES
-#SUBDIRS += . test examples
-#endif
 
 if WANT_INSTALL_HEADERS
 scondir = $(sconincludedir)/$(subdir)

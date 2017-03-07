@@ -19,13 +19,17 @@
 #include "src/util/show_help.h"
 #include "src/mca/base/base.h"
 #include "src/mca/base/scon_mca_base_var.h"
-#include "src/mca/pinstalldirs/base/base.h"
-#include "src/mca/common/base/base.h"
+#include "src/mca/sinstalldirs/base/base.h"
+#include "src/mca/comm/base/base.h"
 #include "src/mca/collectives/base/base.h"
+#include "src/mca/topology/base/base.h"
+#include "src/mca/if/base/base.h"
 #include "src/mca/pt2pt/base/base.h"
 #include "src/util/error.h"
 #include "src/util/keyval_parse.h"
 #include "src/runtime/scon_progress_threads.h"
+#include "src/buffer_ops/buffer_ops.h"
+#include "src/runtime/scon_rte.h"
 
 #if SCON_CC_USE_PRAGMA_IDENT
 #pragma ident SCON_IDENT_STRING
@@ -36,17 +40,19 @@ const char scon_version_string[] = SCON_IDENT_STRING;
 
 int scon_initialized = 0;
 bool scon_init_called = false;
-scon_globals_t scon_globals = {0};
+SCON_EXPORT scon_globals_t scon_globals = {0};
 bool scon_finalizing = false;
 
-int scon_init(scon_info_t info[],
+scon_proc_t scon_proc_wildcard = {SCON_JOBNAME_WILDCARD, SCON_RANK_WILDCARD};
+
+SCON_EXPORT scon_status_t scon_init(scon_info_t info[],
                  size_t ninfo)
 {
     int ret, debug_level;
-    char *error = NULL, *evar;
-    char *param;
-    size_t n;
-
+    char *error = NULL, *evar, *nspace, *rank_evar;
+    size_t n, sz;
+    uint32_t *nmembers;
+    scon_proc_t *me;
     if( ++scon_initialized != 1 ) {
         if( scon_initialized < 1 ) {
             return SCON_ERROR;
@@ -68,21 +74,27 @@ int scon_init(scon_info_t info[],
 
     /* initialize the output system */
     if (!scon_output_init()) {
+        fprintf(stderr, "scon_output_init() failed -- process will likely abort (%s:%d, returned %d instead of SCON_SUCCESS)\n",
+                __FILE__, __LINE__, ret);
         return SCON_ERROR;
     }
-
+    fprintf(stderr, "scon_output_init() success --  (%s:%d,)\n",
+            __FILE__, __LINE__);
     /* initialize install dirs code */
-    if (SCON_SUCCESS != (ret = scon_mca_base_framework_open(&scon_pinstalldirs_base_framework, 0))) {
-        fprintf(stderr, "scon_pinstalldirs_base_open() failed -- process will likely abort (%s:%d, returned %d instead of SCON_SUCCESS)\n",
+    if (SCON_SUCCESS != (ret = scon_mca_base_framework_open(&scon_sinstalldirs_base_framework, 0))) {
+        fprintf(stderr, "scon_sinstalldirs_base_open() failed -- process will likely abort (%s:%d, returned %d instead of SCON_SUCCESS)\n",
                 __FILE__, __LINE__, ret);
         return ret;
     }
-
+    fprintf(stderr, "scon_sinstalldirs_base_open() success --  (%s:%d,)\n",
+            __FILE__, __LINE__);
     /* initialize the help system */
     scon_show_help_init();
 
+
     /* keyval lex-based parser */
     if (SCON_SUCCESS != (ret = scon_util_keyval_parse_init())) {
+        scon_output(0, "scon_util_keyval_parse_init error!",  __FILE__, __LINE__);
         error = "scon_util_keyval_parse_init";
         goto return_error;
     }
@@ -90,6 +102,13 @@ int scon_init(scon_info_t info[],
     /* Setup the parameter system */
     if (SCON_SUCCESS != (ret = scon_mca_base_var_init())) {
         error = "mca_base_var_init";
+        scon_output(0, "mca_base_var_init error!",  __FILE__, __LINE__);
+        goto return_error;
+    }
+
+    /* register params for scon */
+    if (SCON_SUCCESS != (ret = scon_register_params())) {
+        error = "scon_register_params";
         goto return_error;
     }
 
@@ -104,7 +123,8 @@ int scon_init(scon_info_t info[],
         goto return_error;
     }
     /* setup the globals structure */
-    memset(&scon_globals.myid, 0, sizeof(scon_proc_t));
+  /*  SCON_PROC_CREATE(scon_globals.myid, 1);
+    scon_globals.myid->rank = SCON_RANK_UNDEF;*/
     SCON_CONSTRUCT(&scon_globals.scons, scon_list_t);
     /* get our effective id's */
     scon_globals.uid = geteuid();
@@ -134,23 +154,56 @@ int scon_init(scon_info_t info[],
             goto return_error;
         }
     }
-    /** Open the common framework and select the overall implementation
-        selection of other plugins happen will happen inside the common init call***/
 
-    if (SCON_SUCCESS != (ret = scon_mca_base_framework_open(&scon_common_base_framework, 0))) {
-        scon_output_verbose(0, scon_globals.debug_output, "scon_init failed : error = orte_scon_base_open");
-        error = "scon_common_base_open";
+    /* get our identity information - namespace and rank
+    if not provided as envs, user may provide as input in the info array*/
+    if( (NULL != (nspace = getenv("SCON_MY_NAMESPACE"))) &&
+            NULL != ((rank_evar = getenv("SCON_MY_RANK")))) {
+        SCON_PROC_CREATE(scon_globals.myid, 1);
+        strncpy(scon_globals.myid->job_name, nspace, SCON_MAX_NSLEN);
+        scon_globals.myid->rank = strtol(rank_evar, NULL, 10);
+    } else {
+        /* check if the identity information is passed as in info [] param*/
+        if (NULL != info) {
+            for (n=0; n < ninfo; n++) {
+                if (0 == strncmp(SCON_MY_ID, info[n].key, SCON_MAX_KEYLEN)) {
+                    scon_value_unload(&info[n].value, (void**)&me, &sz, SCON_PROC);
+                    scon_globals.myid = me;
+                   // scon_bfrop.copy((void**)&scon_globals.myid, &info[n].value.data.proc, SCON_PROC);
+                    scon_output(0, "found info SCON_MY_ID, set my rank to namespace to %s, my rank to %d",
+                             SCON_PRINT_PROC(SCON_PROC_MY_NAME) );
+                    break;
+                }
+                if (0 == strncmp(SCON_JOB_RANKS, info[n].key, SCON_MAX_KEYLEN)) {
+                    /* TO DO need to use the correct bfrop op*/
+                    nmembers = &scon_globals.num_peers;
+                    scon_value_unload(&info[n].value, (void**)&nmembers, &sz, SCON_UINT32);
+                    //scon_bfrop.copy((void**)&scon_globals.num_peers, &info[n].value.data.uint32, SCON_UINT32);
+                    break;
+                }
+            }
+        }
+    /*    if (SCON_RANK_UNDEF == scon_globals.myid->rank) {
+            error = "scon_cannot_get_my_id";
+            goto return_error;
+        }*/
+    }
+    /** Open the comm framework and select the overall implementation
+        selection of other plugins happen will happen inside the comm init call***/
+    if (SCON_SUCCESS != (ret = scon_mca_base_framework_open(&scon_comm_base_framework, 0))) {
+        scon_output_verbose(0, scon_globals.debug_output, "scon_init failed : error = comm_base_open");
+        error = "scon_comm_base_open";
         goto return_error;
     }
-    if (SCON_SUCCESS != (ret = scon_common_base_select())) {
-        scon_output_verbose(0, scon_globals.debug_output, "scon_init failed : error = orte_scon_base_select");
-        error = "scon_common_base_select";
+    if (SCON_SUCCESS != (ret = scon_comm_base_select())) {
+        scon_output_verbose(0, scon_globals.debug_output, "scon_init failed : error = comm_base_select");
+        error = "scon_comm_base_select";
         goto return_error;
     }
 
-    if (SCON_SUCCESS != (ret = scon_common.init(info, ninfo))) {
-        scon_output_verbose(0, scon_globals.debug_output, "scon_init failed : error = orte_scon_init");
-        error = "scon_common.init";
+    if (SCON_SUCCESS != (ret = scon_comm_module.init(info, ninfo))) {
+        scon_output_verbose(0, scon_globals.debug_output, "scon_init failed : error = scon_comm.init");
+        error = "scon_comm.init";
         goto return_error;
     }
     /* All done */
@@ -158,30 +211,31 @@ int scon_init(scon_info_t info[],
 
 return_error:
     scon_initialized--;
+    scon_output (0, "scon_init:startup:internal failure %s", error);
     scon_show_help( "help-scon-runtime.txt",
                     "scon_init:startup:internal-failure", true,
                     error, ret );
     return ret;
 }
 
-scon_handle_t scon_create(scon_proc_t procs[],
+SCON_EXPORT scon_handle_t scon_create(scon_proc_t procs[],
                           size_t nprocs,
                           scon_info_t info[],
                           size_t ninfo,
                           scon_create_cbfunc_t cbfunc,
                           void *cbdata)
 {
-    return scon_common.create( procs, nprocs, info, ninfo, cbfunc, cbdata);
+    return scon_comm_module.create( procs, nprocs, info, ninfo, cbfunc, cbdata);
 }
 
-scon_status_t scon_get_info (scon_handle_t scon_handle,
+SCON_EXPORT scon_status_t scon_get_info (scon_handle_t scon_handle,
                              scon_info_t **info,
                              size_t *ninfo)
 {
     return SCON_ERR_NOT_IMPLEMENTED;
 }
 
-scon_status_t scon_send_nb (scon_handle_t scon_handle,
+SCON_EXPORT scon_status_t scon_send_nb (scon_handle_t scon_handle,
                             scon_proc_t *peer,
                             scon_buffer_t *buf,
                             scon_msg_tag_t tag,
@@ -190,10 +244,11 @@ scon_status_t scon_send_nb (scon_handle_t scon_handle,
                             scon_info_t info[],
                             size_t ninfo)
 {
-    return scon_pt2pt.send(scon_handle, peer, buf, tag, cbfunc, cbdata, info, ninfo);
+    //return scon_pt2pt.send(scon_handle, peer, buf, tag, cbfunc, cbdata, info, ninfo);
+    return pt2pt_base_api_send_nb(scon_handle, peer, buf, tag, cbfunc, cbdata, info, ninfo);
 }
 
-scon_status_t scon_recv_nb (scon_handle_t scon_handle,
+SCON_EXPORT scon_status_t scon_recv_nb (scon_handle_t scon_handle,
                             scon_proc_t *peer,
                             scon_msg_tag_t tag,
                             bool persistent,
@@ -202,17 +257,18 @@ scon_status_t scon_recv_nb (scon_handle_t scon_handle,
                             scon_info_t info[],
                             size_t ninfo)
 {
-    return scon_pt2pt.recv(scon_handle, peer, tag, persistent, cbfunc, cbdata, info, ninfo);
+   // return scon_pt2pt.recv(scon_handle, peer, tag, persistent, cbfunc, cbdata, info, ninfo);
+    return pt2pt_base_api_recv_nb(scon_handle, peer, tag, persistent, cbfunc, cbdata, info, ninfo);
 }
 
-scon_status_t scon_recv_cancel ( scon_handle_t scon_handle,
+SCON_EXPORT scon_status_t scon_recv_cancel ( scon_handle_t scon_handle,
                                  scon_proc_t *peer,
                                  scon_msg_tag_t tag)
 {
     return SCON_ERR_NOT_IMPLEMENTED;
 }
 
-scon_status_t scon_xcast (scon_handle_t scon_handle,
+SCON_EXPORT scon_status_t scon_xcast (scon_handle_t scon_handle,
                           scon_proc_t procs[],
                           size_t nprocs,
                           scon_buffer_t *buf,
@@ -222,11 +278,11 @@ scon_status_t scon_xcast (scon_handle_t scon_handle,
                           scon_info_t info[],
                           size_t ninfo)
 {
-    return scon_collectives.xcast(scon_handle, procs, nprocs, buf, tag, cbfunc, cbdata,
+    return collectives_base_api_xcast(scon_handle, procs, nprocs, buf, tag, cbfunc, cbdata,
                             info, ninfo);
 }
 
-scon_status_t scon_barrier(scon_handle_t scon_handle,
+SCON_EXPORT scon_status_t scon_barrier(scon_handle_t scon_handle,
                            scon_proc_t procs[],
                            size_t nprocs,
                            scon_barrier_cbfunc_t cbfunc,
@@ -234,19 +290,20 @@ scon_status_t scon_barrier(scon_handle_t scon_handle,
                            scon_info_t info[],
                            size_t ninfo)
 {
-    return scon_collectives.barrier(scon_handle, procs, nprocs, cbfunc, cbdata, info, ninfo);
+    return collectives_base_api_barrier(scon_handle, procs, nprocs, cbfunc, cbdata, info, ninfo);
 }
 
-scon_status_t scon_delete(scon_handle_t scon_handle,
+SCON_EXPORT scon_status_t scon_delete(scon_handle_t scon_handle,
                           scon_op_cbfunc_t cbfunc,
                           void *cbdata,
                           scon_info_t info[],
                           size_t ninfo)
 {
-    return scon_common.del(scon_handle, cbfunc, cbdata, info, ninfo);
+    return scon_comm_module.del(scon_handle, cbfunc, cbdata, info, ninfo);
 }
 
-scon_status_t scon_finalize(void)
+SCON_EXPORT scon_status_t scon_finalize(void)
 {
-    return scon_common.finalize();
+    free(scon_globals.myid);
+    return scon_comm_module.finalize();
 }

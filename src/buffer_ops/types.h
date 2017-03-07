@@ -38,7 +38,7 @@
 
 BEGIN_C_DECLS
 
-SCON_CLASS_DECLARATION (scon_buffer_t);
+//SCON_CLASS_DECLARATION (scon_buffer_t);
 SCON_CLASS_DECLARATION(scon_regex_range_t);
 SCON_CLASS_DECLARATION(scon_regex_value_t);
 

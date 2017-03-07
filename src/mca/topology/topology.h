@@ -27,12 +27,27 @@
 #include <unistd.h>
 #endif
 
+#include "src/class/scon_bitmap.h"
 #include "src/class/scon_list.h"
 BEGIN_C_DECLS
 
+/* struct for tracking routing trees */
+typedef struct {
+    scon_list_item_t super;
+    unsigned int my_id;
+    /* bitmap of members that are reachable from here */
+    scon_bitmap_t relatives;
+    unsigned int myparent_id;
+    unsigned int mygrandparent_id;
+    unsigned int mylifeline_id;
+} scon_topo_t;
+SCON_CLASS_DECLARATION(scon_topo_t);
 
-typedef int (*scon_topology_component_start_fn_t)(void);
-typedef void (*scon_topology_component_shutdown_fn_t)(void);
+typedef struct {
+    scon_topo_t my_topo;
+    scon_list_t my_peers;
+} scon_topology_t;
+SCON_CLASS_DECLARATION(scon_topology_t);
 
 //* ******************************************************************** */
 /**
@@ -43,7 +58,7 @@ typedef void (*scon_topology_component_shutdown_fn_t)(void);
  * @retval SCON_SUCCESS Success
  * @retval SCON_ERROR  Error code from whatever was encountered
  */
-typedef int (*scon_topology_module_init_fn_t)(void);
+typedef int (*scon_topology_module_init_fn_t)(scon_topology_t *topo);
 
 /**
  * Finalize the topology module
@@ -59,7 +74,7 @@ typedef int (*scon_topology_module_init_fn_t)(void);
  * @retval SCON_SUCCESS Success
  * @retval SCON_ERROR   An unspecified error occurred
  */
-typedef int (*scon_topology_module_finalize_fn_t)(void);
+typedef int (*scon_topology_module_finalize_fn_t)(scon_topology_t *topo);
 
 
 /*
@@ -69,7 +84,8 @@ typedef int (*scon_topology_module_finalize_fn_t)(void);
  * that wildcards are supported to remove routes from, for example, all
  * procs in a given job
  */
-typedef int (*scon_topology_module_delete_route_fn_t)(scon_proc_t *proc);
+typedef int (*scon_topology_module_delete_route_fn_t)(scon_topology_t *topo,
+                                                      scon_proc_t *proc);
 
 /**
  * Update route table with new information
@@ -88,8 +104,9 @@ typedef int (*scon_topology_module_delete_route_fn_t)(scon_proc_t *proc);
  *                      such functionality
  * @retval SCON_ERROR   An unspecified error occurred
  */
-typedef int (*scon_topology_module_update_route_fn_t)(scon_proc_t *target,
-                                                    scon_proc_t *route);
+typedef int (*scon_topology_module_update_route_fn_t)(scon_topology_t *topo,
+                                                     scon_proc_t *target,
+                                                     scon_proc_t *route);
 
 /**
  * Get the next hop towards the target
@@ -99,7 +116,8 @@ typedef int (*scon_topology_module_update_route_fn_t)(scon_proc_t *target,
  * to the target - it only returns the next hop. This could be the target itself,
  * or it could be an intermediate relay.
  */
-typedef scon_proc_t (*scon_topology_module_get_nexthop_fn_t)(scon_proc_t *target);
+typedef scon_proc_t  (*scon_topology_module_get_nexthop_fn_t)(scon_topology_t *topo,
+                                                             scon_proc_t *target);
 
 /**
  * Initialize the topology for the CON
@@ -108,7 +126,8 @@ typedef scon_proc_t (*scon_topology_module_get_nexthop_fn_t)(scon_proc_t *target
  * at the end of the function, the routes to any other process in the
  * specified SCON-must- be defined (even if it is direct)
  */
-typedef int (*scon_topology_module_init_routes_fn_t)(scon_handle_t scon_handle,
+typedef int (*scon_topology_module_init_routes_fn_t)(scon_topology_t *topo,
+                                                     scon_handle_t scon_handle,
                                                      scon_buffer_t *topo_map);
 
 /**
@@ -121,7 +140,8 @@ typedef int (*scon_topology_module_init_routes_fn_t)(scon_handle_t scon_handle,
  * removing that route from the routing table, or could - in the case
  * of a "lifeline" connection - result in teardown of the SCON
  */
-typedef int (*scon_topology_module_route_lost_fn_t)(const scon_proc_t *route);
+typedef int (*scon_topology_module_route_lost_fn_t)(scon_topology_t *topo,
+                                                    const scon_proc_t *route);
 
 /*
  * Is this route defined?
@@ -135,23 +155,16 @@ typedef int (*scon_topology_module_route_lost_fn_t)(const scon_proc_t *route);
  * In some cases, though, we truly -do- need to know if a route was
  * specifically defined.
  */
-typedef bool (*scon_topology_module_route_is_defined_fn_t)(const scon_proc_t *target);
-
-/**
- * Get wireup data for daemons
- *
- * Add whatever routing data
- * this module requires to allow inter-process messaging.
- */
-typedef int (*scon_topology_module_get_wireup_info_fn_t)(scon_buffer_t *buf);
+typedef bool (*scon_topology_module_route_is_defined_fn_t)(scon_topology_t *topo,
+                                                           const scon_proc_t *target);
 
 /*
  * Update the module's routing plan
  *
  *
  */
-typedef void (*scon_topology_module_update_topology_fn_t)(void);
-
+typedef void (*scon_topology_module_update_topology_fn_t)(scon_topology_t *topo,
+                                                          int num_nodes);
 /*
  * Get the routing list for an xcast collective
  *
@@ -159,7 +172,8 @@ typedef void (*scon_topology_module_update_topology_fn_t)(void);
  * the collectives framework will know who to send xcast to
  * next
  */
-typedef void (*scon_topology_module_get_routing_list_fn_t)(scon_list_t *coll);
+typedef void (*scon_topology_module_get_routing_list_fn_t)(scon_topology_t *topo,
+                                                           scon_list_t *coll);
 
 /*
  * Set lifeline process
@@ -168,14 +182,15 @@ typedef void (*scon_topology_module_get_routing_list_fn_t)(scon_list_t *coll);
  * that process be lost, the errmgr will be called, possibly resulting
  * in termination of the process and job.
  */
-typedef int (*scon_topology_module_set_lifeline_fn_t)(scon_proc_t *proc);
+typedef int (*scon_topology_module_set_lifeline_fn_t)(scon_topology_t *topo,
+                                                      scon_proc_t *proc);
 
 /*
  * Get the number of routes supported by this process
  *
  * Returns the size of the routing tree using an O(1) function
  */
-typedef size_t (*scon_topology_module_num_routes_fn_t)(void);
+typedef size_t (*scon_topology_module_num_routes_fn_t)(scon_topology_t *topo);
 
 
 /* ******************************************************************** */
@@ -188,8 +203,8 @@ typedef size_t (*scon_topology_module_num_routes_fn_t)(void);
  * instance of this module, scon_topology, provices an interface into the
  * active topology interface.
  */
-struct scon_topology_module_t {
-    /** Startup/shutdown the communication system and clean up resources */
+struct scon_topology_module_api_1_0_0_t {
+    /** Startup/shutdown the  topology system and clean up resources */
     scon_topology_module_init_fn_t                    initialize;
     scon_topology_module_finalize_fn_t                finalize;
     /* API functions */
@@ -202,17 +217,25 @@ struct scon_topology_module_t {
     scon_topology_module_set_lifeline_fn_t            set_lifeline;
     scon_topology_module_update_topology_fn_t         update_topology;
     scon_topology_module_get_routing_list_fn_t        get_routing_list;
-    scon_topology_module_get_wireup_info_fn_t         get_wireup_info;
     scon_topology_module_num_routes_fn_t              num_routes;
+
 };
 /** Convenience typedef */
-typedef struct scon_topology_module_t_1_0_0_t  scon_topology_module_t_1_0_0_t;
-typedef struct scon_topology_module_t_1_0_0_t  scon_topology_module_t;
+typedef struct scon_topology_module_api_1_0_0_t  scon_topology_module_api_1_0_0_t;
+typedef struct scon_topology_module_api_1_0_0_t  scon_topology_module_api_t;
 
-/** topology instance  */
- extern scon_topology_module_t *scon_topology;
+struct scon_topology_module_1_0_0_t {
+    scon_topology_module_api_t                        api;
+    scon_topology_t                                   topology;
+};
+/** Convenience typedef */
+typedef struct scon_topology_module_1_0_0_t  scon_topology_module_1_0_0_t;
+typedef struct scon_topology_module_1_0_0_t  scon_topology_module_t;
 
-
+/**
+ * topology component specific functions
+ */
+typedef scon_topology_module_t* (*scon_mca_topology_get_module_fn_t) (void);
 
 /**
  * topology component definition
@@ -222,13 +245,12 @@ struct scon_topology_base_component_1_0_0_t {
     scon_mca_base_component_t                                  base_version;
     /** MCA base data */
     scon_mca_base_component_data_t                             base_data;
-    scon_topology_component_start_fn_t                         start;
-    scon_topology_component_shutdown_fn_t                      shutdown;
     /** Default priority */
     int priority;
+    /** get module */
+    scon_mca_topology_get_module_fn_t           get_module;
 };
-typedef struct scon_topology_component_1_0_0_t  scon_topology_component_1_0_0_t;
-typedef struct scon_topology_component_1_0_0_t  scon_topology_component_t;
+typedef struct scon_topology_base_component_1_0_0_t  scon_topology_component_t;
 
 /**
  * Macro for use in components that are of type common

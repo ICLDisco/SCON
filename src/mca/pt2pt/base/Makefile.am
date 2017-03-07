@@ -12,6 +12,9 @@
 headers += \
 	base/base.h
 
-libmca_scon_pt2pt_la_SOURCES += \
+libmca_pt2pt_la_SOURCES += \
         base/pt2pt_base_component.c\
-        base/pt2pt_base_select.c
+        base/pt2pt_base_select.c \
+		base/pt2pt_base_stubs.c\
+		base/pt2pt_base_recv_msg_handlers.c\
+		base/pt2pt_base_contact.c

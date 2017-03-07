@@ -48,8 +48,6 @@ const char* SCON_Error_string(scon_status_t errnum)
         return "NOT-FOUND";
     case SCON_ERR_INVALID_SIZE:
         return "INVALID-SIZE";
-    case SCON_ERR_INVALID_KEYVALP:
-        return "INVALID-KEYVAL";
     case SCON_ERR_INVALID_NUM_PARSED:
         return "INVALID-NUM-PARSED";
 
@@ -127,6 +125,10 @@ const char* SCON_Error_string(scon_status_t errnum)
         return "SCON_ERR_PERM";
     case SCON_SUCCESS:
         return "SUCCESS";
+    case SCON_ERR_NETWORK_NOT_PARSEABLE:
+        return "NETWORK_NOT_PARSEABLE";
+    case SCON_ERR_WOULD_BLOCK:
+        return "OPERATION_WOULD_BLOCK";
     default:
         return "ERROR STRING NOT FOUND";
     }

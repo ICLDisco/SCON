@@ -20,9 +20,9 @@
 #ifndef SCON_GLOBALS_H
 #define SCON_GLOBALS_H
 
-#include <src/include/scon_config.h>
+#include <scon_config.h>
 
-#include <src/include/types.h>
+#include <scon_types.h>
 
 #include <unistd.h>
 #ifdef HAVE_SYS_TYPES_H
@@ -40,22 +40,34 @@ BEGIN_C_DECLS
 #define SCON_MAX_CRED_SIZE      131072              // set max at 128kbytes
 #define SCON_MAX_ERR_CONSTANT   INT_MIN
 
-
 /****    GLOBAL STORAGE    ****/
 /* define a global construct that includes values that must be shared
  * between various parts of the code library. */
 typedef struct {
     int init_cntr;                       // #times someone called Init - #times called Finalize
-    scon_proc_t myid;
+    scon_proc_t *myid;                   // my id
+    char *my_uri;                        // my complete address  expressed as uri ( my proc name, my network address ip or fabrics)
     uid_t uid;                           // my effective uid
     gid_t gid;                           // my effective gid
-    scon_event_base_t *evbase;
-    bool external_evbase;
-    int debug_output;
-    scon_list_t scons;                 // list of scons that this process is a member of
+    unsigned int num_peers;              // number of peer processes in my job
+    scon_event_base_t *evbase;           // the global event base
+    bool external_evbase;                // if we are bound to an external event vase
+    int debug_output;                    // the global debug level
+    scon_list_t scons;                   // list of scons that this process is a member of
 } scon_globals_t;
-extern scon_globals_t scon_globals;
+SCON_EXPORT extern scon_globals_t scon_globals;
+
+SCON_EXPORT extern scon_proc_t scon_proc_wildcard;
+
+#define SCON_PROC_MY_NAME       (scon_globals.myid)
+#define SCON_PROC_WILDCARD      (&scon_proc_wildcard)
+#define SCON_JOB_SIZE          (scon_globals.num_peers)
+/* max no of scons for a process */
+#define MAX_SCONS 10
+/* lets make 0 to indicate non existent scon for legacy reasons*/
+#define SCON_HANDLE_INVALID        0
+#define SCON_HANDLE_NEW            0XFFFFFFFE
+#define SCON_INDEX_UNDEFINED       0xFFFFFFFF
 
 END_C_DECLS
-
 #endif /* SCON_GLOBALS_H */

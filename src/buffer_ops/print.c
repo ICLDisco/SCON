@@ -34,7 +34,7 @@
 #include "src/include/scon_globals.h"
 #include "src/buffer_ops/internal.h"
 #include "src/util/output.h"
-
+#include "src/util/name_fns.h"
  scon_status_t scon_bfrop_print(char **output, char *prefix, void *src, scon_data_type_t type)
  {
     scon_bfrop_type_info_t *info;
@@ -764,7 +764,6 @@ scon_status_t scon_bfrop_print_status(char **output, char *prefix,
  {
     char *prefx;
     int rc;
-
     /* deal with NULL prefix */
     if (NULL == prefix) {
         if (0 > asprintf(&prefx, " ")) {
@@ -868,9 +867,11 @@ scon_status_t scon_bfrop_print_status(char **output, char *prefix,
         case SCON_PROC:
         if (NULL == src->data.proc) {
             rc = asprintf(output, "%sSCON_VALUE: Data type: SCON_PROC\tNULL", prefx);
+            scon_output(0, "print proc input is null, printing output=%s", output);
         } else {
             rc = asprintf(output, "%sSCON_VALUE: Data type: SCON_PROC\t%s:%lu",
                           prefx, src->data.proc->job_name, (unsigned long)src->data.proc->rank);
+            scon_output(0, "print proc: printing it as output=%s", output);
         }
         break;
         case SCON_BYTE_OBJECT:
@@ -940,10 +941,11 @@ scon_status_t scon_bfrop_print_proc(char **output, char *prefix,
 {
     char *prefx;
     int rc;
-
+    scon_output(0, "scon_bfrop_print_proc");
     /* deal with NULL prefix */
     if (NULL == prefix) {
         if (0 > asprintf(&prefx, " ")) {
+            scon_output(0, "scon_bfrop_print_proc returning SCON_ERR_NOMEM");
             return SCON_ERR_NOMEM;
         }
     } else {
@@ -968,14 +970,9 @@ scon_status_t scon_bfrop_print_proc(char **output, char *prefix,
         free(prefx);
     }
     if (0 > rc) {
+        scon_output(0, "scon_bfrop_print_proc returning SCON_ERR_NOMEM");
         return SCON_ERR_NOMEM;
     }
-    return SCON_SUCCESS;
-}
-#if 0
-scon_status_t scon_bfrop_print_kval(char **output, char *prefix,
-                                    scon_kval_t *src, scon_data_type_t type)
-{
     return SCON_SUCCESS;
 }
 
@@ -1033,7 +1030,7 @@ if (prefx != prefix) {
 
 return SCON_SUCCESS;
 }
-#endif
+
 scon_status_t scon_bfrop_print_bo(char **output, char *prefix,
                                   scon_byte_object_t *src, scon_data_type_t type)
 {
@@ -1119,6 +1116,43 @@ scon_status_t scon_bfrop_print_darray(char **output, char *prefix,
     return SCON_SUCCESS;
 }
 
+int scon_bfrop_print_coll_sig(char **output, char *prefix,
+                              scon_collectives_signature_t *src,
+                              scon_data_type_t type)
+{
+    char *prefx;
+    size_t i;
+    char *tmp, *tmp2;
+
+    /* deal with NULL prefix */
+    if (NULL == prefix) asprintf(&prefx, " ");
+    else prefx = strdup(prefix);
+
+    /* if src is NULL, just print data type and return */
+    if (NULL == src) {
+        asprintf(output, "%sData type: COLLECTIVES_SIG", prefx);
+        free(prefx);
+        return SCON_SUCCESS;
+    }
+
+    if (NULL == src->procs) {
+        asprintf(output, "%s COLLECTIVES_SIG  SeqNumber:%d  Procs: NULL", prefx, src->seq_num);
+        free(prefx);
+        return SCON_SUCCESS;
+    }
+
+    /* there must be at least one proc in the signature */
+    asprintf(&tmp, "%sCOLLECTIVES_SIG  SeqNumber:%d  Procs: ", prefx, src->seq_num);
+
+    for (i=0; i < src->nprocs; i++) {
+        asprintf(&tmp2, "%s%s", tmp, SCON_PRINT_PROC(&src->procs[i]));
+        free(tmp);
+        tmp = tmp2;
+    }
+    *output = tmp;
+    return SCON_SUCCESS;
+}
+
 #if 0
 scon_status_t scon_bfrop_print_query(char **output, char *prefix,
                                      scon_query_t *src, scon_data_type_t type)
@@ -1192,7 +1226,7 @@ scon_status_t scon_bfrop_print_query(char **output, char *prefix,
     return rc;
 }
 #endif
-#if 0
+
 scon_status_t scon_bfrop_print_rank(char **output, char *prefix,
                                     scon_rank_t *src, scon_data_type_t type)
 {
@@ -1219,11 +1253,7 @@ scon_status_t scon_bfrop_print_rank(char **output, char *prefix,
                           "%sData type: SCON_PROC_RANK\tValue: SCON_RANK_WILDCARD",
                           prefx);
             break;
-        case SCON_RANK_LOCAL_NODE:
-            rc = asprintf(output,
-                          "%sData type: SCON_PROC_RANK\tValue: SCON_RANK_LOCAL_NODE",
-                          prefx);
-            break;
+
         default:
             rc = asprintf(output, "%sData type: SCON_PROC_RANK\tValue: %lu",
                           prefx, (unsigned long)(*src));
@@ -1237,6 +1267,7 @@ scon_status_t scon_bfrop_print_rank(char **output, char *prefix,
     return SCON_SUCCESS;
 }
 
+#if 0
 /**** DEPRECATED ****/
 scon_status_t scon_bfrop_print_array(char **output, char *prefix,
                                      scon_info_array_t *src, scon_data_type_t type)

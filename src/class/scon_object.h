@@ -234,7 +234,7 @@ struct scon_object_t {
  * Put this in NAME.h
  */
 #define SCON_CLASS_DECLARATION(NAME)             \
-    extern scon_class_t NAME ## _class
+ SCON_EXPORT  extern scon_class_t NAME ## _class
 
 
 /**
@@ -390,7 +390,7 @@ SCON_CLASS_DECLARATION(scon_object_t);
  *
  * @param class    Pointer to class descriptor
  */
-void scon_class_initialize(scon_class_t *);
+SCON_EXPORT void scon_class_initialize(scon_class_t *);
 
 /**
  * Shut down the class system and release all memory
@@ -401,7 +401,7 @@ void scon_class_initialize(scon_class_t *);
  * tools like valgrind and purify don't report still-reachable memory
  * upon process termination.
  */
-int scon_class_finalize(void);
+SCON_EXPORT int scon_class_finalize(void);
 
 /**
  * Run the hierarchy of class constructors for this object, in a

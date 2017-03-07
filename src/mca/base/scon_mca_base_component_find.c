@@ -46,7 +46,7 @@
 #include <netdb.h>
 #endif
 
-#include "src/mca/pinstalldirs/pinstalldirs.h"
+#include "src/mca/sinstalldirs/sinstalldirs.h"
 #include "src/util/scon_environ.h"
 #include "src/util/output.h"
 #include "src/util/argv.h"
@@ -56,16 +56,16 @@
 #include "src/mca/base/base.h"
 #include "src/mca/base/scon_mca_base_component_repository.h"
 #include "scon_common.h"
-#include "src/mca/pdl/base/base.h"
+#include "src/mca/sdl/base/base.h"
 
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
 /*
  * Private functions
  */
 static void find_dyn_components(const char *path, scon_mca_base_framework_t *framework,
                                 const char **names, bool include_mode);
 
-#endif /* SCON_HAVE_PDL_SUPPORT */
+#endif /* SCON_HAVE_SDL_SUPPORT */
 
 static int component_find_check (scon_mca_base_framework_t *framework, char **requested_component_names);
 
@@ -134,7 +134,7 @@ int scon_mca_base_component_find (const char *directory, scon_mca_base_framework
         }
     }
 
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
     /* Find any available dynamic components in the specified directory */
     if (open_dso_components && !scon_mca_base_component_disable_dlopen) {
         find_dyn_components(directory, framework, (const char**)requested_component_names,
@@ -180,12 +180,14 @@ int scon_mca_base_components_filter (scon_mca_base_framework_t *framework, uint3
     assert (NULL != components);
 
     if (0 == filter_flags && NULL == framework->framework_selection) {
+        scon_output(0, "scon_mca_base_components_filter : return success");
         return SCON_SUCCESS;
     }
 
     ret = scon_mca_base_component_parse_requested (framework->framework_selection, &include_mode,
                                               &requested_component_names);
     if (SCON_SUCCESS != ret) {
+        scon_output(0, "scon_mca_base_components_filter : return error = %d", ret);
         return ret;
     }
 
@@ -234,7 +236,7 @@ int scon_mca_base_components_filter (scon_mca_base_framework_t *framework, uint3
     return ret;
 }
 
-#if SCON_HAVE_PDL_SUPPORT
+#if SCON_HAVE_SDL_SUPPORT
 
 /*
  * Open up all directories in a given path and search for components of
@@ -275,7 +277,7 @@ static void find_dyn_components(const char *path, scon_mca_base_framework_t *fra
     }
 }
 
-#endif /* SCON_HAVE_PDL_SUPPORT */
+#endif /* SCON_HAVE_SDL_SUPPORT */
 
 static bool use_component(const bool include_mode,
                           const char **requested_component_names,
@@ -324,6 +326,7 @@ static int component_find_check (scon_mca_base_framework_t *framework, char **re
     scon_mca_base_component_list_item_t *cli;
 
     if (NULL == requested_component_names) {
+        scon_output(0, "component_find_check : returned success");
         return SCON_SUCCESS;
     }
 

@@ -944,7 +944,7 @@ find_rule: /* we branch to this label when backing up */
         if ( yy_act != YY_END_OF_BUFFER && yy_rule_can_match_eol[yy_act] )
             {
             int yyl;
-            for ( yyl = 0; yyl < scon_util_keyval_yyleng; ++yyl )
+            for ( yyl = 0; yyl < (int)scon_util_keyval_yyleng; ++yyl )
                 if ( scon_util_keyval_yytext[yyl] == '\n' )
 
     scon_util_keyval_yylineno++;
@@ -1787,7 +1787,7 @@ YY_BUFFER_STATE scon_util_keyval_yy_scan_bytes  (yyconst char * yybytes, yy_size
     if ( ! buf )
         YY_FATAL_ERROR( "out of dynamic memory in scon_util_keyval_yy_scan_bytes()" );
 
-    for ( i = 0; i < _yybytes_len; ++i )
+    for ( i = 0; i < (int)_yybytes_len; ++i )
         buf[i] = yybytes[i];
 
     buf[_yybytes_len] = buf[_yybytes_len+1] = YY_END_OF_BUFFER_CHAR;

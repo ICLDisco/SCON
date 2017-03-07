@@ -143,7 +143,7 @@ const char* scon_tmp_directory( void );
 #ifdef HAVE__NSGETENVIRON
 #define environ (*_NSGetEnviron())
 #else
-extern char **environ;
+SCON_EXPORT extern char **environ;
 #endif
 
 END_C_DECLS

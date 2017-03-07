@@ -12,6 +12,7 @@
 headers += \
 	base/base.h
 
-libmca_scon_collectives_la_SOURCES += \
+libmca_collectives_la_SOURCES += \
         base/collectives_base_component.c\
-        base/collectives_base_select.c
+        base/collectives_base_select.c\
+		base/collectives_base_stubs.c
