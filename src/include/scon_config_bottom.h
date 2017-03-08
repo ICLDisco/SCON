@@ -13,7 +13,7 @@
  * Copyright (c) 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * Copyright (c) 2013      Mellanox Technologies, Inc.
  *                         All rights reserved.
- * Copyright (c) 2013-2015 Intel, Inc. All rights reserved
+ * Copyright (c) 2013-2017 Intel, Inc. All rights reserved.
  * Copyright (c) 2016      IBM Corporation.  All rights reserved.
  * $COPYRIGHT$
  *
@@ -395,15 +395,6 @@ typedef SCON_PTRDIFF_TYPE ptrdiff_t;
 #define SCON_PATH_MAX   (_POSIX_PATH_MAX + 1)
 #else
 #define SCON_PATH_MAX   256
-#endif
-
-#if defined(MAXHOSTNAMELEN)
-#define SCON_MAXHOSTNAMELEN (MAXHOSTNAMELEN + 1)
-#elif defined(HOST_NAME_MAX)
-#define SCON_MAXHOSTNAMELEN (HOST_NAME_MAX + 1)
-#else
-/* SUSv2 guarantees that "Host names are limited to 255 bytes". */
-#define SCON_MAXHOSTNAMELEN (255 + 1)
 #endif
 
 /*

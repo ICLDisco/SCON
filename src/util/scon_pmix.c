@@ -27,11 +27,20 @@ SCON_EXPORT int scon_pmix_init ( scon_proc_t *me,
     scon_output_verbose(2, scon_globals.debug_output,
                          "%s scon_pmix_init: initializing pmix client",
                          SCON_PRINT_PROC(SCON_PROC_MY_NAME));
+#if SCON_HAVE_PMIX_VERSION == 2
     if (PMIX_SUCCESS != (rc = PMIx_Init(&myproc, NULL, 0))) {
         scon_output(0, "%s pmix init failed with error %d",
                      SCON_PRINT_PROC(SCON_PROC_MY_NAME), rc);
         return SCON_ERR_PMIXINIT_FAILED;
     }
+#else
+    if (PMIX_SUCCESS != (rc = PMIx_Init(&myproc))) {
+        scon_output(0, "%s pmix init failed with error %d",
+                     SCON_PRINT_PROC(SCON_PROC_MY_NAME), rc);
+        return SCON_ERR_PMIXINIT_FAILED;
+    }
+#endif
+
     scon_output_verbose(2, scon_globals.debug_output,
                         "%s scon_pmix_init: pmix init returned my namespace %s, rank =%d",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
@@ -98,5 +107,9 @@ SCON_EXPORT int scon_pmix_finalize (scon_info_t  info[],
     scon_output_verbose(2, scon_globals.debug_output,
                         "%s scon_pmix_finalize: finalizing pmix client",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME));
+#if SCON_HAVE_PMIX_VERSION == 2
     return PMIx_Finalize(NULL, 0);
+#else
+    return PMIx_Finalize();
+#endif
 }

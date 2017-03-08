@@ -17,7 +17,7 @@ dnl Copyright (c) 2009      Los Alamos National Security, LLC.  All rights
 dnl                         reserved.
 dnl Copyright (c) 2009-2011 Oak Ridge National Labs.  All rights reserved.
 dnl Copyright (c) 2011-2013 NVIDIA Corporation.  All rights reserved.
-dnl Copyright (c) 2013-2015 Intel, Inc. All rights reserved
+dnl Copyright (c) 2013-2017 Intel, Inc. All rights reserved.
 dnl Copyright (c) 2015      Research Organization for Information Science
 dnl                         and Technology (RIST). All rights reserved.
 dnl Copyright (c) 2016      Mellanox Technologies, Inc.
@@ -787,45 +787,6 @@ AC_DEFINE_UNQUOTED([SCON_WANT_HOME_CONFIG_FILES], [$result],
      [Enable per-user config files])
 
 #
-# Do we want the pretty-print stack trace feature?
-#
-
-AC_MSG_CHECKING([if want pretty-print stacktrace])
-AC_ARG_ENABLE([pretty-print-stacktrace],
-              [AC_HELP_STRING([--enable-pretty-print-stacktrace],
-                              [Pretty print stacktrace on process signal (default: enabled)])])
-if test "$enable_pretty_print_stacktrace" = "no" ; then
-    AC_MSG_RESULT([no])
-    WANT_PRETTY_PRINT_STACKTRACE=0
-else
-    AC_MSG_RESULT([yes])
-    WANT_PRETTY_PRINT_STACKTRACE=1
-fi
-AC_DEFINE_UNQUOTED([SCON_WANT_PRETTY_PRINT_STACKTRACE],
-                   [$WANT_PRETTY_PRINT_STACKTRACE],
-                   [if want pretty-print stack trace feature])
-
-#
-# Do we want the shared memory datastore usage?
-#
-
-AC_MSG_CHECKING([if want special dstore usage])
-AC_ARG_ENABLE([dstore],
-              [AC_HELP_STRING([--enable-dstore],
-                              [Using special datastore (default: disabled)])])
-if test "$enable_dstore" = "yes" ; then
-    AC_MSG_RESULT([yes])
-    WANT_DSTORE=1
-else
-    AC_MSG_RESULT([no])
-    WANT_DSTORE=0
-fi
-AC_DEFINE_UNQUOTED([SCON_ENABLE_DSTORE],
-                   [$WANT_DSTORE],
-                   [if want special dstore feature])
-AM_CONDITIONAL([WANT_DSTORE],[test "x$enable_dstore" = "xyes"])
-
-#
 # Ident string
 #
 AC_MSG_CHECKING([if want ident string])
@@ -868,21 +829,21 @@ AC_DEFINE_UNQUOTED([SCON_ENABLE_TIMING], [$WANT_TIMING],
                    [Whether we want developer-level timing support or not])
 
 #
-# Install header files
-#
-AC_MSG_CHECKING([if want to head developer-level header files])
-AC_ARG_WITH(devel-headers,
-              AC_HELP_STRING([--with-devel-headers],
-                             [also install developer-level header files (only for internal SCON developers, default: disabled)]))
-if test "$with_devel_headers" = "yes"; then
+# IPv6 support
+AC_MSG_CHECKING([if IPv6 support should be enabled])
+AC_ARG_ENABLE(ipv6,
+              AC_HELP_STRING([--enable-ipv6],
+                             [Enable IPv6 support (default: disabled)]))
+if test "$enable_ipv6" = "yes"; then
     AC_MSG_RESULT([yes])
-    WANT_INSTALL_HEADERS=1
+    WANT_IPV6=1
 else
     AC_MSG_RESULT([no])
-    WANT_INSTALL_HEADERS=0
+    WANT_IPV6=0
 fi
 
-AM_CONDITIONAL([WANT_INSTALL_HEADERS], [test $WANT_INSTALL_HEADERS -eq 1])
+AC_DEFINE_UNQUOTED([SCON_ENABLE_IPV6], [$WANT_IPV6],
+                   [Whether or not we want IPv6 support])
 ])dnl
 
 # This must be a standalone routine so that it can be called both by

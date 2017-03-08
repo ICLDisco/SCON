@@ -65,7 +65,7 @@ scon_sdl_slibltsdl_component_t mca_sdl_slibltsdl_component = {
 
         .base_data = {
             /* The component is checkpoint ready */
-            MCA_BASE_METADATA_PARAM_CHECKPOINT
+            SCON_MCA_BASE_METADATA_PARAM_CHECKPOINT
         },
 
         /* The dl framework members */

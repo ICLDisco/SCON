@@ -12,7 +12,7 @@
  * Copyright (c) 2010      Oracle and/or its affiliates.  All rights reserved.
  * Copyright (c) 2014-2016 Research Organization for Information Science
  *                         and Technology (RIST). All rights reserved.
- * Copyright (c) 2016      Intel, Inc. All rights reserved.
+ * Copyright (c) 2016-2017 Intel, Inc. All rights reserved.
  * $COPYRIGHT$
  *
  * Additional copyrights may follow
@@ -36,6 +36,7 @@
 #define SCON_PRINT_NAME_ARG_NUM_BUFS    16
 
 #define SCON_SCHEMA_DELIMITER_CHAR      '.'
+#define SCON_SCHEMA_DELIMITER_STRING    "."
 #define SCON_SCHEMA_WILDCARD_CHAR       '*'
 #define SCON_SCHEMA_WILDCARD_STRING     "*"
 #define SCON_SCHEMA_INVALID_CHAR        '$'
@@ -54,7 +55,7 @@ SCON_EXPORT char* scon_util_print_name_args(const scon_proc_t *name)
     //scon_value_load(&src, (void *)name,
       //              SCON_PROC);
 
-    ret= scon_bfrop.print(&output, NULL, name, SCON_PROC);
+    ret= scon_bfrop.print(&output, NULL, (scon_proc_t*)name, SCON_PROC);
     scon_output(0, "testing scon_util_print_name_args input namespace = %s, rank =%d", name->job_name, name->rank);
     scon_output(0, "testing scon_util_print_name_args output =%s ret =%d", output, ret);
     return output;
@@ -124,7 +125,7 @@ int scon_util_convert_string_to_process_name(scon_proc_t *name,
                                              const char* name_string)
 {
     char *temp, *token;
-    unsigned int rank;
+
     /* check for NULL string - error */
     if (NULL == name_string) {
         SCON_ERROR_LOG(SCON_ERR_BAD_PARAM);
@@ -132,7 +133,7 @@ int scon_util_convert_string_to_process_name(scon_proc_t *name,
     }
 
     temp = strdup(name_string);  /** copy input string as the strtok process is destructive */
-    token = strtok(temp, SCON_SCHEMA_DELIMITER_CHAR); /** get first field -> namespace */
+    token = strtok(temp, SCON_SCHEMA_DELIMITER_STRING); /** get first field -> namespace */
 
     /* check for error */
     if (NULL == token) {
@@ -143,7 +144,7 @@ int scon_util_convert_string_to_process_name(scon_proc_t *name,
     /* copy namespace */
     strncpy(name->job_name, token, SCON_MAX_JOBLEN);
     /* copy rank */
-    token = strtok(NULL, SCON_SCHEMA_DELIMITER_CHAR);
+    token = strtok(NULL, SCON_SCHEMA_DELIMITER_STRING);
     if (NULL == token) {
         SCON_ERROR_LOG(SCON_ERR_BAD_PARAM);
         free(temp);
