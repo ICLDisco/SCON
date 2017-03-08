@@ -23,7 +23,7 @@
  * $HEADER$
  */
 
-#include <src/include/pmix_config.h>
+#include <src/include/scon_config.h>
 
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
@@ -38,16 +38,16 @@
 
 BEGIN_C_DECLS
 
-int pmix_util_keyval_yywrap(void);
+int scon_util_keyval_yywrap(void);
 
 END_C_DECLS
 
 /*
  * global variables
  */
-int pmix_util_keyval_yynewlines = 1;
-bool pmix_util_keyval_parse_done = false;
-char *pmix_util_keyval_string = NULL;
+int scon_util_keyval_yynewlines = 1;
+bool scon_util_keyval_parse_done = false;
+char *scon_util_keyval_string = NULL;
 
 %}
 
@@ -60,36 +60,36 @@ CHAR        [A-Za-z0-9_\-\.]
 
 %%
 
-{WHITE}*\n          { pmix_util_keyval_yynewlines++; return PMIX_UTIL_KEYVAL_PARSE_NEWLINE; }
-#.*\n               { pmix_util_keyval_yynewlines++; return PMIX_UTIL_KEYVAL_PARSE_NEWLINE; }
-"//".*\n            { pmix_util_keyval_yynewlines++; return PMIX_UTIL_KEYVAL_PARSE_NEWLINE; }
+{WHITE}*\n          { scon_util_keyval_yynewlines++; return SCON_UTIL_KEYVAL_PARSE_NEWLINE; }
+#.*\n               { scon_util_keyval_yynewlines++; return SCON_UTIL_KEYVAL_PARSE_NEWLINE; }
+"//".*\n            { scon_util_keyval_yynewlines++; return SCON_UTIL_KEYVAL_PARSE_NEWLINE; }
 
 "/*"                { BEGIN(comment);
-                      return PMIX_UTIL_KEYVAL_PARSE_NEWLINE; }
+                      return SCON_UTIL_KEYVAL_PARSE_NEWLINE; }
 <comment>[^*\n]*       ; /* Eat up non '*'s */
 <comment>"*"+[^*/\n]*  ; /* Eat '*'s not followed by a '/' */
-<comment>\n         { pmix_util_keyval_yynewlines++;
-                      return PMIX_UTIL_KEYVAL_PARSE_NEWLINE; }
+<comment>\n         { scon_util_keyval_yynewlines++;
+                      return SCON_UTIL_KEYVAL_PARSE_NEWLINE; }
 <comment>"*"+"/"    { BEGIN(INITIAL); /* Done with Block Comment */
-                      return PMIX_UTIL_KEYVAL_PARSE_NEWLINE; }
+                      return SCON_UTIL_KEYVAL_PARSE_NEWLINE; }
 
-{WHITE}*"="{WHITE}* { BEGIN(VALUE); return PMIX_UTIL_KEYVAL_PARSE_EQUAL; }
+{WHITE}*"="{WHITE}* { BEGIN(VALUE); return SCON_UTIL_KEYVAL_PARSE_EQUAL; }
 {WHITE}+            ; /* whitespace */
-{CHAR}+             { return PMIX_UTIL_KEYVAL_PARSE_SINGLE_WORD; }
+{CHAR}+             { return SCON_UTIL_KEYVAL_PARSE_SINGLE_WORD; }
 
-<VALUE>{WHITE}*\n   { BEGIN(INITIAL); return PMIX_UTIL_KEYVAL_PARSE_NEWLINE; }
-<VALUE>[^\n]*[^\t \n]/[\t ]*      { return PMIX_UTIL_KEYVAL_PARSE_VALUE; }
+<VALUE>{WHITE}*\n   { BEGIN(INITIAL); return SCON_UTIL_KEYVAL_PARSE_NEWLINE; }
+<VALUE>[^\n]*[^\t \n]/[\t ]*      { return SCON_UTIL_KEYVAL_PARSE_VALUE; }
 
-<MCA_VALUE>[^\n \t]+      { BEGIN(INITIAL); return PMIX_UTIL_KEYVAL_PARSE_VALUE; }
-<MCA_VALUE>"'"[^\n]*"'"{WHITE}+      { BEGIN(INITIAL); return PMIX_UTIL_KEYVAL_PARSE_VALUE; }
-<MCA_VALUE>"\""[^\n]*"\""{WHITE}+      { BEGIN(INITIAL); return PMIX_UTIL_KEYVAL_PARSE_VALUE; }
-<MCA_VALUE>{WHITE}*\n   { BEGIN(INITIAL); BEGIN(INITIAL); return PMIX_UTIL_KEYVAL_PARSE_NEWLINE; }
+<MCA_VALUE>[^\n \t]+      { BEGIN(INITIAL); return SCON_UTIL_KEYVAL_PARSE_VALUE; }
+<MCA_VALUE>"'"[^\n]*"'"{WHITE}+      { BEGIN(INITIAL); return SCON_UTIL_KEYVAL_PARSE_VALUE; }
+<MCA_VALUE>"\""[^\n]*"\""{WHITE}+      { BEGIN(INITIAL); return SCON_UTIL_KEYVAL_PARSE_VALUE; }
+<MCA_VALUE>{WHITE}*\n   { BEGIN(INITIAL); BEGIN(INITIAL); return SCON_UTIL_KEYVAL_PARSE_NEWLINE; }
 
-"-"?"-mca"{WHITE}+{CHAR}+{WHITE}+ {BEGIN(MCA_VALUE); return PMIX_UTIL_KEYVAL_PARSE_MCAVAR; }
-"-"?"-x"{WHITE}+{CHAR}+{WHITE}*"="{WHITE}* {BEGIN(MCA_VALUE); return PMIX_UTIL_KEYVAL_PARSE_ENVEQL; }
-"-"?"-x"{WHITE}+{CHAR}+{WHITE}*/[^=] { return PMIX_UTIL_KEYVAL_PARSE_ENVVAR; }
+"-"?"-mca"{WHITE}+{CHAR}+{WHITE}+ {BEGIN(MCA_VALUE); return SCON_UTIL_KEYVAL_PARSE_MCAVAR; }
+"-"?"-x"{WHITE}+{CHAR}+{WHITE}*"="{WHITE}* {BEGIN(MCA_VALUE); return SCON_UTIL_KEYVAL_PARSE_ENVEQL; }
+"-"?"-x"{WHITE}+{CHAR}+{WHITE}*/[^=] { return SCON_UTIL_KEYVAL_PARSE_ENVVAR; }
 
-.	            { return PMIX_UTIL_KEYVAL_PARSE_ERROR; }
+.               { return SCON_UTIL_KEYVAL_PARSE_ERROR; }
 
 %%
 
@@ -99,7 +99,7 @@ CHAR        [A-Za-z0-9_\-\.]
 #endif
 
 #if (YY_FLEX_MAJOR_VERSION < 2) || (YY_FLEX_MAJOR_VERSION == 2 && (YY_FLEX_MINOR_VERSION < 5 || (YY_FLEX_MINOR_VERSION == 5 && YY_FLEX_SUBMINOR_VERSION < 5)))
-int pmix_util_keyval_yylex_destroy(void)
+int scon_util_keyval_yylex_destroy(void)
 {
     if (NULL != YY_CURRENT_BUFFER) {
         yy_delete_buffer(YY_CURRENT_BUFFER);
@@ -113,9 +113,9 @@ int pmix_util_keyval_yylex_destroy(void)
 }
 #endif
 
-int pmix_util_keyval_yywrap(void)
+int scon_util_keyval_yywrap(void)
 {
-    pmix_util_keyval_parse_done = true;
+    scon_util_keyval_parse_done = true;
     return 1;
 }
 
@@ -128,7 +128,7 @@ int pmix_util_keyval_yywrap(void)
  * have a valid buffer.  Hence, here we ensure to give it a valid
  * buffer.
  */
-int pmix_util_keyval_init_buffer(FILE *file)
+int scon_util_keyval_init_buffer(FILE *file)
 {
     YY_BUFFER_STATE buf = yy_create_buffer(file, YY_BUF_SIZE);
     yy_switch_to_buffer(buf);

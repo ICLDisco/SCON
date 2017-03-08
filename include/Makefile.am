@@ -10,16 +10,6 @@
 
 # Only install the headers if we're in standalone mode
 
-#if ! PMIX_EMBEDDED_MODE
-#include_HEADERS = \
-#        pmix.h \
-#        pmix_common.h \
-#        pmix_server.h \
-#        pmi.h \
-#        pmi2.h \
-#        pmix_tool.h
-
-#endif ! PMIX_EMBEDDED_MODE
 include_HEADERS = \
         scon.h \
         scon_common.h

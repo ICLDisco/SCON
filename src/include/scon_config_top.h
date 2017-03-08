@@ -13,7 +13,7 @@
  * configure, and b) included in most/all files in SCON.
  *
  * Since this file is *only* ever included by scon_config.h, and
- * pmix_config.h already has #ifndef/#endif protection, there is no
+ * scon_config.h already has #ifndef/#endif protection, there is no
  * need to #ifndef/#endif protection here.
  */
 
