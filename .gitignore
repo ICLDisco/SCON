@@ -52,3 +52,6 @@ config/ltversion.m4
 config/lt~obsolete.m4
 config/ylwrap
 config/autogen_found_items.m4
+
+src/include/scon_config.h*
+src/mca/sinstalldirs/config/sinstall_dirs.h

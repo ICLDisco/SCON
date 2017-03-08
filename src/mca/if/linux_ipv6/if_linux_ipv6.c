@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2010      Cisco Systems, Inc.  All rights reserved.
  * Copyright (c) 2010      Oracle and/or its affiliates.  All rights reserved.
+ * Copyright (c) 2017      Intel, Inc. All rights reserved.
  * $COPYRIGHT$
  *
  * Additional copyrights may follow
@@ -72,7 +73,7 @@ scon_if_base_component_t mca_if_linux_ipv6_component = {
     /* First, the mca_component_t struct containing meta information
        about the component itself */
     {
-        SCON_IF_BASE_VERSION_2_0_0,
+        SCON_IF_BASE_VERSION_1_0_0,
 
         /* Component name and version */
         "linux_ipv6",
@@ -86,7 +87,7 @@ scon_if_base_component_t mca_if_linux_ipv6_component = {
     },
     {
         /* This component is checkpointable */
-        MCA_BASE_METADATA_PARAM_CHECKPOINT
+        SCON_MCA_BASE_METADATA_PARAM_CHECKPOINT
     },
 };
 

@@ -1,5 +1,5 @@
 /**
- * copyright (c) 2015-2016 Intel, Inc. All rights reserved.
+ * Copyright (c) 2015-2017 Intel, Inc. All rights reserved.
  * $COPYRIGHT$
  *
  * Additional copyrights may follow
@@ -75,7 +75,7 @@ typedef int (*scon_comm_base_module_delete_fn_t) (scon_handle_t scon_handle,
 /**
  * scon finalize - finalize scon framework operations
  */
-typedef int (*scon_comm_base_module_finalize_fn_t) ();
+typedef int (*scon_comm_base_module_finalize_fn_t) (void);
 
 
 /**

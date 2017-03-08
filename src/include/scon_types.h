@@ -9,7 +9,7 @@
  *                         University of Stuttgart.  All rights reserved.
  * Copyright (c) 2004-2005 The Regents of the University of California.
  *                         All rights reserved.
- * Copyright (c) 2014-2015 Intel, Inc. All rights reserved.
+ * Copyright (c) 2014-2017 Intel, Inc. All rights reserved.
  * Copyright (c) 2015      Mellanox Technologies, Inc.
  *                         All rights reserved.
  * $COPYRIGHT$
@@ -259,7 +259,7 @@ typedef struct event scon_event_t;
 
 #define scon_event_loop(b, fg) event_base_loop((b), (fg))
 
-#define scon_event_set_priority(ev, pri) event_priority_set
+#define scon_event_set_priority(ev, pri) event_priority_set(ev, pri)
 
 /* Timer APIs */
 #define scon_event_evtimer_new(b, cb, arg) scon_event_new((b), -1, 0, (cb), (arg))
