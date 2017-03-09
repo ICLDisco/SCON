@@ -2,7 +2,7 @@
 #
 # Copyright (c) 2009-2015 Cisco Systems, Inc.  All rights reserved.
 # Copyright (c) 2013      Los Alamos National Security, LLC.  All rights reserved.
-# Copyright (c) 2013-2016 Intel, Inc. All rights reserved
+# Copyright (c) 2013-2017 Intel, Inc. All rights reserved.
 # $COPYRIGHT$
 #
 # Additional copyrights may follow
@@ -33,10 +33,6 @@ AC_DEFUN([SCON_LIBEVENT_CONFIG],[
     AC_DEFINE_UNQUOTED([SCON_EVENT2_THREAD_HEADER], [$SCON_EVENT2_THREAD_HEADER],
                        [Location of event2/thread.h])
     AC_MSG_RESULT([$SCON_EVENT2_THREAD_HEADER])
-
-    CPPFLAGS="$CPPFLAGS $SCON_EVENT_CPPFLAGS"
-    LDFLAGS="$LDFLAGS $SCON_EVENT_LDFLAGS"
-    LIBS="$LIBS $SCON_EVENT_LIBS"
 ])
 
 AC_DEFUN([_SCON_LIBEVENT_EMBEDDED_MODE],[
@@ -45,9 +41,6 @@ AC_DEFUN([_SCON_LIBEVENT_EMBEDDED_MODE],[
 
     SCON_EVENT_HEADER="$with_libevent_header"
     SCON_EVENT2_THREAD_HEADER="$with_libevent_header"
-    SCON_EVENT_CPPFLAGS=
-    SCON_EVENT_LIB=
-    SCON_EVENT_LDFLAGS=
 
  ])
 
@@ -96,11 +89,6 @@ AC_DEFUN([_SCON_LIBEVENT_EXTERNAL],[
                        [AC_MSG_WARN([LIBEVENT SUPPORT NOT FOUND])
                         AC_MSG_ERROR([CANNOT CONTINE])])
 
-    CPPFLAGS="$scon_libevent_CPPFLAGS $CPPFLAGS"
-    LIBS="$scon_libevent_LIBS $LIBS"
-    LDFLAGS="$scon_libevent_LDFLAGS $LDFLAGS"
-
-
     # Ensure that this libevent has the symbol
     # "evthread_set_lock_callbacks", which will only exist if
     # libevent was configured with thread support.
@@ -124,11 +112,6 @@ AC_DEFUN([_SCON_LIBEVENT_EXTERNAL],[
     # Set output variables
     SCON_EVENT_HEADER="<event.h>"
     SCON_EVENT2_THREAD_HEADER="<event2/thread.h>"
-    SCON_EVENT_LIB=-levent
-    AS_IF([test "$scon_event_dir" != ""],
-        [SCON_EVENT_CPPFLAGS="-I$scon_event_dir/include"])
-    AS_IF([test "$scon_event_libdir" != ""],
-        [SCON_EVENT_LDFLAGS="-L$scon_event_libdir"])
 
     SCON_VAR_SCOPE_POP
 ])dnl

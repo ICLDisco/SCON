@@ -13,7 +13,7 @@
  *                         University of Stuttgart.  All rights reserved.
  * Copyright (c) 2004-2005 The Regents of the University of California.
  *                         All rights reserved.
- * Copyright (c) 2016      Intel, Inc. All rights reserved
+ * Copyright (c) 2016-2017 Intel, Inc. All rights reserved.
  * $COPYRIGHT$
  *
  * Additional copyrights may follow
@@ -21,7 +21,7 @@
  * $HEADER$
  */
 
-#include <src/include/pmix_config.h>
+#include <src/include/scon_config.h>
 
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
@@ -35,20 +35,20 @@ BEGIN_C_DECLS
 /*
  * public functions
  */
-extern int pmix_show_help_finish_parsing(void);
+extern int scon_show_help_finish_parsing(void);
 
 /*
  * local functions
  */
-static int pmix_show_help_yywrap(void);
+static int scon_show_help_yywrap(void);
 
 END_C_DECLS
 
 /*
  * global variables
  */
-int pmix_show_help_yynewlines = 1;
-bool pmix_show_help_parse_done = false;
+int scon_show_help_yynewlines = 1;
+bool scon_show_help_parse_done = false;
 
 %}
 
@@ -61,11 +61,11 @@ CHAR        [A-Za-z0-9_\-\.]
 
 #.*\n               ; /* comment line */
 
-^\[.+\]/[^\]\n]*\n { BEGIN(CHOMP); return PMIX_SHOW_HELP_PARSE_TOPIC; }
+^\[.+\]/[^\]\n]*\n { BEGIN(CHOMP); return SCON_SHOW_HELP_PARSE_TOPIC; }
 
 <CHOMP>.*\n { BEGIN(INITIAL); }
 
-.*/\n { BEGIN(CHOMP); return PMIX_SHOW_HELP_PARSE_MESSAGE; }
+.*/\n { BEGIN(CHOMP); return SCON_SHOW_HELP_PARSE_MESSAGE; }
 
 %%
 
@@ -75,7 +75,7 @@ CHAR        [A-Za-z0-9_\-\.]
 #endif
 
 #if (YY_FLEX_MAJOR_VERSION < 2) || (YY_FLEX_MAJOR_VERSION == 2 && (YY_FLEX_MINOR_VERSION < 5 || (YY_FLEX_MINOR_VERSION == 5 && YY_FLEX_SUBMINOR_VERSION < 5)))
-int pmix_show_help_yylex_destroy(void)
+int scon_show_help_yylex_destroy(void)
 {
     if (NULL != YY_CURRENT_BUFFER) {
         yy_delete_buffer(YY_CURRENT_BUFFER);
@@ -89,9 +89,9 @@ int pmix_show_help_yylex_destroy(void)
 }
 #endif
 
-static int pmix_show_help_yywrap(void)
+static int scon_show_help_yywrap(void)
 {
-    pmix_show_help_parse_done = true;
+    scon_show_help_parse_done = true;
     return 1;
 }
 
@@ -105,7 +105,7 @@ static int pmix_show_help_yywrap(void)
  * have a valid buffer.  Hence, here we ensure to give it a valid
  * buffer.
  */
-int pmix_show_help_init_buffer(FILE *file)
+int scon_show_help_init_buffer(FILE *file)
 {
     YY_BUFFER_STATE buf = yy_create_buffer(file, YY_BUF_SIZE);
     yy_switch_to_buffer(buf);
