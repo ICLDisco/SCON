@@ -651,7 +651,6 @@ AC_DEFUN([SCON_SETUP_CORE],[
         scon_config_prefix[src/Makefile]
         scon_config_prefix[src/util/keyval/Makefile]
         scon_config_prefix[src/mca/base/Makefile]
-        scon_config_prefix[src/test/Makefile]
         )
 
     # Success
@@ -854,6 +853,7 @@ AC_DEFUN([SCON_DO_AM_CONDITIONALS],[
         AM_CONDITIONAL([SCON_COMPILE_TIMING], [test "$WANT_TIMING" = "1"])
         AM_CONDITIONAL([SCON_WANT_MUNGE], [test "$scon_munge_support" = "1"])
         AM_CONDITIONAL([SCON_WANT_SASL], [test "$scon_sasl_support" = "1"])
+        AM_CONDITIONAL([SCON_TESTS_EXAMPLES], [test "$scon_tests" = "yes"])
     ])
     scon_did_am_conditionals=yes
 ])dnl

@@ -19,7 +19,7 @@
 # Copyright (c) 2012      Oracle and/or its affiliates.  All rights reserved.
 # Copyright (c) 2013      Mellanox Technologies, Inc.
 #                         All rights reserved.
-# Copyright (c) 2014-2015 Intel, Inc. All rights reserved
+# Copyright (c) 2014-2017 Intel, Inc. All rights reserved.
 # Copyright (c) 2016      IBM Corporation.  All rights reserved.
 # $COPYRIGHT$
 #
@@ -203,6 +203,12 @@ AC_MSG_RESULT([$CPPFLAGS])
 AC_MSG_CHECKING([final CFLAGS])
 AC_MSG_RESULT([$CFLAGS])
 
+AC_MSG_CHECKING([final LDFLAGS])
+AC_MSG_RESULT([$LDFLAGS])
+
+AC_MSG_CHECKING([final LIBS])
+AC_MSG_RESULT([$LIBS])
+
 ####################################################################
 # Version information
 ####################################################################
@@ -214,6 +220,8 @@ AC_SUBST([CONFIGURE_DEPENDENCIES], ['$(top_srcdir)/VERSION'])
 
 . $srcdir/VERSION
 AC_SUBST([libscon_so_version])
+
+AC_CONFIG_FILES(scon_config_prefix[test/Makefile])
 
 scon_show_title "Configuration complete"
 

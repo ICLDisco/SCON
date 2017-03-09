@@ -40,7 +40,7 @@ AC_DEFUN([SCON_PMIX_CONFIG],[
            # check the version
            scon_external_pmix_save_CPPFLAGS=$CPPFLAGS
            scon_external_pmix_save_LDFLAGS=$LDFLAGS
-           scon_external_pmix_save_LIBS=$LIB
+           scon_external_pmix_save_LIBS=$LIBS
 
            # if the pmix_version.h file does not exist, then
            # this must be from a pre-1.1.5 version
@@ -93,9 +93,9 @@ AC_DEFUN([SCON_PMIX_CONFIG],[
                   AC_MSG_WARN([be detected])
                   AC_MSG_ERROR([cannot continue])])
 
-           CPPFLAGS=$opal_external_pmix_save_CPPFLAGS
-           LDFLAGS=$opal_external_pmix_save_LDFLAGS
-           LIBS=$opal_external_pmix_save_LIBS
+           CPPFLAGS=$scon_external_pmix_save_CPPFLAGS
+           LDFLAGS=$scon_external_pmix_save_LDFLAGS
+           LIBS=$scon_external_pmix_save_LIBS
 
            # we need to update the global flags as the location
            # of the PMIx support is required throughout the code

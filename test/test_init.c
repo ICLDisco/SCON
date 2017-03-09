@@ -57,4 +57,3 @@ int main(int argc, char **argv)
    // TEST_ERROR (("\n scon init returned %d", rc));
     return 0;
 }
-
