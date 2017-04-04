@@ -941,7 +941,6 @@ scon_status_t scon_bfrop_print_proc(char **output, char *prefix,
 {
     char *prefx;
     int rc;
-    scon_output(0, "scon_bfrop_print_proc");
     /* deal with NULL prefix */
     if (NULL == prefix) {
         if (0 > asprintf(&prefx, " ")) {
@@ -955,15 +954,15 @@ scon_status_t scon_bfrop_print_proc(char **output, char *prefix,
     switch(src->rank) {
         case SCON_RANK_UNDEF:
             rc = asprintf(output,
-                          "%sPROC: %s:SCON_RANK_UNDEF", prefx, src->job_name);
+                          "%sPROC:%s:SCON_RANK_UNDEF", prefx, src->job_name);
             break;
         case SCON_RANK_WILDCARD:
             rc = asprintf(output,
-                          "%sPROC: %s:SCON_RANK_WILDCARD", prefx, src->job_name);
+                          "%sPROC:%s:SCON_RANK_WILDCARD", prefx, src->job_name);
             break;
         default:
             rc = asprintf(output,
-                          "%sPROC: %s:%lu", prefx, src->job_name,
+                          "%sPROC:%s:%lu", prefx, src->job_name,
                           (unsigned long)(src->rank));
     }
     if (prefx != prefix) {

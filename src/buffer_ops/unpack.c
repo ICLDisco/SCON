@@ -32,7 +32,7 @@
 #include "src/buffer_ops/types.h"
 #include "src/buffer_ops/internal.h"
 #include "src/include/scon_globals.h"
-
+#include "src/util/name_fns.h"
 scon_status_t scon_bfrop_unpack(scon_buffer_t *buffer,
                                 void *dst, int32_t *num_vals,
                                 scon_data_type_t type)
@@ -640,11 +640,11 @@ scon_status_t scon_bfrop_unpack_status(scon_buffer_t *buffer, void *dest,
                 return ret;
             }
             break;
-       /* case SCON_PROC_RANK:
-            if (SCON_SUCCESS != (ret = scon_bfrop_unpack_buffer(buffer, &val->data.rank, &m, SCON_PROC_RANK))) {
+        case SCON_INFO:
+            if (SCON_SUCCESS != (ret = scon_bfrop_unpack_buffer(buffer, val->data.info, &m, SCON_INFO))) {
                 return ret;
             }
-            break;*/
+            break;
         case SCON_BYTE_OBJECT:
             if (SCON_SUCCESS != (ret = scon_bfrop_unpack_buffer(buffer, &val->data.bo, &m, SCON_BYTE_OBJECT))) {
                 return ret;
@@ -817,11 +817,7 @@ scon_status_t scon_bfrop_unpack_proc(scon_buffer_t *buffer, void *dest,
 
     ptr = (scon_proc_t *) dest;
     n = *num_vals;
-
     for (i = 0; i < n; ++i) {
-        scon_output_verbose(20, scon_globals.debug_output,
-                            "scon_bfrop_unpack: init proc[%d]", i);
-        memset(&ptr[i], 0, sizeof(scon_proc_t));
         /* unpack job name */
         m=1;
         tmp = NULL;
@@ -1047,24 +1043,31 @@ int scon_bfrop_unpack_coll_sig(scon_buffer_t *buffer, void *dest, int32_t *num_v
         if (NULL == ptr[i]) {
             return SCON_ERR_OUT_OF_RESOURCE;
         }
+        /* unpack the scon handle  */
+        cnt = 1;
+        if (SCON_SUCCESS != (rc = scon_bfrop_unpack_datatype(buffer, &ptr[i]->scon_handle, &cnt, SCON_INT32))) {
+            return rc;
+        }
         /* unpack the #procs */
         cnt = 1;
         if (SCON_SUCCESS != (rc = scon_bfrop_unpack_datatype(buffer, &ptr[i]->nprocs, &cnt, SCON_SIZE))) {
             return rc;
         }
-        if (SCON_SUCCESS != (rc = scon_bfrop_unpack_datatype(buffer, &ptr[i]->seq_num, &cnt, SCON_UINT32))) {
-            return rc;
-        }
         if (0 < ptr[i]->nprocs) {
             /* allocate space for the array */
-            ptr[i]->procs = (scon_proc_t*)malloc(ptr[i]->nprocs * sizeof(scon_proc_t));
             /* unpack the array - the array is our signature for the collective */
             cnt = ptr[i]->nprocs;
+            SCON_PROC_CREATE(ptr[i]->procs, cnt);
             if (SCON_SUCCESS != (rc = scon_bfrop_unpack_proc(buffer, ptr[i]->procs, &cnt, SCON_PROC))) {
                 SCON_RELEASE(ptr[i]);
                 return rc;
             }
         }
+        cnt = 1;
+        if (SCON_SUCCESS != (rc = scon_bfrop_unpack_datatype(buffer, &ptr[i]->seq_num, &cnt, SCON_UINT32))) {
+            return rc;
+        }
+
     }
     return SCON_SUCCESS;
 }

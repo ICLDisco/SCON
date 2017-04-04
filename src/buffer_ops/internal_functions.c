@@ -38,7 +38,7 @@ char* scon_bfrop_buffer_extend(scon_buffer_t *buffer, size_t bytes_to_add)
 {
     size_t required, to_alloc;
     size_t pack_offset, unpack_offset;
-
+    char *tmp;
     /* Check to see if we have enough space already */
 
     if ((buffer->bytes_allocated - buffer->bytes_used) >= bytes_to_add) {
@@ -47,35 +47,27 @@ char* scon_bfrop_buffer_extend(scon_buffer_t *buffer, size_t bytes_to_add)
 
     required = buffer->bytes_used + bytes_to_add;
     if (required >= scon_bfrop_threshold_size) {
-        to_alloc = ((required + scon_bfrop_threshold_size - 1)
-                    / scon_bfrop_threshold_size) * scon_bfrop_threshold_size;
+        to_alloc = (required + scon_bfrop_threshold_size - 1) & ~(scon_bfrop_threshold_size -1);
     } else {
-        to_alloc = buffer->bytes_allocated;
-        if(0 == to_alloc) {
-            to_alloc = scon_bfrop_initial_size;
-        }
+        to_alloc = buffer->bytes_allocated ? buffer->bytes_allocated : scon_bfrop_initial_size;
         while(to_alloc < required) {
             to_alloc <<= 1;
         }
     }
-
-    if (NULL != buffer->base_ptr) {
-        pack_offset = ((char*) buffer->pack_ptr) - ((char*) buffer->base_ptr);
-        unpack_offset = ((char*) buffer->unpack_ptr) -
-            ((char*) buffer->base_ptr);
-        buffer->base_ptr = (char*)realloc(buffer->base_ptr, to_alloc);
-        memset(buffer->base_ptr + pack_offset, 0, to_alloc - buffer->bytes_allocated);
-    } else {
-        pack_offset = 0;
-        unpack_offset = 0;
-        buffer->bytes_used = 0;
-        buffer->base_ptr = (char*)malloc(to_alloc);
-        memset(buffer->base_ptr, 0, to_alloc);
+    pack_offset = ((char*) buffer->pack_ptr) - ((char*) buffer->base_ptr);
+    unpack_offset = ((char*) buffer->unpack_ptr) -
+                                   ((char*) buffer->base_ptr);
+    if (NULL == buffer->base_ptr)
+        buffer->base_ptr = (char*) malloc (to_alloc);
+    else {
+        tmp = (char*)realloc(buffer->base_ptr, to_alloc);
+        if (NULL == buffer->base_ptr) {
+            return NULL;
+        }
+        buffer->base_ptr = tmp;
     }
+    memset(buffer->base_ptr + pack_offset, 0, to_alloc - buffer->bytes_allocated);
 
-    if (NULL == buffer->base_ptr) {
-        return NULL;
-    }
     buffer->pack_ptr = ((char*) buffer->base_ptr) + pack_offset;
     buffer->unpack_ptr = ((char*) buffer->base_ptr) + unpack_offset;
     buffer->bytes_allocated = to_alloc;
