@@ -33,13 +33,14 @@ typedef struct {
     scon_list_t actives;
     int max_uri_length;
     scon_hash_table_t peers;
-    bool use_module_threads;
+    bool num_threads;
+    scon_event_base_t *pt2pt_evbase;
 } scon_pt2pt_base_t;
 SCON_EXPORT extern scon_pt2pt_base_t scon_pt2pt_base;
 
 typedef struct {
     scon_object_t super;
-    struct scon_pt2pt_base_component_t *component;
+    struct scon_pt2pt_base_module_t *module;
     scon_bitmap_t addressable;
 } scon_pt2pt_base_peer_t;
 SCON_EXPORT SCON_CLASS_DECLARATION(scon_pt2pt_base_peer_t);
@@ -48,6 +49,7 @@ SCON_EXPORT SCON_CLASS_DECLARATION(scon_pt2pt_base_peer_t);
 int scon_pt2pt_base_select(void);
 /* get a module of the selected component */
 scon_pt2pt_module_t * scon_pt2pt_base_get_module(char *comp_name);
+#define SCON_PT2PT_NUM_THREADS 8
 
 #define PT2PT_SEND_MESSAGE(m)                                        \
     do {                                                             \
@@ -59,7 +61,7 @@ scon_pt2pt_module_t * scon_pt2pt_base_get_module(char *comp_name);
                         __FILE__, __LINE__);                         \
     cd =  SCON_NEW(scon_send_req_t);                                 \
     cd->post.send = *m;                                             \
-    scon_event_set(scon_globals.evbase, &cd->ev, -1,                \
+    scon_event_set(scon_pt2pt_base.pt2pt_evbase, &cd->ev, -1,        \
                    SCON_EV_WRITE,                                    \
                    pt2pt_base_process_send, cd);                     \
     scon_event_set_priority(&cd->ev, SCON_MSG_PRI);                  \
@@ -84,7 +86,7 @@ scon_pt2pt_module_t * scon_pt2pt_base_get_module(char *comp_name);
     msg->iov.iov_base = (IOVBASE_TYPE*)(b);                                \
     msg->iov.iov_len = (l);                                                \
     /* setup the event */                                                  \
-    scon_event_set(scon_globals.evbase, &msg->ev, -1,                      \
+    scon_event_set(scon_pt2pt_base.pt2pt_evbase, &msg->ev, -1,             \
                    SCON_EV_WRITE,                                          \
                    pt2pt_base_process_recv_msg, msg);                      \
     scon_event_set_priority(&msg->ev, SCON_MSG_PRI);                       \

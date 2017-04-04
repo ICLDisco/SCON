@@ -164,11 +164,15 @@ static void process_uri(char *uri)
     uris = scon_argv_split(cptr, ';');
 
     /* get the peer object for this process */
-    memcpy(&ui64, (char*)&peer, sizeof(uint64_t));
+    scon_util_convert_process_name_to_uint64(&ui64, &peer);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
                                                          ui64, (void**)&pr) ||
         NULL == pr) {
         pr = SCON_NEW(scon_pt2pt_base_peer_t);
+        scon_output(0, "process_uri %s setting hash table %p, key %llu, value %p",
+                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                         (void*)&scon_pt2pt_base.peers,
+                         ui64, (void*) pr);
         if (SCON_SUCCESS != (rc = scon_hash_table_set_value_uint64(&scon_pt2pt_base.peers, ui64, (void*)pr))) {
             SCON_ERROR_LOG(rc);
             scon_argv_free(uris);
@@ -199,6 +203,8 @@ static void process_uri(char *uri)
                                     SCON_PRINT_PROC(&peer),
                                     component->base_version.scon_mca_component_name);
                 scon_bitmap_set_bit(&pr->addressable, component->idx);
+                pr->module = scon_pt2pt_base_get_module(
+                                 component->base_version.scon_mca_component_name);
             } else {
                 scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
                                     "%s: peer %s is NOT reachable via component %s",

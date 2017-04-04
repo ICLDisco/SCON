@@ -16,6 +16,8 @@
 #include "src/mca/pt2pt/pt2pt.h"
 #include "src/mca/comm/base/base.h"
 #include "src/util/name_fns.h"
+#include "src/util/error.h"
+#include "src/util/scon_pmix.h"
 
 static void pt2pt_base_send_complete (int status,
                                       scon_handle_t scon_handle,
@@ -45,7 +47,13 @@ void pt2pt_base_process_send (int fd, short flags, void *cbdata)
     scon_comm_scon_t *scon = scon_comm_base_get_scon(req->post.send.scon_handle);
     scon_proc_t peer = req->post.send.dst;
     scon_handle_t peer_handle;
+    scon_proc_t hop;
     scon_recv_t *rcv;
+    scon_pt2pt_base_peer_t *pr;
+    uint64_t ui64;
+    scon_value_t *val = NULL;
+    char *uri = NULL;
+    size_t uri_sz;
     /* if this is a send to ourselves lets handle it in base instead of sending it
     down */
     scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
@@ -70,7 +78,7 @@ void pt2pt_base_process_send (int fd, short flags, void *cbdata)
         }
         /* post the message for receipt - then execute the send complete callback
          */
-        scon_event_set(scon_globals.evbase, &rcv->ev, -1,
+        scon_event_set(scon_pt2pt_base.pt2pt_evbase, &rcv->ev, -1,
                        SCON_EV_WRITE,
                        pt2pt_base_process_recv_msg, rcv);
         scon_event_set_priority(&rcv->ev, SCON_MSG_PRI);
@@ -95,6 +103,50 @@ void pt2pt_base_process_send (int fd, short flags, void *cbdata)
      * routes the message END TO DO ****/
     /* For now we will just get the scon id of the destination for sending this message */
     peer_handle = scon_base_get_handle(scon, &peer);
+    /* before farwording the request to the module lets make sure that we have this
+       peer's contact information */
+    hop = scon->topology_module->api.get_nexthop(&scon->topology_module->topology,
+            &peer);
+    // memcpy(&ui64, (char*)&hop, sizeof(uint64_t));
+    scon_util_convert_process_name_to_uint64(&ui64, &hop);
+    if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
+            ui64, (void**)&pr) || NULL == pr) {
+        scon_output(0,  "%s pt2pt:base:send unknown peer %s",
+                            SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                            SCON_PRINT_PROC(&hop));
+        scon_pmix_get(&hop, SCON_PMIX_PROC_URI, NULL, 0, &val);
+        if (SCON_SUCCESS ==  scon_pmix_get(&hop, SCON_PMIX_PROC_URI, NULL, 0, &val)) {
+            scon_value_unload(val, (void **)&uri,
+                              &uri_sz, SCON_STRING);
+            if (NULL != uri) {
+                scon_pt2pt_base_set_contact_info(uri);
+                if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
+                        ui64, (void**)&pr) ||
+                        NULL == pr) {
+                    /* cannot proceed further, fail the req */
+                    SCON_ERROR_LOG(SCON_ERR_ADDRESSEE_UNKNOWN);
+                    req->post.send.status = SCON_ERR_ADDRESSEE_UNKNOWN;
+                    PT2PT_SEND_COMPLETE(&req->post.send);
+                    return;
+                }
+            } else {
+                SCON_ERROR_LOG(SCON_ERR_ADDRESSEE_UNKNOWN);
+                req->post.send.status = SCON_ERR_ADDRESSEE_UNKNOWN;
+                PT2PT_SEND_COMPLETE(&req->post.send);
+                return;
+            }
+        }
+    }
+    /* the last sanity check we need to do is ensure that this is reachable by the pt2pt component
+       associated with this scon */
+    if( pr->module != scon->pt2pt_module) {
+        SCON_ERROR_LOG(SCON_ERR_ADDRESSEE_UNKNOWN);
+        scon_output(0, "pt2pt_base_process_send: %s oops: proc %s is not reachable from the scon's pt2pt module",
+                        SCON_PRINT_PROC(SCON_PROC_MY_NAME), SCON_PRINT_PROC(&hop));
+        req->post.send.status = SCON_ERR_ADDRESSEE_UNKNOWN;
+        PT2PT_SEND_COMPLETE(&req->post.send);
+        return;
+    }
     scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
                         "%s scon_scon_native_process_send: "
                         "route to %s is %s on src scon %d dest scon%d",
@@ -133,10 +185,6 @@ SCON_EXPORT int pt2pt_base_api_send_nb (scon_handle_t scon_handle,
         req->post.send.dst = *peer;
         req->post.send.cbfunc = cbfunc;
         req->post.send.cbdata = cbdata;
-        scon_output(0, "%s pt2pt_base_send scon %d peer %s",
-                    SCON_PRINT_PROC(SCON_PROC_MY_NAME),
-                    scon->handle,
-                    SCON_PRINT_PROC(&req->post.send.dst));
         /* setup the event for rest of the processing  */
         scon_event_set(scon_globals.evbase, &req->ev, -1, SCON_EV_WRITE, pt2pt_base_process_send, req);
         scon_event_set_priority(&req->ev, SCON_MSG_PRI);
@@ -194,9 +242,16 @@ SCON_EXPORT int pt2pt_base_api_recv_cancel (scon_handle_t scon_handle,
     return SCON_ERROR;
 }
 
+static void send_cons(scon_send_t  *ptr)
+{
+    ptr->buf = NULL;
+    ptr->cbfunc = NULL;
+    ptr->cbdata = NULL;
+    ptr->info = NULL;
+}
 SCON_CLASS_INSTANCE (scon_send_t,
                      scon_list_item_t,
-                     NULL, NULL);
+                     send_cons, NULL);
 
 static void send_req_cons(scon_send_req_t *ptr)
 {

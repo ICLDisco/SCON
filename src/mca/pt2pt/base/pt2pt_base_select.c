@@ -72,10 +72,20 @@ SCON_EXPORT int scon_pt2pt_base_select(void)
          */
         if (NULL == module) {
             scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
-                                 "mca:base:select:pt2pt Skipping component [%s]. Query failed to return a module",
+                                 "mca:pt2pt:select:pt2pt Skipping component [%s]. Query failed to return a module",
                                   component->base_version.scon_mca_component_name );
             continue;
         }
+        /*
+         * start the component
+         */
+        if (SCON_SUCCESS != component->start()) {
+           scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
+                                "mca:pt2pt:select: Skipping component [%s] - failed to startup",
+                                component->base_version.scon_mca_component_name );
+            continue;
+        }
+
         /* record it, but maintain priority order */
         added = false;
         SCON_LIST_FOREACH(cmp, &scon_pt2pt_base.actives, scon_mca_base_component_list_item_t) {
