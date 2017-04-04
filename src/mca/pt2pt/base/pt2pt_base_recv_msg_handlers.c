@@ -60,8 +60,6 @@ void pt2pt_base_post_recv(int sd, short args, void *cbdata)
     }
     post = req->post;
     scon = scon_comm_base_get_scon(post->scon_handle);
-    scon_output(0, "posting recv for Scon %d on tag %d",
-                post->scon_handle, post->tag);
     if (NULL == scon) {
         /* something went wrong */
         scon_output(0, "%s dangling SCON RECV request, invalid scon handle %d",
@@ -98,10 +96,6 @@ void pt2pt_base_post_recv(int sd, short args, void *cbdata)
             //abort();
         }
     }
-    scon_output(0, "%s posting %s recv on tag %d for peer %s",
-                        SCON_PRINT_PROC(SCON_PROC_MY_NAME),
-                        (post->persistent) ? "persistent" : "non-persistent",
-                        post->tag, SCON_PRINT_PROC(&post->peer));
     scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
                         "%s posting %s recv on tag %d for peer %s",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
@@ -109,10 +103,6 @@ void pt2pt_base_post_recv(int sd, short args, void *cbdata)
                         post->tag, SCON_PRINT_PROC(&post->peer));
     /* add it to the list of recvs */
     scon_list_append(&scon->posted_recvs, &post->super);
-    scon_output(0, "%s posted %s recv on tag %d for peer %s calling match recv",
-                SCON_PRINT_PROC(SCON_PROC_MY_NAME),
-                (post->persistent) ? "persistent" : "non-persistent",
-                post->tag, SCON_PRINT_PROC(&post->peer));
     req->post = NULL;
     /* handle any messages that may have already arrived for this recv */
     match_posted_recv(post, post->persistent, scon);
@@ -129,14 +119,14 @@ static void pt2pt_base_complete_recv_msg (scon_recv_t **recv_msg)
     scon_recv_t *msg = *recv_msg;
     scon_comm_scon_t *scon;
     scon = scon_comm_base_get_scon(msg->scon_handle);
-    scon_output(0, "completing recv message on scon %d tag %d",
-                msg->tag, msg->scon_handle);
+
     if (NULL == scon) {
         SCON_ERROR_LOG(SCON_ERR_NOT_FOUND);
-        scon_output(0, "OOPS received a message on a non existent SCON handle %d",
-                   msg->scon_handle);
+        scon_output(0, "OOPS received a message on a non existent SCON handle %d, tag %d",
+                   msg->scon_handle, msg->tag);
         return;
     }
+
     /* see if we have a waiting recv for this message */
     SCON_LIST_FOREACH(post, &scon->posted_recvs, scon_posted_recv_t) {
         /* since names could include wildcards, must use
@@ -146,6 +136,7 @@ static void pt2pt_base_complete_recv_msg (scon_recv_t **recv_msg)
             msg->tag == post->tag) {
             /* deliver the data in the buffer */
             //SCON_CONSTRUCT(&buf, scon_buffer_t);
+            scon_buffer_construct(&buf);
             if(SCON_SUCCESS != scon_buffer_load(&buf, msg->iov.iov_base, msg->iov.iov_len)) {
                 scon_output(0, "%s error loading received buffer on scon %d tag =%d from peer %s",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME), scon->handle, msg->tag,
@@ -163,9 +154,6 @@ static void pt2pt_base_complete_recv_msg (scon_recv_t **recv_msg)
                                      SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                                      SCON_PRINT_PROC(&msg->sender),
                                      msg->tag);
-            scon_output(0, "completed recv message on scon %d tag %d",
-                        msg->tag, msg->scon_handle);
-            SCON_DESTRUCT(&buf);
             /* release the message */
             SCON_RELEASE(msg);
             scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
@@ -206,10 +194,6 @@ static void match_posted_recv(scon_posted_recv_t *rcv,
     scon_list_item_t *item, *next;
     scon_recv_t *msg;
     scon_ns_cmp_bitmask_t mask = SCON_NS_CMP_ALL | SCON_NS_CMP_WILD;
-    scon_output(0, "checking recv msg for tag %d from %s on scon %d",
-                rcv->tag,
-                SCON_PRINT_PROC(&rcv->peer),
-                scon->handle);
     /* scan thru the list of unmatched recvd messages and
      * see if any matches this spec - if so, push the first
      * into the recvd msg queue and look no further
@@ -255,10 +239,7 @@ static void match_posted_recv(scon_posted_recv_t *rcv,
 void pt2pt_base_process_recv_msg(int fd, short flags, void *cbdata)
 {
     scon_recv_t *msg = (scon_recv_t*)cbdata;
-    scon_output(0,"%s message received from %s for tag %d",
-                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
-                         SCON_PRINT_PROC(&msg->sender),
-                         msg->tag);
+
     scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
                          "%s message received from %s for tag %d",
                          SCON_PRINT_PROC(SCON_PROC_MY_NAME),

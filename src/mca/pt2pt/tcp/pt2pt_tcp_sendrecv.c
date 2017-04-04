@@ -202,7 +202,7 @@ void scon_pt2pt_tcp_send_handler(int sd, short flags, void *cbdata)
                         SCON_RELEASE(msg);
                         peer->send_msg = NULL;
                     } else if (NULL != msg->msg->buf) {
-                        /* we are done - notify the RML */
+                        /* we are done - notify the pt2pt */
                         scon_output_verbose(2, scon_pt2pt_base_framework.framework_output,
                                             "%s MESSAGE SEND COMPLETE TO %s OF %d BYTES ON SOCKET %d",
                                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),
@@ -489,8 +489,12 @@ void scon_pt2pt_tcp_recv_handler(int sd, short flags, void *cbdata)
                 if (SCON_EQUAL == scon_util_compare_name_fields(SCON_NS_CMP_ALL, &peer->recv_msg->hdr.dst,
                             SCON_PROC_MY_NAME)) {
                     /* yes - post it to the base for delivery */
+                    scon_output(0, "%s DELIVERING msg tag = %d scon_handle = %d",
+                                        SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                                        peer->recv_msg->hdr.tag,
+                                        peer->recv_msg->hdr.scon_handle);
                     scon_output_verbose(PT2PT_TCP_DEBUG_CONNECT, scon_pt2pt_base_framework.framework_output,
-                                        "%s DELIVERING TO RML tag = %d scon_handle = %d",
+                                        "%s DELIVERING msg tag = %d scon_handle = %d",
                                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                                         peer->recv_msg->hdr.tag,
                                         peer->recv_msg->hdr.scon_handle);

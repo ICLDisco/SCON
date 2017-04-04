@@ -58,6 +58,7 @@ scon_bfrop_t scon_bfrop = {
  * Object constructors, destructors, and instantiations
  */
 /** Value **/
+#if 0
 static void scon_buffer_construct (scon_buffer_t* buffer)
 {
     /** set the default buffer type */
@@ -79,7 +80,7 @@ SCON_CLASS_INSTANCE(scon_buffer_t,
                    scon_object_t,
                    scon_buffer_construct,
                    scon_buffer_destruct);
-
+#endif
 
 static void scon_bfrop_type_info_construct(scon_bfrop_type_info_t *obj)
 {
@@ -174,7 +175,7 @@ scon_status_t scon_bfrop_open(void)
     }
     scon_bfrop_num_reg_types = SCON_UNDEF;
     scon_bfrop_threshold_size = SCON_BFROP_DEFAULT_THRESHOLD_SIZE;
-    scon_bfrop_initial_size = 1;
+    scon_bfrop_initial_size = SCON_BFROP_DEFAULT_INITIAL_SIZE ;
 
     /* Register all the supported types */
     SCON_REGISTER_TYPE("SCON_BOOL", SCON_BOOL,

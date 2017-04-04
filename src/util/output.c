@@ -319,12 +319,12 @@ void scon_output_close(int output_id)
  */
 SCON_EXPORT void scon_output(int output_id, const char *format, ...)
 {
-    //if (output_id >= 0 && output_id < SCON_OUTPUT_MAX_STREAMS) {
+    if (output_id >= 0 && output_id < SCON_OUTPUT_MAX_STREAMS) {
         va_list arglist;
         va_start(arglist, format);
         output(output_id, format, arglist);
         va_end(arglist);
-   // }
+    }
 }
 
 
@@ -333,17 +333,13 @@ SCON_EXPORT void scon_output(int output_id, const char *format, ...)
  */
 SCON_EXPORT void scon_output_verbose(int level, int output_id, const char *format, ...)
 {
-    va_list arglist;
-    va_start(arglist, format);
-    output(output_id, format, arglist);
-    va_end(arglist);
-    /*if (output_id >= 0 && output_id < SCON_OUTPUT_MAX_STREAMS &&
+    if (output_id >= 0 && output_id < SCON_OUTPUT_MAX_STREAMS &&
         info[output_id].ldi_verbose_level >= level) {
         va_list arglist;
         va_start(arglist, format);
         output(output_id, format, arglist);
         va_end(arglist);
-   }*/
+   }
 }
 
 
@@ -407,7 +403,7 @@ char *scon_output_vstring(int level, int output_id, const char *format,
 /*
  * Set the verbosity level of a stream
  */
-void scon_output_set_verbosity(int output_id, int level)
+SCON_EXPORT void scon_output_set_verbosity(int output_id, int level)
 {
     if (output_id >= 0 && output_id < SCON_OUTPUT_MAX_STREAMS) {
         info[output_id].ldi_verbose_level = level;
@@ -988,7 +984,7 @@ static int output(int output_id, const char *format, va_list arglist)
     return rc;
 }
 
-int scon_output_get_verbosity(int output_id)
+SCON_EXPORT int scon_output_get_verbosity(int output_id)
 {
     if (output_id >= 0 && output_id < SCON_OUTPUT_MAX_STREAMS && info[output_id].ldi_used) {
         return info[output_id].ldi_verbose_level;

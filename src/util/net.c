@@ -419,7 +419,7 @@ scon_net_get_hostname(const struct sockaddr *addr)
 }
 
 
-int
+SCON_EXPORT int
 scon_net_get_port(const struct sockaddr *addr)
 {
     switch (addr->sa_family) {

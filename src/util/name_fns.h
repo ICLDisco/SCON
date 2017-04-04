@@ -49,6 +49,13 @@ typedef uint8_t  scon_ns_cmp_bitmask_t;  /**< Bit mask for comparing process nam
 #define SCON_NS_CMP_ALL        0x0f
 #define SCON_NS_CMP_WILD       0x10
 
+/* define a struct that lets us create a list of scon procs */
+typedef struct scon_proc_list_t {
+    scon_list_item_t super;
+    scon_proc_t *name;
+}scon_proc_list_t;
+SCON_EXPORT SCON_CLASS_DECLARATION(scon_proc_list_t);
+
 /* useful define to print name args in output messages */
 extern char* scon_util_print_name_args(const scon_proc_t *name);
 #define SCON_PRINT_PROC(n) \
@@ -64,5 +71,9 @@ int scon_util_convert_process_name_to_string(char **name_string,
         const scon_proc_t* name);
 int scon_util_convert_string_to_process_name(scon_proc_t *name,
         const char* name_string);
+
+int scon_util_convert_process_name_to_uint64(uint64_t *procid,
+        const scon_proc_t *proc);
+
 END_C_DECLS
 #endif

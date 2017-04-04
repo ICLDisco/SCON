@@ -11,7 +11,7 @@
  */
 
 /**
- * This file is a simple set of wrappers around the selected SCON PDL
+ * This file is a simple set of wrappers around the selected SCON SDL
  * component (it's a compile-time framework with, at most, a single
  * component; see sdl.h for details).
  */

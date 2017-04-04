@@ -19,7 +19,7 @@ BEGIN_C_DECLS
 /*
  * comm native interfaces
  */
-SCON_EXPORT extern scon_comm_base_component_t scon_comm_native_component;
+SCON_EXPORT extern scon_comm_base_component_t mca_comm_native_component;
 SCON_EXPORT extern scon_comm_module_t scon_comm_native_module;
 
 END_C_DECLS

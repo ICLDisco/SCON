@@ -391,7 +391,7 @@ typedef struct scon_data_array {
     void *array;
 } scon_data_array_t;
 
-/**** TO DO: this matches opal value but we do need to add
+/**** TO DO: this matches scon value but we do need to add
   * INFO array support */
 
 /* NOTE: operations can supply a collection of values under
@@ -446,6 +446,7 @@ typedef struct {
         scon_member_range_t range;
         scon_status_t status;
         void *ptr;
+        struct scon_info_t *info;
     } data;
 } scon_value_t;
 

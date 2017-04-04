@@ -544,11 +544,11 @@ static scon_status_t pack_val(scon_buffer_t *buffer,
                 return ret;
             }
             break;
-  /*      case SCON_PROC_RANK:
-            if (SCON_SUCCESS != (ret = scon_bfrop_pack_buffer(buffer, &p->data.rank, 1, SCON_PROC_RANK))) {
+        case SCON_INFO:
+            if (SCON_SUCCESS != (ret = scon_bfrop_pack_info(buffer, p->data.info, 1, SCON_INFO))) {
                 return ret;
             }
-            break;*/
+            break;
         case SCON_BYTE_OBJECT:
             if (SCON_SUCCESS != (ret = scon_bfrop_pack_buffer(buffer, &p->data.bo, 1, SCON_BYTE_OBJECT))) {
                 return ret;
@@ -804,12 +804,13 @@ scon_status_t scon_bfrop_pack_coll_sig(scon_buffer_t *buffer,
     ptr = (scon_collectives_signature_t **) src;
 
     for (i = 0; i < num_vals; ++i) {
-        /* pack the #procs */
-        if (SCON_SUCCESS != (rc = scon_bfrop_pack_datatype(buffer, &ptr[i]->nprocs, 1, SCON_SIZE))) {
+        /* pack the scon handle  */
+        if (SCON_SUCCESS != (rc = scon_bfrop_pack_datatype(buffer, &ptr[i]->scon_handle, 1, SCON_INT32))) {
             return rc;
         }
-        /* pack the sequence number */
-        if (SCON_SUCCESS != (rc = scon_bfrop_pack_datatype(buffer, &ptr[i]->seq_num, 1, SCON_UINT32))) {
+
+        /* pack the #procs */
+        if (SCON_SUCCESS != (rc = scon_bfrop_pack_datatype(buffer, &ptr[i]->nprocs, 1, SCON_SIZE))) {
             return rc;
         }
         if (0 < ptr[i]->nprocs) {
@@ -817,6 +818,11 @@ scon_status_t scon_bfrop_pack_coll_sig(scon_buffer_t *buffer,
             if (SCON_SUCCESS != (rc = scon_bfrop_pack_proc(buffer, ptr[i]->procs, ptr[i]->nprocs, SCON_PROC))) {
                 return rc;
             }
+        }
+
+        /* pack the sequence number */
+        if (SCON_SUCCESS != (rc = scon_bfrop_pack_datatype(buffer, &ptr[i]->seq_num, 1, SCON_UINT32))) {
+            return rc;
         }
     }
 

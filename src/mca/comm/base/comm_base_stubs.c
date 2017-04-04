@@ -153,7 +153,7 @@ error:
 }
 
 
-scon_status_t comm_base_pack_scon_config(scon_comm_scon_t *scon,
+SCON_EXPORT scon_status_t comm_base_pack_scon_config(scon_comm_scon_t *scon,
                                               scon_buffer_t *buffer)
 {
     int rc;

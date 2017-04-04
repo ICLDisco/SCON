@@ -53,7 +53,7 @@ static int scon_comm_base_open(scon_mca_base_open_flag_t flags)
     /* setup globals */
     SCON_CONSTRUCT(&comm_base.actives, scon_list_t);
     SCON_CONSTRUCT(&comm_base.scons, scon_pointer_array_t);
-    if (SCON_SUCCESS != scon_pointer_array_init(&comm_base.scons, 0,
+    if (SCON_SUCCESS != scon_pointer_array_init(&comm_base.scons, 1,
                                                  INT_MAX, 1)) {
         return SCON_ERR_OUT_OF_RESOURCE;
     }
@@ -63,8 +63,13 @@ static int scon_comm_base_open(scon_mca_base_open_flag_t flags)
 
 SCON_EXPORT scon_comm_scon_t * scon_comm_base_get_scon (scon_handle_t handle)
 {
-    if (SCON_INDEX_UNDEFINED != get_index(handle))
-        return scon_pointer_array_get_item (&comm_base.scons, get_index(handle));
+    scon_comm_scon_t *scon;
+    int index = get_index(handle);
+    if ((0 <= index) && (SCON_INDEX_UNDEFINED != index)) {
+        scon = (scon_comm_scon_t*) scon_pointer_array_get_item (&comm_base.scons,
+                                       index);
+        return scon;
+    }
     else
         return NULL;
 }
@@ -79,7 +84,9 @@ SCON_EXPORT void scon_comm_base_add_scon(scon_comm_scon_t *scon)
 SCON_EXPORT void scon_comm_base_remove_scon(scon_comm_scon_t *scon)
 {
     int remove_index = scon->handle - 1;
+    scon_output(0, "removing scon %d", scon->handle);
     scon_pointer_array_set_item (&comm_base.scons, remove_index, NULL);
+
 }
 
 

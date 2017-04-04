@@ -66,11 +66,9 @@ static void allgather_recv(scon_status_t status,
                            void *cbdata);
 static void barrier_release(scon_status_t status,
                             scon_handle_t scon_handle,
-                            scon_proc_t procs[],
-                            size_t nprocs,
+                            scon_proc_t *peer,
                             scon_buffer_t *buf,
-                            scon_info_t info[],
-                            size_t ninfo,
+                            scon_msg_tag_t tag,
                             void *cbdata);
 
 /**
@@ -89,20 +87,20 @@ static int init(scon_handle_t scon_handle)
                            SCON_PROC_WILDCARD,
                            SCON_MSG_TAG_ALLGATHER_DIRECT,
                            SCON_MSG_PERSISTENT,
-                           xcast_recv, NULL,
+                           allgather_recv, NULL,
                            NULL, 0);
-    pt2pt_base_api_recv_nb(scon_handle,
+ /*   pt2pt_base_api_recv_nb(scon_handle,
                            SCON_PROC_WILDCARD,
                            SCON_MSG_TAG_BARRIER_DIRECT,
                            SCON_MSG_PERSISTENT,
                            xcast_recv, NULL,
-                           NULL, 0);
+                           NULL, 0);*/
     /* setup recv for  collective (allgather/barrier) release */
     pt2pt_base_api_recv_nb(scon_handle,
                            SCON_PROC_WILDCARD,
                            SCON_MSG_TAG_COLL_RELEASE,
                            SCON_MSG_PERSISTENT,
-                           xcast_recv, NULL,
+                           barrier_release, NULL,
                            NULL, 0);
 
     return SCON_SUCCESS;
@@ -183,6 +181,7 @@ static int xcast(scon_xcast_t *xcast)
     sig->seq_num = 0;
     //xcast_buf = SCON_NEW(scon_buffer_t);
     xcast_buf = (scon_buffer_t*) malloc(sizeof(scon_buffer_t));
+    scon_buffer_construct(xcast_buf);
     scon = scon_comm_base_get_scon(xcast->scon_handle);
     scon_output_verbose(2,  scon_collectives_base_framework.framework_output,
                         "xcast from %s forwarding to master %s for tag %d, nprocs =%d, on scon=%d",
@@ -258,6 +257,7 @@ static int allgather(scon_collectives_tracker_t *coll,
 
    // relay = SCON_NEW(scon_buffer_t);
     relay = (scon_buffer_t*) malloc(sizeof(scon_buffer_t));
+    scon_buffer_construct(relay);
     /* pack the signature */
     if (SCON_SUCCESS != (rc = scon_bfrop.pack(relay, &coll->sig, 1,
                               SCON_COLLECTIVES_SIGNATURE))) {
@@ -292,7 +292,7 @@ CLEANUP:
        and call user's callback */
     //SCON_RELEASE(relay);
     free(relay);
-    allgather = (scon_allgather_t*) coll->req;
+   allgather = (scon_allgather_t*) coll->req;
     allgather->status = rc;
     if (NULL != allgather->cbfunc) {
         allgather->cbfunc(allgather->status,
@@ -327,7 +327,7 @@ static void allgather_recv(scon_status_t status,
     scon_collectives_tracker_t *coll;
     scon_comm_scon_t *scon;
     scon_xcast_t *xcast;
-    scon_proc_t *parent = NULL;
+    scon_proc_t *parent;
     /* retrieve the scon on which the msg was received */
     if( NULL == (scon = (scon_comm_base_get_scon(scon_handle))))
     {
@@ -365,7 +365,9 @@ static void allgather_recv(scon_status_t status,
                         "%s collectives:direct allgather recv nexpected %d nrep %d",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                         (int)coll->nexpected, (int)coll->nreported);
-
+    scon_output(0,  "%s collectives:direct allgather recv nexpected %d nrep %d",
+                SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                (int)coll->nexpected, (int)coll->nreported);
     /* see if everyone has reported */
     if (coll->nreported == coll->nexpected) {
         if (is_master(scon)) {
@@ -376,6 +378,7 @@ static void allgather_recv(scon_status_t status,
             /* the allgather is complete - send the xcast */
             //reply = SCON_NEW(scon_buffer_t);
             reply = (scon_buffer_t*) malloc(sizeof(scon_buffer_t));
+            scon_buffer_construct(reply);
             /* pack the signature */
             if (SCON_SUCCESS != (rc = scon_bfrop.pack(reply, &sig, 1, SCON_COLLECTIVES_SIGNATURE))) {
                 SCON_ERROR_LOG(rc);
@@ -407,12 +410,18 @@ static void allgather_recv(scon_status_t status,
             xcast->cbdata = NULL;
             xcast->info = NULL;
             xcast->ninfo = 0;
+            scon_output(0, "%s allgather complete, sending xcast to release",
+                        SCON_PRINT_PROC(SCON_PROC_MY_NAME));
             scon->collective_module->xcast(xcast);
             //SCON_RELEASE(reply);
-            free(reply);
+            //free(reply);
         } else {
+            SCON_PROC_CREATE(parent,1);
             *parent = scon->topology_module->api.get_nexthop(&scon->topology_module->topology,
                       SCON_GET_MASTER(scon));
+            scon_output(0, "%s received all inputs, sending my collection to master %s",
+                        SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                        SCON_PRINT_PROC(SCON_GET_MASTER(scon)));
             scon_output_verbose(2,  scon_collectives_base_framework.framework_output,
                                 "%s collectives:default allgather rollup  complete"
                                 "sending bucket to parent %s",
@@ -421,19 +430,22 @@ static void allgather_recv(scon_status_t status,
             /* relay the bucket upward */
             // reply = SCON_NEW(scon_buffer_t);
             reply = (scon_buffer_t*) malloc(sizeof(scon_buffer_t));
+            scon_buffer_construct(reply);
             /* pack the signature */
             if (SCON_SUCCESS != (rc = scon_bfrop.pack(reply, &sig, 1, SCON_COLLECTIVES_SIGNATURE))) {
                 SCON_ERROR_LOG(rc);
                 //SCON_RELEASE(reply);
                 free(reply);
                 SCON_RELEASE(sig);
+                SCON_PROC_FREE(parent, 1);
                 return;
             }
             /* transfer the collected bucket */
-            scon_bfrop.copy_payload(reply, &coll->bucket);;
+            scon_bfrop.copy_payload(reply, &coll->bucket);
+
             /* send the info to our parent */
             if(SCON_SUCCESS != (rc = pt2pt_base_api_send_nb(scon_handle,
-                                     SCON_GET_MASTER(scon), reply,
+                                     parent, reply,
                                      SCON_MSG_TAG_ALLGATHER_DIRECT,
                                      scon_collectives_base_allgather_send_complete_callback,
                                      coll,
@@ -442,11 +454,16 @@ static void allgather_recv(scon_status_t status,
                 //SCON_RELEASE(reply);
                 free(reply);
                 SCON_RELEASE(sig);
+                SCON_PROC_FREE(parent, 1);
                 return;
             }
+            scon_output(0, "%s sent my allgather bucket up to %s",
+                        SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                        SCON_PRINT_PROC(parent));
+            SCON_PROC_FREE(parent, 1);
         }
     }
-    SCON_RELEASE(sig);
+   // SCON_RELEASE(sig);
 }
 
 static void xcast_recv(scon_status_t status,
@@ -482,6 +499,7 @@ static void xcast_recv(scon_status_t status,
     /* we need a passthru buffer to send to our children */
     //relay = SCON_NEW(scon_buffer_t);
     relay = (scon_buffer_t*) malloc(sizeof(scon_buffer_t));
+    scon_buffer_construct(relay);
     scon_bfrop.copy_payload(relay, buf);
 
     /* extract the signature that we do not need */
@@ -495,8 +513,6 @@ static void xcast_recv(scon_status_t status,
                             scon_handle);
         return;
     }
-    SCON_RELEASE(sig);
-
     /* extract the target tag */
     cnt=1;
     if (SCON_SUCCESS != (ret = scon_bfrop.unpack(buf, &tag, &cnt, SCON_UINT32))) {
@@ -509,20 +525,25 @@ static void xcast_recv(scon_status_t status,
         return;
     }
 
+    //SCON_RELEASE(sig);
     /* setup a buffer we can pass to ourselves - this just contains
      * the actual message, minus the headers inserted by xcast itself */
     //msg = SCON_NEW(scon_buffer_t);
     msg = (scon_buffer_t*) malloc (sizeof(scon_buffer_t));
+    scon_buffer_construct(msg);
     scon_bfrop.copy_payload(msg, buf);
+
+
     /* setup the relay list */
     SCON_CONSTRUCT(&relay_list, scon_list_t);
+
     /* get the list of next recipients from the routed module */
     scon->topology_module->api.get_routing_list(&scon->topology_module->topology, &relay_list);
 
     /* if list is empty, no relay is required */
     /* send the message to each recipient on list, deconstructing it as we go */
     while (NULL != (item = scon_list_remove_first(&relay_list))) {
-        relay_proc = (scon_proc_t*)item;
+        relay_proc = (scon_proc_t*)((scon_proc_list_t*)item)->name;
         scon_output_verbose(5,  scon_collectives_base_framework.framework_output,
                             "%s collectives_default xcast recv: relaying xcast  msg of %d bytes to %s on scon=%d",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),
@@ -550,16 +571,16 @@ static void xcast_recv(scon_status_t status,
         }
         SCON_RELEASE(item);
     }
-    free(relay);
+    //free(relay);
     //SCON_RELEASE(relay);  // retain accounting
     /* cleanup */
     SCON_DESTRUCT(&relay_list);
 
-    /* now send the relay buffer to myself for processing */
+    /* now send the relay buffer to myself for processing  if I am included in the siglist*/
     if (SCON_SUCCESS != (ret = pt2pt_base_api_send_nb(scon_handle,
                                SCON_PROC_MY_NAME,
                                msg,
-                               SCON_MSG_TAG_XCAST,
+                               tag,
                                xcast_relay_send_complete_callback, NULL,
                                NULL, 0))) {
         scon_output_verbose(0,  scon_collectives_base_framework.framework_output,
@@ -569,18 +590,15 @@ static void xcast_recv(scon_status_t status,
                             scon_handle);
         SCON_ERROR_LOG(ret);
         //SCON_RELEASE(msg);
-        free(msg);
+        //free(msg);
     }
-
 }
 
 static void barrier_release(scon_status_t status,
                             scon_handle_t scon_handle,
-                            scon_proc_t procs[],
-                            size_t nprocs,
+                            scon_proc_t *peer,
                             scon_buffer_t *buf,
-                            scon_info_t info[],
-                            size_t ninfo,
+                            scon_msg_tag_t tag,
                             void *cbdata)
 {
     int32_t cnt;
@@ -588,7 +606,11 @@ static void barrier_release(scon_status_t status,
     scon_collectives_signature_t *sig;
     scon_collectives_tracker_t *coll;
     scon_comm_scon_t *scon;
-    scon_allgather_t *allgather;
+    scon_allgather_t *allgather = NULL;
+    scon_output(0, "%s barrier_release: called with %d bytes on scon %d",
+                        SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                        (int)buf->bytes_used,
+                        scon_handle);
     scon_output_verbose(0,  scon_collectives_base_framework.framework_output,
                         "%s barrier_release: called with %d bytes on scon %d",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
@@ -630,13 +652,17 @@ static void barrier_release(scon_status_t status,
     /* execute the callback : TO DO we need to differentiate between a barrier and
     * allgather here */
     allgather = (scon_allgather_t*)coll->req;
+    scon_output(0, "%s barrier release: calling allgather req %p coll->req= %p coll->nreported = %d ",
+                SCON_PRINT_PROC(SCON_PROC_MY_NAME), allgather, coll->nreported);
     if (NULL != allgather && NULL != allgather->cbfunc) {
-
+        scon_output(0, "%s barrier release: calling allgather cbfunc with status = %d",
+                       SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                       status);
         allgather->cbfunc(status, scon_handle, allgather->procs,
                           allgather->nprocs,  buf, allgather->info,
                           allgather->ninfo, allgather->cbdata);
     }
     scon_list_remove_item(&scon_collectives_base.ongoing, &coll->super);
-    SCON_RELEASE(allgather);
+   // SCON_RELEASE(allgather);
     SCON_RELEASE(coll);
 }

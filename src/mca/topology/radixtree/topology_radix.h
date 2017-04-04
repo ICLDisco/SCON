@@ -20,7 +20,7 @@ typedef struct {
     scon_topology_component_t super;
     int radix;
 } scon_topology_radixtree_component_t;
-SCON_EXPORT extern scon_topology_radixtree_component_t scon_topology_radixtree_component;
+SCON_EXPORT extern scon_topology_radixtree_component_t mca_topology_radixtree_component;
 SCON_EXPORT extern scon_topology_module_api_t radixtree_module_api;
 END_C_DECLS
 

@@ -1081,6 +1081,7 @@ int scon_bfrop_copy_coll_sig(scon_collectives_signature_t **dest,
         SCON_ERROR_LOG(SCON_ERR_OUT_OF_RESOURCE);
         return SCON_ERR_OUT_OF_RESOURCE;
     }
+    (*dest)->scon_handle = src->scon_handle;
     (*dest)->nprocs = src->nprocs;
     (*dest)->procs = (scon_proc_t*)malloc(src->nprocs * sizeof(scon_proc_t));
     (*dest)->seq_num = src->seq_num;

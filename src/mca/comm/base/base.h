@@ -172,12 +172,13 @@ extern scon_handle_t scon_base_get_handle(scon_comm_scon_t *scon,
 
 static inline uint32_t get_index (scon_handle_t handle)
 {
-    if (handle <= SCON_HANDLE_INVALID)
+    if (handle > SCON_HANDLE_INVALID)
         return handle - 1 ;
     else {
         SCON_ERROR_LOG (SCON_ERR_INVALID_HANDLE);
         return SCON_INDEX_UNDEFINED;
     }
+
 }
 
 #define SCON_GET_MASTER(scon)  (&scon->master)

@@ -109,12 +109,13 @@ SCON_CLASS_DECLARATION(scon_pt2pt_tcp_recv_t);
                              SCON_PRINT_PROC(SCON_PROC_MY_NAME),        \
                              __FILE__, __LINE__,                        \
                             SCON_PRINT_PROC(&((m)->dst)));              \
-        msg = SCON_NEW(scon_pt2pt_tcp_send_t);                              \
+        msg = SCON_NEW(scon_pt2pt_tcp_send_t);                          \
         /* setup the header */                                          \
         msg->hdr.origin = (m)->origin;                                  \
         msg->hdr.dst = (m)->dst;                                        \
         msg->hdr.type = SCON_PT2PT_TCP_USER;                            \
         msg->hdr.tag = (m)->tag;                                        \
+        msg->hdr.scon_handle = (m)->scon_handle;                        \
         /* point to the actual message */                               \
         msg->msg = (m);                                                 \
         msg->hdr.nbytes = (m)->buf->bytes_used;                         \
@@ -147,6 +148,7 @@ SCON_CLASS_DECLARATION(scon_pt2pt_tcp_recv_t);
         msg->hdr.dst = (m)->dst;                                        \
         msg->hdr.type = SCON_PT2PT_TCP_USER;                            \
         msg->hdr.tag = (m)->tag;                                        \
+        msg->hdr.scon_handle = (m)->scon_handle;                        \
         /* point to the actual message */                               \
         msg->msg = (m);                                                 \
         /* set the total number of bytes to be sent */                  \
@@ -260,7 +262,7 @@ SCON_CLASS_DECLARATION(scon_pt2pt_tcp_msg_error_t);
                   SCON_MAX_JOBLEN);                              \
         mop->hop.rank = (h)->rank;                                      \
       /* this goes to the Pt2pt framework, so use that event base */    \
-        scon_event_set(scon_globals.evbase, &mop->ev, -1,                   \
+        scon_event_set(scon_pt2pt_base.pt2pt_evbase, &mop->ev, -1,                   \
                        SCON_EV_WRITE, (cbfunc), mop);                   \
         scon_event_set_priority(&mop->ev, SCON_MSG_PRI);                \
         scon_event_active(&mop->ev, SCON_EV_WRITE, 1);                  \
@@ -297,7 +299,7 @@ SCON_CLASS_DECLARATION(scon_pt2pt_tcp_msg_error_t);
                   SCON_MAX_JOBLEN);                                     \
         mop->hop.rank = (h)->rank;                                      \
       /* this goes to the Pt2pt framework, so use that event base */    \
-        scon_event_set(scon_globals.evbase, &mop->ev, -1,               \
+        scon_event_set(scon_pt2pt_base.pt2pt_evbase, &mop->ev, -1,               \
                        SCON_EV_WRITE, (c), mop);                        \
         scon_event_set_priority(&mop->ev, SCON_MSG_PRI);                \
         scon_event_active(&mop->ev, SCON_EV_WRITE, 1);                  \

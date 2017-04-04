@@ -25,7 +25,7 @@ static scon_topology_module_t* radix_get_module(void);
 /**
  * component definition
  */
-scon_topology_radixtree_component_t scon_topology_radixtree_component = {
+scon_topology_radixtree_component_t mca_topology_radixtree_component = {
 
     .super =
     {
@@ -42,19 +42,21 @@ scon_topology_radixtree_component_t scon_topology_radixtree_component = {
         },
         .get_module = radix_get_module
     },
+    .radix = 64,
 };
+
 
 static int topology_radix_component_register(void)
 {
-    scon_mca_base_component_t *c = &scon_topology_radixtree_component.super.base_version;
+    scon_mca_base_component_t *c = &mca_topology_radixtree_component.super.base_version;
 
-    scon_topology_radixtree_component.radix = 64;
+    mca_topology_radixtree_component.radix = 64;
     (void) scon_mca_base_component_var_register(c, "tree radix" ,
                                            "Radix to be used for topology radix tree",
                                            SCON_MCA_BASE_VAR_TYPE_INT, NULL, 0, 0,
                                            SCON_INFO_LVL_9,
                                            SCON_MCA_BASE_VAR_SCOPE_READONLY,
-                                           &scon_topology_radixtree_component.radix);
+                                           &mca_topology_radixtree_component.radix);
 
     return SCON_SUCCESS;
 }

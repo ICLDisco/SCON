@@ -22,7 +22,7 @@ BEGIN_C_DECLS
 /*
  * collectives brucks interfaces
  */
-extern scon_collectives_base_component_t scon_collectives_brucks_component;
+extern scon_collectives_base_component_t mca_collectives_brucks_component;
 extern scon_collectives_module_t scon_collectives_brucks_module;
 
 END_C_DECLS

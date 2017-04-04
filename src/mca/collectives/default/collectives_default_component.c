@@ -25,7 +25,7 @@ static scon_collectives_module_t* default_get_module(void);
 /**
  * component definition
  */
-SCON_EXPORT scon_collectives_base_component_t scon_collectives_default_component = {
+SCON_EXPORT scon_collectives_base_component_t mca_collectives_default_component = {
     /* First, the mca_base_component_t struct containing meta
        information about the component itself */
     .base_version =

@@ -8,10 +8,12 @@
  * $HEADER$
  */
 
-#include <src/include/scon_config.h>
+#include "scon_config.h"
+#include "scon_globals.h"
 #include "src/mca/pt2pt/base/base.h"
 #include "src/mca/pt2pt/base/static-components.h"
 #include "src/mca/pt2pt/pt2pt.h"
+#include "src/runtime/scon_progress_threads.h"
 /*
  * Globals
  */
@@ -37,6 +39,11 @@ static int scon_pt2pt_base_open(scon_mca_base_open_flag_t flags)
     SCON_CONSTRUCT(&scon_pt2pt_base.peers, scon_hash_table_t);
     scon_hash_table_init(&scon_pt2pt_base.peers, 128);
     SCON_CONSTRUCT(&scon_pt2pt_base.actives, scon_list_t);
+    if ((SCON_PROC_IS_MASTER) || (SCON_PROC_IS_INTERIM_NODE)) {
+        scon_pt2pt_base.pt2pt_evbase = scon_progress_thread_init("PT2PT_BASE");
+    } else {
+         scon_pt2pt_base.pt2pt_evbase = scon_progress_thread_init(NULL);
+    }
     /* Open up all available components */
     return scon_mca_base_framework_components_open(&scon_pt2pt_base_framework, flags);
 }
@@ -44,12 +51,15 @@ static int scon_pt2pt_base_open(scon_mca_base_open_flag_t flags)
 
 static int scon_pt2pt_base_register(scon_mca_base_register_flag_t flags)
 {
+    scon_pt2pt_base.num_threads = 0;
+    if((SCON_PROC_IS_MASTER) || (SCON_PROC_IS_INTERIM_NODE))
+        scon_pt2pt_base.num_threads = SCON_PT2PT_NUM_THREADS;
     (void)scon_mca_base_var_register("scon", "pt2pt", "base", "enable_module_progress_threads",
                                 "Whether to independently progress pt2pt messages for each interface",
                                 SCON_MCA_BASE_VAR_TYPE_BOOL, NULL, 0, 0,
                                 9,
                                 SCON_MCA_BASE_VAR_SCOPE_READONLY,
-                                &scon_pt2pt_base.use_module_threads);
+                                &scon_pt2pt_base.num_threads);
     return SCON_SUCCESS;
 }
 
@@ -80,6 +90,10 @@ static int scon_pt2pt_base_close(void)
     }
 
     SCON_DESTRUCT(&scon_pt2pt_base.peers);
+    if ((SCON_PROC_IS_MASTER) || (SCON_PROC_IS_INTERIM_NODE))
+        scon_progress_thread_finalize("PT2PT_BASE");
+    else
+        scon_progress_thread_finalize(NULL);
     return scon_mca_base_framework_components_close(&scon_pt2pt_base_framework, NULL);
 }
 
@@ -93,7 +107,7 @@ SCON_MCA_BASE_FRAMEWORK_DECLARE(scon, pt2pt, "pt2pt",
 
 static void pr_cons(scon_pt2pt_base_peer_t *ptr)
 {
-    ptr->component = NULL;
+    ptr->module = NULL;
     SCON_CONSTRUCT(&ptr->addressable, scon_bitmap_t);
     scon_bitmap_init(&ptr->addressable, 8);
 }

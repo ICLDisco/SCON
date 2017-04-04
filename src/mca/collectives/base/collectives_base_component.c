@@ -12,6 +12,7 @@
 #include <scon_types.h>
 #include <scon_globals.h>
 #include "scon_common.h"
+#include "src/buffer_ops/types.h"
 #include "src/mca/collectives/base/base.h"
 #include "src/mca/collectives/base/static-components.h"
 
@@ -96,6 +97,7 @@ static void tcon(scon_collectives_tracker_t *p)
 {
     p->sig = NULL;
     SCON_CONSTRUCT(&p->distance_mask_recv, scon_bitmap_t);
+    scon_buffer_construct(&p->bucket);
     p->nexpected = 0;
     p->nreported = 0;
     p->req = NULL;

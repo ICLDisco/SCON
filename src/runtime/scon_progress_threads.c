@@ -173,7 +173,7 @@ static int start_progress_engine(scon_progress_tracker_t *trk)
     return rc;
 }
 
-scon_event_base_t *scon_progress_thread_init(const char *name)
+SCON_EXPORT scon_event_base_t *scon_progress_thread_init(const char *name)
 {
     scon_progress_tracker_t *trk;
     int rc;

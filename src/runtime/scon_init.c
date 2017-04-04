@@ -91,7 +91,10 @@ SCON_EXPORT scon_status_t scon_init(scon_info_t info[],
     /* initialize the help system */
     scon_show_help_init();
 
-
+    /* init buffer ops */
+    if(SCON_SUCCESS != (ret = scon_bfrop_open())) {
+        scon_output(0, "scon_init: scon_bfrop_open() failed error %d", ret);
+    }
     /* keyval lex-based parser */
     if (SCON_SUCCESS != (ret = scon_util_keyval_parse_init())) {
         scon_output(0, "scon_util_keyval_parse_init error!",  __FILE__, __LINE__);

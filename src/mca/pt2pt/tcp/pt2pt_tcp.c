@@ -83,17 +83,7 @@ scon_pt2pt_tcp_module_t scon_pt2pt_tcp_module = {
  * Local utility functions
  */
 static void recv_handler(int sd, short flags, void* user);
-static void* progress_thread_engine(scon_object_t *obj)
-{
-    scon_output_verbose(2, scon_pt2pt_base_framework.framework_output,
-                        "%s TCP PT2PT PROGRESS THREAD RUNNING",
-                        SCON_PRINT_PROC(SCON_PROC_MY_NAME));
 
-    while (scon_pt2pt_tcp_module.ev_active) {
-        scon_event_loop(scon_pt2pt_tcp_module.ev_base, SCON_EVLOOP_ONCE);
-    }
-    return SCON_THREAD_CANCELLED;
-}
 
 
 /*
@@ -106,28 +96,17 @@ void scon_pt2pt_tcp_init(void)
     scon_hash_table_init(&scon_pt2pt_tcp_module.peers, 32);
     scon_pt2pt_tcp_module.ev_active = false;
 
-    if (scon_pt2pt_base.use_module_threads) {
+    if (scon_pt2pt_base.num_threads) {
         /* if we are to use independent progress threads at
          * the module level, start it now
          */
         scon_output_verbose(2, scon_pt2pt_base_framework.framework_output,
                             "%s STARTING TCP PROGRESS THREAD",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME));
-        scon_pt2pt_tcp_module.ev_base = scon_progress_thread_init("pt2pt");
-#if 0
-        /* construct the thread object */
-        SCON_CONSTRUCT(&scon_pt2pt_tcp_module.progress_thread, scon_thread_t);
-        /* fork off a thread to progress it */
-        scon_pt2pt_tcp_module.progress_thread.t_run = progress_thread_engine;
-        scon_pt2pt_tcp_module.ev_active = true;
-        if (SCON_SUCCESS != scon_progess_thread_start(&scon_pt2pt_tcp_module.progress_thread)) {
-            scon_output(0, "%s progress thread failed to start",
-                        SCON_PRINT_PROC(SCON_PROC_MY_NAME));
-        }
-#endif
+        scon_pt2pt_tcp_module.ev_base = scon_progress_thread_init("pt2pt_tcp");
     }
     else {
-        scon_pt2pt_tcp_module.ev_base = scon_globals.evbase;
+        scon_pt2pt_tcp_module.ev_base = scon_pt2pt_base.pt2pt_evbase;
     }
 }
 
@@ -159,8 +138,7 @@ void scon_pt2pt_tcp_fini(void)
                             "%s STOPPING TCP PROGRESS THREAD",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME));
         /* stop the progress thread */
-        scon_progress_thread_finalize("pt2pt");
-        SCON_DESTRUCT(&scon_pt2pt_tcp_module.progress_thread);
+        scon_progress_thread_finalize("pt2pt_tcp");
         /* release the event base */
         scon_event_base_free(scon_pt2pt_tcp_module.ev_base);
     }
@@ -172,11 +150,15 @@ void scon_pt2pt_tcp_fini(void)
  * PT2PT-level connection handshake.  Used in both the threaded and
  * event listen modes.
  */
-static void accept_connection(const int accepted_fd,
+ void scon_pt2pt_tcp_accept_connection(const int accepted_fd,
                               const struct sockaddr *addr)
 {
     scon_output_verbose(PT2PT_TCP_DEBUG_CONNECT, scon_pt2pt_base_framework.framework_output,
                         "%s accept_connection: %s:%d\n",
+                        SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                        scon_net_get_hostname(addr),
+                        scon_net_get_port(addr));
+    scon_output(0, "%s scon_pt2pt_tcp_accept_connection: %s:%d\n",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                         scon_net_get_hostname(addr),
                         scon_net_get_port(addr));
@@ -236,7 +218,7 @@ static void process_set_peer(int fd, short args, void *cbdata)
     scon_pt2pt_tcp_peer_op_t *pop = (scon_pt2pt_tcp_peer_op_t*)cbdata;
     scon_pt2pt_tcp_peer_t *peer;
     int rc=SCON_SUCCESS;
-    uint64_t *ui64 = (uint64_t*)(&pop->peer);
+    uint64_t ui64;
     scon_pt2pt_tcp_addr_t *maddr;
 
     scon_output_verbose(PT2PT_TCP_DEBUG_CONNECT, scon_pt2pt_base_framework.framework_output,
@@ -253,11 +235,16 @@ static void process_set_peer(int fd, short args, void *cbdata)
         peer = SCON_NEW(scon_pt2pt_tcp_peer_t);
         strncpy(peer->name.job_name, pop->peer.job_name, SCON_MAX_JOBLEN);
         peer->name.rank = pop->peer.rank;
+        scon_util_convert_process_name_to_uint64(&ui64, &pop->peer);
         scon_output_verbose(20, scon_pt2pt_base_framework.framework_output,
                             "%s SET_PEER ADDING PEER %s",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                             SCON_PRINT_PROC(&pop->peer));
-        if (SCON_SUCCESS != scon_hash_table_set_value_uint64(&scon_pt2pt_tcp_module.peers, (*ui64), peer)) {
+        scon_output(0, "process_set_peer %s setting tcp hash table %p, key %llu, value %p",
+                    SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                    (void*)&scon_pt2pt_tcp_module.peers,
+                    ui64, (void*) peer);
+        if (SCON_SUCCESS != scon_hash_table_set_value_uint64(&scon_pt2pt_tcp_module.peers, ui64, peer)) {
             SCON_RELEASE(peer);
             return;
         }
@@ -399,6 +386,10 @@ static void process_send(int fd, short args, void *cbdata)
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                             __FILE__, __LINE__,
                             SCON_PRINT_PROC(&hop));
+        scon_output(0,   "%s:[%s:%d] hop %s unknown",
+                            SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                            __FILE__, __LINE__,
+                            SCON_PRINT_PROC(&hop));
         SCON_ACTIVATE_TCP_NO_ROUTE(op->msg, &hop, scon_pt2pt_tcp_component_no_route);
         goto cleanup;
     }
@@ -535,16 +526,20 @@ static void recv_handler(int sd, short flg, void *cbdata)
     uint64_t *ui64;
     scon_pt2pt_tcp_hdr_t hdr;
     scon_pt2pt_tcp_peer_t *peer;
+    int rc;
 
     scon_output_verbose(PT2PT_TCP_DEBUG_CONNECT, scon_pt2pt_base_framework.framework_output,
                         "%s:tcp:recv:handler called",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME));
+    scon_output(0, "%s:tcp:recv:handler called",
+                        SCON_PRINT_PROC(SCON_PROC_MY_NAME));
 
     /* get the handshake */
-    if (SCON_SUCCESS != scon_pt2pt_tcp_peer_recv_connect_ack(NULL, sd, &hdr)) {
+    if (SCON_SUCCESS != (rc = scon_pt2pt_tcp_peer_recv_connect_ack(NULL, sd, &hdr))) {
+        scon_output(0, "%s tcp:recv:handler: scon_pt2pt_tcp_peer_recv_connect_ack failed status %d",
+                      SCON_PRINT_PROC(SCON_PROC_MY_NAME), rc);
         goto cleanup;
     }
-
     /* finish processing ident */
     if (SCON_PT2PT_TCP_IDENT == hdr.type) {
         if (NULL == (peer = scon_pt2pt_tcp_peer_lookup(&hdr.origin))) {
@@ -574,8 +569,15 @@ static void recv_handler(int sd, short flg, void *cbdata)
                             SCON_PRINT_PROC(&(hdr.origin)),
                             peer->state);
             }
+            scon_output(0, "%s-%s scon_pt2pt_tcp_recv_connect: "
+                        "rejected connection from %s connection state %d",
+                        SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                        SCON_PRINT_PROC(&(peer->name)),
+                        SCON_PRINT_PROC(&(hdr.origin)),
+                        peer->state);
             CLOSE_THE_SOCKET(sd);
-            ui64 = (uint64_t*)(&peer->name);
+            //ui64 = (uint64_t*)(&peer->name);
+            scon_util_convert_process_name_to_uint64(ui64, &peer->name);
             (void)scon_hash_table_set_value_uint64(&scon_pt2pt_tcp_module.peers, (*ui64), NULL);
             SCON_RELEASE(peer);
         }

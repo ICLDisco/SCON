@@ -46,7 +46,10 @@ typedef struct {
     int                  max_retries;        /**< max number of retries before declaring peer gone */
     scon_list_t          events;             /**< events for monitoring connections */
     int                  peer_limit;         /**< max size of tcp peer cache */
-
+    scon_pointer_array_t ev_bases;           /**array of event bases serving the tcp component*/
+    char**               ev_threads;         /** names of our progress threads */
+    int                  next_base;          /** counter to load-level thread use */
+    scon_hash_table_t    peers;              /** connection address for peers */
     /* Port specifications */
     char*              if_include;           /**< list of ip interfaces to include */
     char*              if_exclude;           /**< list of ip interfaces to exclude */
@@ -81,12 +84,24 @@ typedef struct {
 
 } scon_pt2pt_tcp_component_t;
 
-SCON_EXPORT extern scon_pt2pt_tcp_component_t scon_pt2pt_tcp_component;
+SCON_EXPORT extern scon_pt2pt_tcp_component_t mca_pt2pt_tcp_component;
 
 void scon_pt2pt_tcp_component_set_module(int fd, short args, void *cbdata);
 void scon_pt2pt_tcp_component_lost_connection(int fd, short args, void *cbdata);
 void scon_pt2pt_tcp_component_failed_to_connect(int fd, short args, void *cbdata);
 void scon_pt2pt_tcp_component_no_route(int fd, short args, void *cbdata);
 void scon_pt2pt_tcp_component_hop_unknown(int fd, short args, void *cbdata);
+
+#define SCON_PT2PT_TCP_NEXT_BASE(p)                                                       \
+    do {                                                                                \
+         ++scon_pt2pt_tcp_component.next_base;                                              \
+        if (scon_pt2pt_base.num_threads <= scon_pt2pt_tcp_component.next_base) {             \
+        scon_pt2pt_tcp_component.next_base = 0;                                        \
+    }                                                                               \
+    (p)->ev_base = (scon_event_base_t*)scon_pointer_array_get_item(&scon_pt2pt_tcp_component.ev_bases, \
+                    scon_pt2pt_tcp_component.next_base); \
+} while(0)
+
+
 
 #endif /* _SCON_PT2PT_TCP_COMPONENT_H_ */

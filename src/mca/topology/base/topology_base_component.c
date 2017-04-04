@@ -10,6 +10,9 @@
 
 #include <src/include/scon_config.h>
 #include "src/mca/topology/base/base.h"
+#include "src/class/scon_list.h"
+#include "src/include/scon_globals.h"
+#include "src/util/name_fns.h"
 #include "src/mca/topology/base/static-components.h"
 
 /*
@@ -34,7 +37,7 @@ int scon_topology_base_open(scon_mca_base_open_flag_t flags)
     return scon_mca_base_framework_components_open(&scon_topology_base_framework, flags);
 }
 
-void scon_topology_base_convert_topoid_to_procid( scon_proc_t *route,
+SCON_EXPORT void scon_topology_base_convert_topoid_to_procid( scon_proc_t *route,
                                                    unsigned int route_rank,
                                                    scon_proc_t *target)
 {
@@ -43,6 +46,25 @@ void scon_topology_base_convert_topoid_to_procid( scon_proc_t *route,
     route->rank = route_rank;
     strncpy(route->job_name, target->job_name, SCON_MAX_JOBLEN);
 }
+
+SCON_EXPORT void scon_topology_base_xcast_routing(scon_list_t *peers,
+                                             scon_list_t *children)
+{
+    scon_topo_t *child_topo;
+    scon_proc_list_t *child_proc;
+    scon_list_item_t *item;
+    /* consists of my (direct routes) children */
+    for (item = scon_list_get_first(peers);
+         item != scon_list_get_end(peers);
+         item = scon_list_get_next(item)) {
+        child_topo = (scon_topo_t*) item;
+        child_proc = SCON_NEW(scon_proc_list_t);
+        scon_topology_base_convert_topoid_to_procid(child_proc->name, child_topo->my_id, SCON_PROC_MY_NAME);
+        scon_list_append(children, &child_proc->super);
+    }
+}
+
+
 /* Framework Declaration */
 SCON_MCA_BASE_FRAMEWORK_DECLARE(scon, topology, "Topology framework",
                                 NULL /* register */,
@@ -67,7 +89,7 @@ static void topo_des(scon_topo_t *ptr)
     SCON_DESTRUCT(&ptr->relatives);
 }
 SCON_CLASS_INSTANCE(scon_topo_t,
-                    scon_object_t,
+                    scon_list_item_t,
                     topo_cons, topo_des);
 
 static void tply_cons(scon_topology_t *ptr)

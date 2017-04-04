@@ -72,15 +72,18 @@ static void collectives_base_process_allgather (int fd, short flags, void *cbdat
     void *seq_number;
     int ret;
     size_t i = 0;
+    scon_allgather_t *allgather = SCON_NEW(scon_allgather_t);
     scon = scon_comm_base_get_scon(req->post.allgather.scon_handle);
     sig = SCON_NEW(scon_collectives_signature_t);
     sig->scon_handle = scon->handle;
+    scon_output(0, "collectives_base_process_allgather: scon %d nprocs =%d", scon->handle,
+                req->post.allgather.nprocs);
     if(req->post.allgather.nprocs == 0) {
         sig->nprocs = scon_list_get_size(&scon->members);
         sig->procs = (scon_proc_t*)malloc(sig->nprocs *
                                           sizeof(scon_proc_t));
         SCON_LIST_FOREACH(sm, &scon->members, scon_member_t) {
-            strncpy(sm->name.job_name, sig->procs[i].job_name, SCON_MAX_JOBLEN);
+            strncpy(sig->procs[i].job_name, sm->name.job_name,  SCON_MAX_JOBLEN);
             sig->procs[i].rank = sm->name.rank;
             ++i;
         }
@@ -91,10 +94,11 @@ static void collectives_base_process_allgather (int fd, short flags, void *cbdat
         sig->procs = (scon_proc_t*)malloc(sig->nprocs *
                                           sizeof(scon_proc_t));
         for(i = 0; i < sig->nprocs; i++) {
-            strncpy(req->post.allgather.procs[i].job_name, sig->procs[i].job_name, SCON_MAX_JOBLEN);
+            strncpy(sig->procs[i].job_name, req->post.allgather.procs[i].job_name, SCON_MAX_JOBLEN);
             sig->procs[i].rank = req->post.allgather.procs[i].rank;
         }
     }
+
     ret = scon_hash_table_get_value_ptr(&scon_collectives_base.coll_table,
                                         (void *)sig->procs,
                                         sig->nprocs * sizeof(scon_proc_t),
@@ -104,6 +108,8 @@ static void collectives_base_process_allgather (int fd, short flags, void *cbdat
     } else if (SCON_SUCCESS == ret) {
         sig->seq_num = *((uint32_t *)(seq_number)) + 1;
     } else {
+        scon_output(0, " %s SCON collectives base: fatal error sig hash table not initialized",
+                    SCON_PRINT_PROC(SCON_PROC_MY_NAME));
         scon_output_verbose(0, scon_collectives_base_framework.framework_output,
                             " %s SCON collectives base: fatal error sig hash table not initialized",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME));
@@ -125,12 +131,14 @@ static void collectives_base_process_allgather (int fd, short flags, void *cbdat
     * already found. The allgather module is responsible
     * for releasing it upon completion of the collective */
     coll = scon_collectives_base_get_tracker(sig, true);
-    coll->req = (void*)&req->post.allgather;
     scon_output_verbose(5, scon_collectives_base_framework.framework_output,
-                        " %s calling allgather with  nprocs =%lu, on scon=%d",
+                        " %s calling allgather with  nprocs =%lu, on scon=%d buf =%p",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
-                        req->post.allgather.nprocs, req->post.allgather.scon_handle);
+                        req->post.allgather.nprocs, req->post.allgather.scon_handle,
+                        req->post.allgather.buf);
     scon->collective_module->allgather(coll, req->post.allgather.buf);
+    memcpy(allgather, &req->post.allgather, sizeof(scon_allgather_t));
+    coll->req = (void*)allgather;
     SCON_RELEASE(req);
 }
 
@@ -206,15 +214,20 @@ static void collectives_base_process_barrier (int fd, short flags, void *cbdata)
     SCON_RELEASE(req);
 }
 /* helper functions */
-scon_collectives_tracker_t* scon_collectives_base_get_tracker(scon_collectives_signature_t *sig,
-                                                             bool create)
+SCON_EXPORT scon_collectives_tracker_t* scon_collectives_base_get_tracker(
+                                               scon_collectives_signature_t *sig,
+                                               bool create)
 {
     scon_collectives_tracker_t *coll;
     size_t n, i;
     bool match = true;
     scon_comm_scon_t *scon = scon_comm_base_get_scon(sig->scon_handle);
+    scon_output(0, "searching for tracker for scon %d, seq num =%d num trackers  =%d",
+                  sig->scon_handle, sig->seq_num,
+                  scon_list_get_size(&scon_collectives_base.ongoing));
     /* search the existing tracker list to see if this already exists */
     SCON_LIST_FOREACH(coll, &scon_collectives_base.ongoing, scon_collectives_tracker_t) {
+
         /* check if there is an ongoing collective on the same set of procs */
         if((coll->sig->nprocs == sig->nprocs) && (coll->sig->seq_num == sig->seq_num) &&
             (coll->sig->scon_handle == sig->scon_handle)) {
@@ -222,6 +235,10 @@ scon_collectives_tracker_t* scon_collectives_base_get_tracker(scon_collectives_s
             for(n = 0; n < sig->nprocs; n++) {
                 if (SCON_EQUAL != scon_util_compare_name_fields(SCON_NS_CMP_ALL,
                         &sig->procs[n], &coll->sig->procs[n])) {
+                    scon_output(0, "%s collectives_base_get_tracker failed to match %d proc %s with %s",
+                                SCON_PRINT_PROC(SCON_PROC_MY_NAME), n,
+                                SCON_PRINT_PROC(&sig->procs[n]),
+                                SCON_PRINT_PROC(&coll->sig->procs[n]));
                     match = false;
                     break;
                 }
@@ -245,20 +262,25 @@ scon_collectives_tracker_t* scon_collectives_base_get_tracker(scon_collectives_s
         return NULL;
     }
     coll = SCON_NEW(scon_collectives_tracker_t);
-    coll->sig->scon_handle = sig->scon_handle;
+    coll->sig = sig;
+  /*  coll->sig->scon_handle = sig->scon_handle;
     coll->sig->nprocs = sig->nprocs;
     coll->sig->seq_num = sig->seq_num;
-    coll->sig->procs = (scon_proc_t*)malloc(coll->sig->nprocs *
-                                            sizeof(scon_proc_t));
+    SCON_PROC_CREATE(coll->sig->procs, coll->sig->nprocs);
+   // coll->sig->procs = (scon_proc_t*)malloc(coll->sig->nprocs *
+    //                                        sizeof(scon_proc_t));
     for(i = 0; i < coll->sig->nprocs; i++) {
-        strncpy(sig->procs[i].job_name, coll->sig->procs[i].job_name, SCON_MAX_JOBLEN);
+        strncpy(coll->sig->procs[i].job_name, sig->procs[i].job_name, SCON_MAX_JOBLEN);
         coll->sig->procs[i].rank = sig->procs[i].rank;
-    }
+    }*/
     /*add this tracker to the list */
     scon_list_append(&scon_collectives_base.ongoing, &coll->super);
+    scon_output(0, "%s scon_collectives_base_get_tracker, completed tracker setup calling num_routes",
+                 SCON_PRINT_PROC(SCON_PROC_MY_NAME));
     /* To do  nexpected may not always be equal to the number of participants */
     if(NULL != scon->topology_module) {
-        coll->nexpected = scon->topology_module->api.num_routes(&scon->topology_module->topology);
+        /* include ourselves too + number of procs under me*/
+        coll->nexpected = 1+ scon->topology_module->api.num_routes(&scon->topology_module->topology);
     }
     else
         coll->nexpected = coll->sig->nprocs;
@@ -387,6 +409,7 @@ SCON_EXPORT int collectives_base_api_allgather(scon_handle_t scon_handle,
     /* get the scon object*/
     if( NULL == (scon = scon_comm_base_get_scon(scon_handle)))
     {
+        scon_output(0, "collectives_base_api_allgather: cannot find the scon with handle %d", scon_handle);
         return SCON_ERR_NOT_FOUND;
     }
     else {
@@ -401,6 +424,9 @@ SCON_EXPORT int collectives_base_api_allgather(scon_handle_t scon_handle,
         req->post.allgather.cbdata = cbdata;
         req->post.allgather.info = info;
         req->post.allgather.ninfo = ninfo;
+        scon_output(0, "collectives_base_api_allgather:%s collectives_base_api_barrier scon %d ",
+                    SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                    scon->handle);
         scon_output_verbose(1, scon_collectives_base_framework.framework_output,
                             "%s collectives_base_api_barrier scon %d ",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),
@@ -409,11 +435,14 @@ SCON_EXPORT int collectives_base_api_allgather(scon_handle_t scon_handle,
         scon_event_set(scon_globals.evbase, &req->ev, -1, SCON_EV_WRITE, collectives_base_process_allgather, req);
         scon_event_set_priority(&req->ev, SCON_MSG_PRI);
         scon_event_active(&req->ev, SCON_EV_WRITE, 1);
+        scon_output(0, "%s collectives_base_api_allgather - set event done",
+                            SCON_PRINT_PROC(SCON_PROC_MY_NAME));
         scon_output_verbose(5, scon_collectives_base_framework.framework_output,
                             "%s collectives_base_api_allgather - set event done",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME));
         return SCON_SUCCESS;
     }
+    return 0;
 }
 
 SCON_EXPORT void scon_collectives_base_allgather_send_complete_callback(

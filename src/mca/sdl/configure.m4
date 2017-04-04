@@ -27,7 +27,7 @@ AC_DEFUN([MCA_scon_sdl_CONFIG],[
     # (we still need to configure them all so that things like "make
     # dist" work", but we just want the MCA system to (artificially)
     # conclude that it can't build any of the components.
-    AS_IF([test $SCON_ENABLE_DLOPEN_SUPPORT -eq 0],
+    AS_IF([test "$enable_dlopen" = "no"],
           [want_sdl=0], [want_sdl=1])
 
     MCA_CONFIGURE_FRAMEWORK([sdl], [$want_sdl])
@@ -35,7 +35,7 @@ AC_DEFUN([MCA_scon_sdl_CONFIG],[
     # If we found no suitable static sdl component and dlopen support
     # was not specifically disabled, this is an error.
     AS_IF([test "$MCA_scon_sdl_STATIC_COMPONENTS" = "" && \
-           test $SCON_ENABLE_DLOPEN_SUPPORT -ne 0],
+           test "$enable_dlopen" = "no"],
           [AC_MSG_WARN([Did not find a suitable static scon sdl component])
            AC_MSG_WARN([You might need to install libltld (and its headers) or])
            AC_MSG_WARN([specify --disable-dlopen to configure.])
