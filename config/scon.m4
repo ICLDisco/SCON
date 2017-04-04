@@ -658,6 +658,22 @@ AC_DEFUN([SCON_SETUP_CORE],[
 ])dnl
 
 AC_DEFUN([SCON_DEFINE_ARGS],[
+    # do we want dlopen support ?
+    AC_MSG_CHECKING([if want dlopen support])
+    AC_ARG_ENABLE([dlopen],
+        [AC_HELP_STRING([--enable-dlopen],
+                        [Whether build should attempt to use dlopen (or
+                         similar) to dynamically load components.
+                         (default: enabled)])])
+    AS_IF([test "$enable_dlopen" = "no"],
+          [enable_mca_dso="no"
+           enable_mca_static="yes"
+           SCON_ENABLE_DLOPEN_SUPPORT=0
+           AC_MSG_RESULT([no])],
+          [SCON_ENABLE_DLOPEN_SUPPORT=1
+           AC_MSG_RESULT([yes])])
+    AC_DEFINE_UNQUOTED(SCON_ENABLE_DLOPEN_SUPPORT, $SCON_ENABLE_DLOPEN_SUPPORT,
+                      [Whether we want to enable dlopen support])
     # Embedded mode, or standalone?
     AC_MSG_CHECKING([if embedded mode is enabled])
     AC_ARG_ENABLE([embedded-mode],
