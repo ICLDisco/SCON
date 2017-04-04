@@ -40,6 +40,13 @@ BEGIN_C_DECLS
 #define SCON_MAX_CRED_SIZE      131072              // set max at 128kbytes
 #define SCON_MAX_ERR_CONSTANT   INT_MIN
 
+typedef enum {
+    SCON_PROC_NONE = 0,
+    SCON_PROC_ROOT = 1,
+    SCON_PROC_INTERIM_NODE = 2,
+    SCON_PROC_LEAF = 3
+}scon_proc_type_t;
+
 /****    GLOBAL STORAGE    ****/
 /* define a global construct that includes values that must be shared
  * between various parts of the code library. */
@@ -54,6 +61,7 @@ typedef struct {
     bool external_evbase;                // if we are bound to an external event vase
     int debug_output;                    // the global debug level
     scon_list_t scons;                   // list of scons that this process is a member of
+    scon_proc_type_t type;                 // the process type (leaf node, root node or interim node)
 } scon_globals_t;
 SCON_EXPORT extern scon_globals_t scon_globals;
 
@@ -69,5 +77,11 @@ SCON_EXPORT extern scon_proc_t scon_proc_wildcard;
 #define SCON_HANDLE_NEW            0XFFFFFFFE
 #define SCON_INDEX_UNDEFINED       0xFFFFFFFF
 
+/* this is specific to scon, will be set during SCON create by setting the appropriate flags,
+   lets assume rank 0 is master for now */
+#define SCON_PROC_IS_MASTER    ((scon_globals.myid->rank == 0) ||        \
+                                (scon_globals.type == SCON_PROC_ROOT))
+
+#define SCON_PROC_IS_INTERIM_NODE  (scon_globals.type == SCON_PROC_INTERIM_NODE)
 END_C_DECLS
 #endif /* SCON_GLOBALS_H */
