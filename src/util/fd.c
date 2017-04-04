@@ -28,7 +28,7 @@
 /*
  * Simple loop over reading from a fd
  */
-scon_status_t scon_fd_read(int fd, int len, void *buffer)
+SCON_EXPORT scon_status_t scon_fd_read(int fd, int len, void *buffer)
 {
     int rc;
     char *b = buffer;
@@ -53,7 +53,7 @@ scon_status_t scon_fd_read(int fd, int len, void *buffer)
 /*
  * Simple loop over writing to an fd
  */
-scon_status_t scon_fd_write(int fd, int len, const void *buffer)
+SCON_EXPORT scon_status_t scon_fd_write(int fd, int len, const void *buffer)
 {
     int rc;
     const char *b = buffer;
@@ -74,7 +74,7 @@ scon_status_t scon_fd_write(int fd, int len, const void *buffer)
 }
 
 
-scon_status_t scon_fd_set_cloexec(int fd)
+SCON_EXPORT scon_status_t scon_fd_set_cloexec(int fd)
 {
 #ifdef FD_CLOEXEC
     int flags;

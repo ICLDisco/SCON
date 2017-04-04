@@ -48,23 +48,15 @@
 SCON_EXPORT char* scon_util_print_name_args(const scon_proc_t *name)
 {
     char *output = NULL;
-   // scon_value_t src;
     int ret = SCON_SUCCESS;
-   // SCON_PROC_CREATE(src.data.proc, 1);
-   // memcpy(src.data.proc, name, sizeof(scon_proc_t));
-    //scon_value_load(&src, (void *)name,
-      //              SCON_PROC);
-
     ret= scon_bfrop.print(&output, NULL, (scon_proc_t*)name, SCON_PROC);
-    scon_output(0, "testing scon_util_print_name_args input namespace = %s, rank =%d", name->job_name, name->rank);
-    scon_output(0, "testing scon_util_print_name_args output =%s ret =%d", output, ret);
     return output;
 }
 
 
 
 /****    COMPARE NAME FIELDS     ****/
-int scon_util_compare_name_fields(scon_ns_cmp_bitmask_t fields,
+SCON_EXPORT int scon_util_compare_name_fields(scon_ns_cmp_bitmask_t fields,
                                   const scon_proc_t* name1,
                                   const scon_proc_t* name2)
 {
@@ -89,7 +81,7 @@ int scon_util_compare_name_fields(scon_ns_cmp_bitmask_t fields,
     if (SCON_NS_CMP_JOB & fields) {
         if (SCON_NS_CMP_WILD & fields &&
             ((0 == strcmp(name1->job_name, SCON_JOBNAME_WILDCARD))||
-             (0 == strcmp(name1->job_name, SCON_JOBNAME_WILDCARD)))) {
+             (0 == strcmp(name2->job_name, SCON_JOBNAME_WILDCARD)))) {
             goto check_rank;
         }
         if (0 != strcmp(name1->job_name, name2->job_name))
@@ -170,3 +162,27 @@ int scon_util_convert_process_name_to_string(char **name_string,
     free(tmp);
     return SCON_SUCCESS;
 }
+
+SCON_EXPORT  int scon_util_convert_process_name_to_uint64(uint64_t *procid,
+                                             const scon_proc_t *proc)
+{
+     /* convert job name to string using strtol and add process rank */
+    uint64_t u64;
+    u64 = strtoul(proc->job_name, NULL, 10);
+    u64 += proc->rank;
+    *procid = u64;
+    return SCON_SUCCESS;
+}
+/* instantiate scon_proc_list_t class */
+static void proc_list_cons(scon_proc_list_t *ptr)
+{
+    SCON_PROC_CREATE(ptr->name, 1);
+}
+static void proc_list_dest(scon_proc_list_t *ptr)
+{
+    SCON_PROC_FREE(ptr->name, 1);
+}
+SCON_CLASS_INSTANCE(scon_proc_list_t,
+                    scon_list_item_t,
+                    proc_list_cons,
+                    proc_list_dest);

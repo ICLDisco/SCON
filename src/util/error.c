@@ -35,7 +35,7 @@
 
 #include "src/util/error.h"
 
-const char* SCON_Error_string(scon_status_t errnum)
+SCON_EXPORT const char* SCON_Error_string(scon_status_t errnum)
 {
     switch(errnum) {
     case SCON_ERR_UNPACK_READ_PAST_END_OF_BUFFER:

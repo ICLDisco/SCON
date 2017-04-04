@@ -72,6 +72,7 @@
 #define SCON_ERR_PMIXINIT_FAILED                        (SCON_INTERNAL_ERR_BASE - 42)
 #define SCON_ERR_PMIXGET_FAILED                         (SCON_INTERNAL_ERR_BASE - 43)
 #define SCON_ERR_CREATE_XCAST_SEND_FAIL                 (SCON_INTERNAL_ERR_BASE - 44)
+#define SCON_ERR_ADDRESSEE_UNKNOWN                      (SCON_INTERNAL_ERR_BASE - 45)
 
 
 #define SCON_ERROR_LOG(r)                                           \

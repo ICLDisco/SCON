@@ -158,7 +158,7 @@ scon_status_t scon_argv_append_unique_nosize(char ***argv, const char *arg, bool
 /*
  * Free a NULL-terminated argv array.
  */
-void scon_argv_free(char **argv)
+SCON_EXPORT void scon_argv_free(char **argv)
 {
   char **p;
 
@@ -250,7 +250,7 @@ static char **scon_argv_split_inter(const char *src_string, int delimiter,
   return argv;
 }
 
-char **scon_argv_split(const char *src_string, int delimiter)
+SCON_EXPORT char **scon_argv_split(const char *src_string, int delimiter)
 {
     return scon_argv_split_inter(src_string, delimiter, 0);
 }
