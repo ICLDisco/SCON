@@ -101,7 +101,7 @@ AC_DEFUN([MCA_scon_sdl_slibltdl_CONFIG],[
            LDFLAGS=$LDFLAGS_save
            LIBS=$LIBS_save
           ])
-    AC_DEFINE_UNQUOTED(SCON_PDL_PLIBLTDL_HAVE_LT_DLADVISE,
+    AC_DEFINE_UNQUOTED(SCON_SDL_SLIBLTDL_HAVE_LT_DLADVISE,
         [$scon_sdl_slibltdl_have_lt_dladvise],
         [Whether we have lt_dladvise or not])
 

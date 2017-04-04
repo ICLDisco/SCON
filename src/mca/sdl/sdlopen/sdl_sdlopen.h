@@ -8,8 +8,8 @@
  * $HEADER$
  */
 
-#ifndef SCON_PDL_PDLOPEN
-#define SCON_PDL_PDLOPEN
+#ifndef SCON_SDL_SDLOPEN
+#define SCON_SDL_SDLOPEN
 
 #include <src/include/scon_config.h>
 
@@ -38,4 +38,4 @@ typedef struct {
 
 extern scon_sdl_sdlopen_component_t mca_sdl_sdlopen_component;
 
-#endif /* SCON_PDL_PDLOPEN */
+#endif /* SCON_SDL_SDLOPEN */

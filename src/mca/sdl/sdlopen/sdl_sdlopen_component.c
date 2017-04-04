@@ -47,7 +47,7 @@ scon_sdl_sdlopen_component_t mca_sdl_sdlopen_component = {
         /* First, the mca_component_t struct containing meta information
            about the component itself */
         .base_version = {
-            SCON_PDL_BASE_VERSION_1_0_0,
+            SCON_SDL_BASE_VERSION_1_0_0,
 
             /* Component name and version */
             .scon_mca_component_name = "sdlopen",

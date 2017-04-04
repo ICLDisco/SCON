@@ -8,12 +8,12 @@
  * $HEADER$
  */
 
-#ifndef SCON_DL_LIBLTDL
-#define SCON_DL_LIBLTDL
+#ifndef SCON_SDL_LIBLTDL
+#define SCON_SDL_LIBLTDL
 
 #include "scon_config.h"
 
-#include "scon/mca/dl/dl.h"
+#include "scon/mca/sdl/sdl.h"
 
 #include <ltdl.h>
 

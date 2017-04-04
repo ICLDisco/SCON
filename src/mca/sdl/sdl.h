@@ -38,14 +38,14 @@
  * https://github.com/open-mpi/ompi/pull/366,
  * https://github.com/open-mpi/ompi/pull/390).  That being said, we,
  * as a developer community, still wanted to be able to natively use
- * DSOs by default.  A small/simple framework for PDL functionality,
+ * DSOs by default.  A small/simple framework for SDL functionality,
  * along with a simple component that supports dlopen/dlsym on POSIX
  * platforms and another component that natively uses libltdl seemed
  * like a good solution.
  */
 
-#ifndef SCON_MCA_PDL_PDL_H
-#define SCON_MCA_PDL_PDL_H
+#ifndef SCON_MCA_SDL_SDL_H
+#define SCON_MCA_SDL_SDL_H
 
 #include <src/include/scon_config.h>
 
@@ -142,7 +142,7 @@ typedef int (*scon_sdl_base_module_foreachfile_fn_t)
      void *context);
 
 /**
- * Structure for PDL components.
+ * Structure for SDL components.
  */
 struct scon_sdl_base_component_1_0_0_t {
     /** MCA base component */
@@ -157,7 +157,7 @@ typedef struct scon_sdl_base_component_1_0_0_t scon_sdl_base_component_1_0_0_t;
 typedef struct scon_sdl_base_component_1_0_0_t scon_sdl_base_component_t;
 
 /**
- * Structure for PDL modules
+ * Structure for SDL modules
  */
 struct scon_sdl_base_module_1_0_0_t {
     scon_mca_base_module_2_0_0_t            super;
@@ -176,11 +176,11 @@ typedef struct scon_sdl_base_module_1_0_0_t scon_sdl_base_module_1_0_0_t;
 typedef struct scon_sdl_base_module_1_0_0_t scon_sdl_base_module_t;
 
 /**
- * Macro for use in components that are of type PDL
+ * Macro for use in components that are of type SDL
  */
-#define SCON_PDL_BASE_VERSION_1_0_0              \
+#define SCON_SDL_BASE_VERSION_1_0_0              \
     SCON_MCA_BASE_VERSION_1_0_0("sdl", 1, 0, 0)
 
 END_C_DECLS
 
-#endif /* SCON_MCA_PDL_PDL_H */
+#endif /* SCON_MCA_SDL_SDL_H */
