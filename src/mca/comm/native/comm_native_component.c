@@ -15,6 +15,8 @@
 #include "src/mca/base/base.h"
 #include "src/runtime/scon_progress_threads.h"
 #include "src/class/scon_hash_table.h"
+#include "src/buffer_ops/buffer_ops.h"
+#include "src/buffer_ops/types.h"
 #include "src/mca/pt2pt/base/base.h"
 #include "src/mca/if/base/base.h"
 #include "src/mca/topology/base/base.h"
@@ -49,7 +51,7 @@ static int native_delete (scon_handle_t scon_handle,
 /**
  * component definition
  */
-SCON_EXPORT scon_comm_base_component_t scon_comm_native_component = {
+SCON_EXPORT scon_comm_base_component_t mca_comm_native_component = {
     /* First, the mca_base_component_t struct containing meta
        information about the component itself */
     .base =
@@ -97,7 +99,7 @@ static int native_query(scon_mca_base_module_t **module, int *priority)
     /* The priority value is somewhat meaningless here; by
        there's at most one component
        available. */
-    *priority = scon_comm_native_component.priority;
+    *priority = mca_comm_native_component.priority;
     *module = (scon_mca_base_module_t*)&native_module;
      return SCON_SUCCESS;
 }
@@ -124,7 +126,7 @@ static void native_create_xcast_send_complete (scon_status_t status,
     /* complete request and release the req object*/
   req->post.create.cbfunc(status, scon_handle,req->post.create.cbdata);
     if(NULL != buf)
-        SCON_RELEASE(buf);
+        scon_buffer_destruct(buf);
     if((NULL != procs) && nprocs != 0)
         SCON_PROC_FREE(procs, nprocs);
     if((NULL != info) && ninfo != 0)
@@ -146,11 +148,12 @@ static void native_create_cfg_recv_cbfunc(scon_status_t status,
         scon_output_verbose (1,  scon_comm_base_framework.framework_output,
                              "%s native_create_cfg_recv_cbfunc for scon %d status = %d ",
                              SCON_PRINT_PROC(SCON_PROC_MY_NAME), scon_handle, status);
-        comm_base_set_scon_config (scon_comm_base_get_scon (scon_handle), buf);
-       req->post.create.cbfunc(status, scon_handle,req->post.create.cbdata);
-        if(NULL != buf)
-            SCON_RELEASE(buf);
-         SCON_RELEASE(req);
+        //comm_base_set_scon_config (scon_comm_base_get_scon (scon_handle), buf);
+        req->post.create.cbfunc(status, scon_handle,req->post.create.cbdata);
+        if(NULL != buf) {
+            scon_buffer_destruct(buf);
+        }
+        SCON_RELEASE(req);
     }
     /*** TO DO: implement error behavior ***/
 }
@@ -165,6 +168,7 @@ static void native_create_barrier_complete_callback (scon_status_t status,
 {
     scon_req_t *req = (scon_req_t *) cbdata;
     scon_buffer_t *buf = malloc(sizeof(scon_buffer_t));
+    scon_buffer_construct(buf);
     scon_comm_scon_t *scon = scon_comm_base_get_scon(scon_handle);
     scon_output_verbose (1,  scon_comm_base_framework.framework_output,
                            "%s native_create_barrier_complete_callback on scon %d status = %d ",
@@ -175,7 +179,8 @@ static void native_create_barrier_complete_callback (scon_status_t status,
            TO DO : process member uris and local SCON IDs from the returned all gather buffer
          **/
         /** Master xcasts  config info to all the participants and completes create req */
-        SCON_RELEASE(buffer);
+        scon_buffer_destruct(buffer);
+
         if(is_master(scon)) {
             /*  prepare the xcast msg and complete create in xcast send callback */
             comm_base_pack_scon_config(scon, buf);
@@ -185,15 +190,16 @@ static void native_create_barrier_complete_callback (scon_status_t status,
                                         SCON_MSG_TAG_CFG_INFO,
                                         native_create_xcast_send_complete,
                                         req, NULL , 0);
-        } else {
-            /* wait for config info xcast msg from master */
-            pt2pt_base_api_recv_nb (scon_handle,
-                                    SCON_GET_MASTER(scon),
-                                    SCON_MSG_TAG_CFG_INFO,
-                                    SCON_MSG_PERSISTENT,
-                                    native_create_cfg_recv_cbfunc,
-                                    req, NULL, 0);
         }
+
+        /* wait for config info xcast msg from master */
+        pt2pt_base_api_recv_nb (scon_handle,
+                                SCON_PROC_WILDCARD,
+                                SCON_MSG_TAG_CFG_INFO,
+                                SCON_MSG_PERSISTENT,
+                                native_create_cfg_recv_cbfunc,
+                                req, NULL, 0);
+
     }
     else {
         scon_output(0, "%s native_create_barrier_complete_callback failed with status =%d",
@@ -233,9 +239,11 @@ static void native_create_barrier_complete_callback (scon_status_t status,
 static void native_process_create (int fd, short flags, void *cbdata)
 {
     int ret, index;
+    scon_comm_scon_t *scon1;
     scon_comm_scon_t *scon = (scon_comm_scon_t *) cbdata;
     scon_req_t *req = (scon_req_t*)scon->req;
     scon_value_t val;
+    scon_buffer_t *allgather_buf;
     //scon_comm_scon_t *scon = scon_comm_base_get_scon(req->post.create.scon_handle);
     /* check the scon type fail if not single job all ranks */
     if( SCON_TYPE_MY_JOB_ALL != scon->type) {
@@ -251,33 +259,45 @@ static void native_process_create (int fd, short flags, void *cbdata)
     scon_comm_base_add_scon(scon);
     scon_output(0, "added scon %d to array",  scon->handle);
     /* Get our address and publish it via PMIX */
-#if 0
+    scon1 = scon_comm_base_get_scon(scon->handle);
     scon_pt2pt_base_get_contact_info(&scon_globals.my_uri);
-    scon_value_load(&val, (void*)scon_globals.my_uri,
-                   SCON_STRING);
-    if(SCON_SUCCESS != scon_pmix_put(SCON_PMIX_PROC_URI, &val)) {
+    scon_output(0, "%s my uri =%s", SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                scon_globals.my_uri);
+    if(SCON_SUCCESS != (ret = scon_pmix_put_string(SCON_PMIX_PROC_URI, scon_globals.my_uri))) {
         scon_output(0, "%s PMIX put of proc uri %s failed ",
                     SCON_PRINT_PROC(SCON_PROC_MY_NAME), scon_globals.my_uri);
     }
+ /*   scon_value_load(&val, (void*)scon_globals.my_uri,
+                   SCON_STRING);*/
+
     /* setup the topology for the selected topology module**/
-    if(NULL == scon->topology_module) {
+    if((NULL == scon->topology_module)) {
         ret = SCON_ERR_TOPO_UNSUPPORTED;
+        scon_output( 0, "scon topology module not set correctly %p", scon->topology_module );
         SCON_ERROR_LOG(ret);
         goto error;
     }
+    scon->topology_module->api.initialize(&scon->topology_module->topology);
+
     scon->topology_module->api.update_topology (&scon->topology_module->topology,
                                                 scon->nmembers);
-
+    scon_output(0, "%s my topology updated ", SCON_PRINT_PROC(SCON_PROC_MY_NAME));
+    allgather_buf = (scon_buffer_t*) malloc (sizeof(scon_buffer_t));
+    scon_buffer_construct(allgather_buf);
+    if (SCON_SUCCESS != (ret = scon_bfrop.pack(allgather_buf, &scon->handle,
+                             1, SCON_UINT32))) {
+        SCON_ERROR_LOG(ret);
+        goto error;
+    }
+    scon->collective_module->init(scon->handle);
     /* now wait for all scon participants to get here */
     /*** TO DO **** - fence or allgather */
     collectives_base_api_allgather( scon->handle,
                                     NULL, 0,
-                                    NULL, native_create_barrier_complete_callback,
+                                    allgather_buf, native_create_barrier_complete_callback,
                                     req,
                                     NULL, 0);
-
     return;
-#endif
 error:
     /* fail the create request back to the caller */
     scon_comm_base_remove_scon(scon);
@@ -397,8 +417,7 @@ static int native_init(scon_info_t info[], size_t ninfo) {
     if(SCON_SUCCESS != (ret = scon_pmix_init(scon_globals.myid, NULL, 0))) {
         scon_output_verbose(0, scon_globals.debug_output, "scon_init pmix_init failed with error =%d", ret);
         error = "pmix_init";
-        return SCON_SUCCESS;
-        //goto return_error;
+        goto return_error;
     }
 return_error:
     if(SCON_SUCCESS != ret) {
@@ -423,9 +442,6 @@ static int native_create ( scon_proc_t procs[],
     scon_req_t *req;
     /* create a req object and do the rest of the processing in
         an event */
-    scon_output(0,
-                        "%s scon_native_create creating scon",
-                        SCON_PRINT_PROC(SCON_PROC_MY_NAME));
     scon_output_verbose(0, scon_comm_base_framework.framework_output,
                         "%s scon_native_create creating scon",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME));
@@ -442,15 +458,11 @@ static int native_create ( scon_proc_t procs[],
         return SCON_HANDLE_INVALID;
     }
     else {
-        scon_output (0, "%s scon_native_create created req %p",
-                     SCON_PRINT_PROC(SCON_PROC_MY_NAME), (void*)req );
         scon->req = req;
         /* setup the event for rest of the processing  */
         scon_event_set(scon_globals.evbase, &req->ev, -1, SCON_EV_WRITE, native_process_create, scon);
         scon_event_set_priority(&req->ev, SCON_MSG_PRI);
         scon_event_active(&req->ev, SCON_EV_WRITE, 1);
-        scon_output (0, "%s scon_native_create set event done %p",
-                            SCON_PRINT_PROC(SCON_PROC_MY_NAME), (void*)req );
         scon_output_verbose(2, scon_comm_base_framework.framework_output,
                             "%s scon_native_create created req %p",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME), (void*)req );
