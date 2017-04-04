@@ -22,7 +22,7 @@ BEGIN_C_DECLS
 /*
  * collectives rcd interfaces
  */
-extern scon_collectives_base_component_t scon_collectives_rcd_component;
+extern scon_collectives_base_component_t mca_collectives_rcd_component;
 extern scon_collectives_module_t scon_collectives_rcd_module;
 
 END_C_DECLS
