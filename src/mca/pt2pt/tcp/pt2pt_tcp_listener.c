@@ -101,9 +101,9 @@ int scon_pt2pt_tcp_start_listening(void)
     scon_pt2pt_tcp_listener_t *listener;
 
     /* if we don't have any TCP interfaces, we shouldn't be here */
-    if (NULL == scon_pt2pt_tcp_component.ipv4conns
+    if (NULL == mca_pt2pt_tcp_component.ipv4conns
 #if SCON_ENABLE_IPV6
-        && NULL == scon_pt2pt_tcp_component.ipv6conns
+        && NULL == mca_pt2pt_tcp_component.ipv6conns
 #endif
         ) {
         SCON_ERROR_LOG(SCON_ERR_NOT_FOUND);
@@ -124,30 +124,30 @@ int scon_pt2pt_tcp_start_listening(void)
     }
 #endif
 
-    /* if I am the HNP, start a listening thread so we can
+    /* if I am the master, start a listening thread so we can
      * harvest connection requests as rapidly as possible
      */
 #if 0
-   if (SCON_PROC_IS_HNP) {
-        if (0 > pipe(scon_pt2pt_tcp_component.stop_thread)) {
+   if (0 == SCON_PROC_MY_RANK) {
+        if (0 > pipe(mca_pt2pt_tcp_component.stop_thread)) {
             SCON_ERROR_LOG(SCON_ERR_OUT_OF_RESOURCE);
             return SCON_ERR_OUT_OF_RESOURCE;
         }
 
         /* Make sure the pipe FDs are set to close-on-exec so that
            they don't leak into children */
-        if (scon_fd_set_cloexec(scon_pt2pt_tcp_component.stop_thread[0]) != SCON_SUCCESS ||
-            scon_fd_set_cloexec(scon_pt2pt_tcp_component.stop_thread[1]) != SCON_SUCCESS) {
-            close(scon_pt2pt_tcp_component.stop_thread[0]);
-            close(scon_pt2pt_tcp_component.stop_thread[1]);
+        if (scon_fd_set_cloexec(mca_pt2pt_tcp_component.stop_thread[0]) != SCON_SUCCESS ||
+            scon_fd_set_cloexec(mca_pt2pt_tcp_component.stop_thread[1]) != SCON_SUCCESS) {
+            close(mca_pt2pt_tcp_component.stop_thread[0]);
+            close(mca_pt2pt_tcp_component.stop_thread[1]);
             SCON_ERROR_LOG(SCON_ERR_IN_ERRNO);
             return SCON_ERR_IN_ERRNO;
         }
 
-        scon_pt2pt_tcp_component.listen_thread_active = true;
-        scon_pt2pt_tcp_component.listen_thread.t_run = listen_thread;
-        scon_pt2pt_tcp_component.listen_thread.t_arg = NULL;
-        if (SCON_SUCCESS != (rc = scon_thread_start(&scon_pt2pt_tcp_component.listen_thread))) {
+        mca_pt2pt_tcp_component.listen_thread_active = true;
+        mca_pt2pt_tcp_component.listen_thread.t_run = listen_thread;
+        mca_pt2pt_tcp_component.listen_thread.t_arg = NULL;
+        if (SCON_SUCCESS != (rc = scon_progressthread_start(&mca_pt2pt_tcp_component.listen_thread))) {
             SCON_ERROR_LOG(rc);
             scon_output(0, "%s Unable to start listen thread", SCON_PRINT_PROC(SCON_PROC_MY_NAME));
         }
@@ -155,14 +155,14 @@ int scon_pt2pt_tcp_start_listening(void)
     }
 #endif
     /* otherwise, setup to listen via the event lib */
-    SCON_LIST_FOREACH(listener, &scon_pt2pt_tcp_component.listeners, scon_pt2pt_tcp_listener_t) {
+    SCON_LIST_FOREACH(listener, &mca_pt2pt_tcp_component.listeners, scon_pt2pt_tcp_listener_t) {
         listener->ev_active = true;
         scon_event_set(scon_globals.evbase, &listener->event,
                        listener->sd,
                        SCON_EV_READ|SCON_EV_PERSIST,
                        connection_event_handler,
                        0);
-        scon_event_set_priority(&listener->event, SCON_MSG_PRI);
+        scon_event_set_priority(&listener->event, SCON_ERROR_PRI);
         scon_event_add(&listener->event, 0);
     }
 
@@ -188,16 +188,16 @@ static int create_listen(void)
     int sd = -1;
     char *tconn;
     scon_pt2pt_tcp_listener_t *conn;
-    if (NULL != scon_pt2pt_tcp_component.tcp_static_ports) {
+    if (NULL != mca_pt2pt_tcp_component.tcp_static_ports) {
         /* if static ports were provided, take the
          * first entry in the list
          */
-        scon_argv_append_nosize(&ports, scon_pt2pt_tcp_component.tcp_static_ports[0]);
+        scon_argv_append_nosize(&ports, mca_pt2pt_tcp_component.tcp_static_ports[0]);
         /* flag that we are using static ports */
         scon_static_ports = true;
-    } else if (NULL != scon_pt2pt_tcp_component.tcp_dyn_ports) {
+    } else if (NULL != mca_pt2pt_tcp_component.tcp_dyn_ports) {
         /* take the entire range */
-        ports = scon_argv_copy(scon_pt2pt_tcp_component.tcp_dyn_ports);
+        ports = scon_argv_copy(mca_pt2pt_tcp_component.tcp_dyn_ports);
         scon_static_ports = false;
     } else {
         /* flag the system to dynamically take any available port */
@@ -235,7 +235,7 @@ static int create_listen(void)
         sd = socket(AF_INET, SOCK_STREAM, 0);
         if (sd < 0) {
             if (EAFNOSUPPORT != scon_socket_errno) {
-                scon_output(0,"scon_pt2pt_tcp_component_init: socket() failed: %s (%d)",
+                scon_output(0,"mca_pt2pt_tcp_component_init: socket() failed: %s (%d)",
                             strerror(scon_socket_errno), scon_socket_errno);
             }
             scon_argv_free(ports);
@@ -292,7 +292,7 @@ static int create_listen(void)
 
         /* setup listen backlog to maximum allowed by kernel */
         if (listen(sd, SOMAXCONN) < 0) {
-            scon_output(0, "scon_pt2pt_tcp_component_init: listen(): %s (%d)",
+            scon_output(0, "mca_pt2pt_tcp_component_init: listen(): %s (%d)",
                         strerror(scon_socket_errno), scon_socket_errno);
             CLOSE_THE_SOCKET(sd);
             scon_argv_free(ports);
@@ -301,7 +301,7 @@ static int create_listen(void)
 
         /* set socket up to be non-blocking, otherwise accept could block */
         if ((flags = fcntl(sd, F_GETFL, 0)) < 0) {
-            scon_output(0, "scon_pt2pt_tcp_component_init: fcntl(F_GETFL) failed: %s (%d)",
+            scon_output(0, "mca_pt2pt_tcp_component_init: fcntl(F_GETFL) failed: %s (%d)",
                         strerror(scon_socket_errno), scon_socket_errno);
             CLOSE_THE_SOCKET(sd);
             scon_argv_free(ports);
@@ -309,7 +309,7 @@ static int create_listen(void)
         }
         flags |= O_NONBLOCK;
         if (fcntl(sd, F_SETFL, flags) < 0) {
-            scon_output(0, "scon_pt2pt_tcp_component_init: fcntl(F_SETFL) failed: %s (%d)",
+            scon_output(0, "mca_pt2pt_tcp_component_init: fcntl(F_SETFL) failed: %s (%d)",
                         strerror(scon_socket_errno), scon_socket_errno);
             CLOSE_THE_SOCKET(sd);
             scon_argv_free(ports);
@@ -320,10 +320,10 @@ static int create_listen(void)
         conn = SCON_NEW(scon_pt2pt_tcp_listener_t);
         conn->sd = sd;
         conn->port = ntohs(((struct sockaddr_in*) &inaddr)->sin_port);
-        scon_list_append(&scon_pt2pt_tcp_component.listeners, &conn->item);
+        scon_list_append(&mca_pt2pt_tcp_component.listeners, &conn->item);
         /* and to our ports */
         asprintf(&tconn, "%d", ntohs(((struct sockaddr_in*) &inaddr)->sin_port));
-        scon_argv_append_nosize(&scon_pt2pt_tcp_component.ipv4ports, tconn);
+        scon_argv_append_nosize(&mca_pt2pt_tcp_component.ipv4ports, tconn);
         free(tconn);
         if (PT2PT_TCP_DEBUG_CONNECT <= scon_output_get_verbosity(scon_pt2pt_base_framework.framework_output)) {
             port = ntohs(((struct sockaddr_in*) &inaddr)->sin_port);
@@ -335,7 +335,7 @@ static int create_listen(void)
     /* done with this, so release it */
     scon_argv_free(ports);
 
-    if (0 == scon_list_get_size(&scon_pt2pt_tcp_component.listeners)) {
+    if (0 == scon_list_get_size(&mca_pt2pt_tcp_component.listeners)) {
         /* cleanup */
         if (0 <= sd) {
             CLOSE_THE_SOCKET(sd);
@@ -365,16 +365,16 @@ static int create_listen6(void)
     int sd;
     char *tconn;
     scon_pt2pt_tcp_listener_t *conn;
-    if (NULL != scon_pt2pt_tcp_component.tcp_static_ports) {
+    if (NULL != mca_pt2pt_tcp_component.tcp_static_ports) {
         /* if static ports were provided, take the
          * first entry in the list
          */
-        scon_argv_append_nosize(&ports, scon_pt2pt_tcp_component.tcp_static_ports[0]);
+        scon_argv_append_nosize(&ports, mca_pt2pt_tcp_component.tcp_static_ports[0]);
         /* flag that we are using static ports */
         scon_static_ports = true;
-    } else if (NULL != scon_pt2pt_tcp_component.tcp_dyn_ports) {
+    } else if (NULL != mca_pt2pt_tcp_component.tcp_dyn_ports) {
         /* take the entire range */
-        ports = scon_argv_copy(scon_pt2pt_tcp_component.tcp_dyn_ports);
+        ports = scon_argv_copy(mca_pt2pt_tcp_component.tcp_dyn_ports);
         scon_static_ports = false;
     } else {
         /* flag the system to dynamically take any available port */
@@ -412,7 +412,7 @@ static int create_listen6(void)
         sd = socket(AF_INET6, SOCK_STREAM, 0);
         if (sd < 0) {
             if (EAFNOSUPPORT != scon_socket_errno) {
-                scon_output(0,"scon_pt2pt_tcp_component_init: socket() failed: %s (%d)",
+                scon_output(0,"mca_pt2pt_tcp_component_init: socket() failed: %s (%d)",
                             strerror(scon_socket_errno), scon_socket_errno);
             }
             return SCON_ERR_IN_ERRNO;
@@ -466,20 +466,20 @@ static int create_listen6(void)
 
         /* setup listen backlog to maximum allowed by kernel */
         if (listen(sd, SOMAXCONN) < 0) {
-            scon_output(0, "scon_pt2pt_tcp_component_init: listen(): %s (%d)",
+            scon_output(0, "mca_pt2pt_tcp_component_init: listen(): %s (%d)",
                         strerror(scon_socket_errno), scon_socket_errno);
             return SCON_ERROR;
         }
 
         /* set socket up to be non-blocking, otherwise accept could block */
         if ((flags = fcntl(sd, F_GETFL, 0)) < 0) {
-            scon_output(0, "scon_pt2pt_tcp_component_init: fcntl(F_GETFL) failed: %s (%d)",
+            scon_output(0, "mca_pt2pt_tcp_component_init: fcntl(F_GETFL) failed: %s (%d)",
                         strerror(scon_socket_errno), scon_socket_errno);
             return SCON_ERROR;
         }
         flags |= O_NONBLOCK;
         if (fcntl(sd, F_SETFL, flags) < 0) {
-            scon_output(0, "scon_pt2pt_tcp_component_init: fcntl(F_SETFL) failed: %s (%d)",
+            scon_output(0, "mca_pt2pt_tcp_component_init: fcntl(F_SETFL) failed: %s (%d)",
                         strerror(scon_socket_errno), scon_socket_errno);
             return SCON_ERROR;
         }
@@ -489,10 +489,10 @@ static int create_listen6(void)
         conn->tcp6 = true;
         conn->sd = sd;
         conn->port = ntohs(((struct sockaddr_in6*) &inaddr)->sin6_port);
-        scon_list_append(&scon_pt2pt_tcp_component.listeners, &conn->item);
+        scon_list_append(&mca_pt2pt_tcp_component.listeners, &conn->item);
         /* and to our ports */
         asprintf(&tconn, "%d", ntohs(((struct sockaddr_in6*) &inaddr)->sin6_port));
-        scon_argv_append_nosize(&scon_pt2pt_tcp_component.ipv6ports, tconn);
+        scon_argv_append_nosize(&mca_pt2pt_tcp_component.ipv6ports, tconn);
         free(tconn);
         if (PT2PT_TCP_DEBUG_CONNECT <= scon_output_get_verbosity(scon_pt2pt_base_framework.framework_output)) {
             scon_output(0, "%s assigned IPv6 port %d",
@@ -502,7 +502,7 @@ static int create_listen6(void)
 
         /*** TO DO check if we need to bind to multiple static ports  ***/
     }
-    if (0 == scon_list_get_size(&scon_pt2pt_tcp_component.listeners)) {
+    if (0 == scon_list_get_size(&mca_pt2pt_tcp_component.listeners)) {
         /* cleanup */
         CLOSE_THE_SOCKET(sd);
         scon_argv_free(ports);
@@ -535,29 +535,29 @@ static void* listen_thread(scon_object_t *obj)
      * to the event method for handling any further connections
      * so as to minimize overhead
      */
-    while (scon_pt2pt_tcp_component.listen_thread_active) {
+    while (mca_pt2pt_tcp_component.listen_thread_active) {
         FD_ZERO(&readfds);
         max = -1;
-        SCON_LIST_FOREACH(listener, &scon_pt2pt_tcp_component.listeners, scon_pt2pt_tcp_listener_t) {
+        SCON_LIST_FOREACH(listener, &mca_pt2pt_tcp_component.listeners, scon_pt2pt_tcp_listener_t) {
             FD_SET(listener->sd, &readfds);
             max = (listener->sd > max) ? listener->sd : max;
         }
         /* add the stop_thread fd */
-        FD_SET(scon_pt2pt_tcp_component.stop_thread[0], &readfds);
-        max = (scon_pt2pt_tcp_component.stop_thread[0] > max) ? scon_pt2pt_tcp_component.stop_thread[0] : max;
+        FD_SET(mca_pt2pt_tcp_component.stop_thread[0], &readfds);
+        max = (mca_pt2pt_tcp_component.stop_thread[0] > max) ? mca_pt2pt_tcp_component.stop_thread[0] : max;
 
         /* set timeout interval */
-        timeout.tv_sec = scon_pt2pt_tcp_component.listen_thread_tv.tv_sec;
-        timeout.tv_usec = scon_pt2pt_tcp_component.listen_thread_tv.tv_usec;
+        timeout.tv_sec = mca_pt2pt_tcp_component.listen_thread_tv.tv_sec;
+        timeout.tv_usec = mca_pt2pt_tcp_component.listen_thread_tv.tv_usec;
 
         /* Block in a select to avoid hammering the cpu.  If a connection
          * comes in, we'll get woken up right away.
          */
         rc = select(max + 1, &readfds, NULL, NULL, &timeout);
-        if (!scon_pt2pt_tcp_component.listen_thread_active) {
+        if (!mca_pt2pt_tcp_component.listen_thread_active) {
             /* we've been asked to terminate */
-            close(scon_pt2pt_tcp_component.stop_thread[0]);
-            close(scon_pt2pt_tcp_component.stop_thread[1]);
+            close(mca_pt2pt_tcp_component.stop_thread[0]);
+            close(mca_pt2pt_tcp_component.stop_thread[1]);
             return NULL;
         }
         if (rc < 0) {
@@ -573,7 +573,7 @@ static void* listen_thread(scon_object_t *obj)
          */
         do {
             accepted_connections = 0;
-            SCON_LIST_FOREACH(listener, &scon_pt2pt_tcp_component.listeners, scon_pt2pt_tcp_listener_t) {
+            SCON_LIST_FOREACH(listener, &mca_pt2pt_tcp_component.listeners, scon_pt2pt_tcp_listener_t) {
                 sd = listener->sd;
 
                 /* according to the man pages, select replaces the given descriptor
@@ -595,7 +595,7 @@ static void* listen_thread(scon_object_t *obj)
                  * OS might start rejecting connections due to timeout.
                  */
                 pending_connection = SCON_NEW(scon_pt2pt_tcp_pending_connection_t);
-                scon_event_set(scon_globals.evbase, &pending_connection->ev, -1,
+                scon_event_set(scon_pt2pt_base.pt2pt_evbase, &pending_connection->ev, -1,
                                SCON_EV_WRITE, connection_handler, pending_connection);
                 scon_event_set_priority(&pending_connection->ev, SCON_MSG_PRI);
                 pending_connection->fd = accept(sd,
@@ -688,9 +688,9 @@ static void* listen_thread(scon_object_t *obj)
                         "%s scon_pt2pt_tcp_listen_thread: switching to event lib",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME));
     /* setup to listen via event library */
-    SCON_LIST_FOREACH(listener, &scon_pt2pt_tcp_component.listeners, scon_pt2pt_tcp_listener_t) {
+    SCON_LIST_FOREACH(listener, &mca_pt2pt_tcp_component.listeners, scon_pt2pt_tcp_listener_t) {
         listener->ev_active = true;
-        scon_event_set(scon_globals.evbase, &listener->event,
+        scon_event_set(scon_pt2pt_base.pt2pt_evbase, &listener->event,
                        listener->sd,
                        SCON_EV_READ|SCON_EV_PERSIST,
                        connection_event_handler,

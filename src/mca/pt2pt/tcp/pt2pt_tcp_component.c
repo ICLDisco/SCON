@@ -84,12 +84,12 @@ static int component_set_addr(scon_proc_t *peer,
                               char **uris);
 static char* component_get_addr(void);
 
-#define TCP_LISTEN 0
+#define TCP_LISTEN 1
 
 /*
  * Struct of function pointers and all that to let us be initialized
  */
-scon_pt2pt_tcp_component_t scon_pt2pt_tcp_component = {
+scon_pt2pt_tcp_component_t mca_pt2pt_tcp_component = {
     /* First, the mca_base_component_t struct containing meta
        information about the component itself */
     .super =
@@ -141,26 +141,26 @@ static int tcp_component_startup(void)
 static int tcp_component_open(void)
 {
     /* initialize state */
-    SCON_CONSTRUCT(&scon_pt2pt_tcp_component.listeners, scon_list_t);
+    SCON_CONSTRUCT(&mca_pt2pt_tcp_component.listeners, scon_list_t);
 #ifdef TCP_LISTEN
-        SCON_CONSTRUCT(&scon_pt2pt_tcp_component.listen_thread, scon_thread_t);
-        scon_pt2pt_tcp_component.listen_thread_active = false;
-        scon_pt2pt_tcp_component.listen_thread_tv.tv_sec = 3600;
-        scon_pt2pt_tcp_component.listen_thread_tv.tv_usec = 0;
+        SCON_CONSTRUCT(&mca_pt2pt_tcp_component.listen_thread, scon_thread_t);
+        mca_pt2pt_tcp_component.listen_thread_active = false;
+        mca_pt2pt_tcp_component.listen_thread_tv.tv_sec = 3600;
+        mca_pt2pt_tcp_component.listen_thread_tv.tv_usec = 0;
 #endif
-    scon_pt2pt_tcp_component.addr_count = 0;
-    scon_pt2pt_tcp_component.ipv4conns = NULL;
-    scon_pt2pt_tcp_component.ipv4ports = NULL;
-    scon_pt2pt_tcp_component.ipv6conns = NULL;
-    scon_pt2pt_tcp_component.ipv6ports = NULL;
+    mca_pt2pt_tcp_component.addr_count = 0;
+    mca_pt2pt_tcp_component.ipv4conns = NULL;
+    mca_pt2pt_tcp_component.ipv4ports = NULL;
+    mca_pt2pt_tcp_component.ipv6conns = NULL;
+    mca_pt2pt_tcp_component.ipv6ports = NULL;
     /* if_include and if_exclude need to be mutually exclusive */
   /*  if (SCON_SUCCESS !=
         scon_mca_base_var_check_exclusive("scon",
-        scon_pt2pt_tcp_component.super.base_version.scon_mca_type_name,
-        scon_pt2pt_tcp_component.super.base_version.scon_mca_component_name,
+        mca_pt2pt_tcp_component.super.base_version.scon_mca_type_name,
+        mca_pt2pt_tcp_component.super.base_version.scon_mca_component_name,
         "if_include",
-        scon_pt2pt_tcp_component.super.base_version.scon_mca_type_name,
-        scon_pt2pt_tcp_component.super.base_version.scon_mca_component_name,
+        mca_pt2pt_tcp_component.super.base_version.scon_mca_type_name,
+        mca_pt2pt_tcp_component.super.base_version.scon_mca_component_name,
         "if_exclude")) {
         //Return ERR_NOT_AVAILABLE so that a warning message about
            //"open" failing is not printed
@@ -174,20 +174,20 @@ static int tcp_component_open(void)
  */
 static int tcp_component_close(void)
 {
-    SCON_LIST_DESTRUCT(&scon_pt2pt_tcp_component.listeners);
-    if (NULL != scon_pt2pt_tcp_component.ipv4conns) {
-        scon_argv_free(scon_pt2pt_tcp_component.ipv4conns);
+    SCON_LIST_DESTRUCT(&mca_pt2pt_tcp_component.listeners);
+    if (NULL != mca_pt2pt_tcp_component.ipv4conns) {
+        scon_argv_free(mca_pt2pt_tcp_component.ipv4conns);
     }
-    if (NULL != scon_pt2pt_tcp_component.ipv4ports) {
-        scon_argv_free(scon_pt2pt_tcp_component.ipv4ports);
+    if (NULL != mca_pt2pt_tcp_component.ipv4ports) {
+        scon_argv_free(mca_pt2pt_tcp_component.ipv4ports);
     }
 
 #if SCON_ENABLE_IPV6
-    if (NULL != scon_pt2pt_tcp_component.ipv6conns) {
-        scon_argv_free(scon_pt2pt_tcp_component.ipv6conns);
+    if (NULL != mca_pt2pt_tcp_component.ipv6conns) {
+        scon_argv_free(mca_pt2pt_tcp_component.ipv6conns);
     }
-    if (NULL != scon_pt2pt_tcp_component.ipv6ports) {
-        scon_argv_free(scon_pt2pt_tcp_component.ipv6ports);
+    if (NULL != mca_pt2pt_tcp_component.ipv6ports) {
+        scon_argv_free(mca_pt2pt_tcp_component.ipv6ports);
     }
 #endif
     return SCON_SUCCESS;
@@ -209,69 +209,69 @@ static char *dyn_port_string6;
 
 static int tcp_component_register(void)
 {
-    scon_mca_base_component_t *component = &scon_pt2pt_tcp_component.super.base_version;
+    scon_mca_base_component_t *component = &mca_pt2pt_tcp_component.super.base_version;
     int var_id;
     /* register pt2pt module parameters */
-    scon_pt2pt_tcp_component.peer_limit = -1;
+    mca_pt2pt_tcp_component.peer_limit = -1;
     (void)scon_mca_base_component_var_register(component, "peer_limit",
                                           "Maximum number of peer connections to simultaneously maintain (-1 = infinite)",
                                           SCON_MCA_BASE_VAR_TYPE_INT, NULL, 0, 0,
                                           SCON_INFO_LVL_5,
                                           SCON_MCA_BASE_VAR_SCOPE_LOCAL,
-                                          &scon_pt2pt_tcp_component.peer_limit);
+                                          &mca_pt2pt_tcp_component.peer_limit);
 
-    scon_pt2pt_tcp_component.max_retries = 2;
+    mca_pt2pt_tcp_component.max_retries = 2;
     (void)scon_mca_base_component_var_register(component, "peer_retries",
                                           "Number of times to try shutting down a connection before giving up",
                                           SCON_MCA_BASE_VAR_TYPE_INT, NULL, 0, 0,
                                           SCON_INFO_LVL_5,
                                           SCON_MCA_BASE_VAR_SCOPE_LOCAL,
-                                          &scon_pt2pt_tcp_component.max_retries);
+                                          &mca_pt2pt_tcp_component.max_retries);
 
-    scon_pt2pt_tcp_component.tcp_sndbuf = 128 * 1024;
+    mca_pt2pt_tcp_component.tcp_sndbuf = 128 * 1024;
     (void)scon_mca_base_component_var_register(component, "sndbuf",
                                           "TCP socket send buffering size (in bytes)",
                                           SCON_MCA_BASE_VAR_TYPE_INT, NULL, 0, 0,
                                           SCON_INFO_LVL_4,
                                           SCON_MCA_BASE_VAR_SCOPE_LOCAL,
-                                          &scon_pt2pt_tcp_component.tcp_sndbuf);
+                                          &mca_pt2pt_tcp_component.tcp_sndbuf);
 
-    scon_pt2pt_tcp_component.tcp_rcvbuf = 128 * 1024;
+    mca_pt2pt_tcp_component.tcp_rcvbuf = 128 * 1024;
     (void)scon_mca_base_component_var_register(component, "rcvbuf",
                                           "TCP socket receive buffering size (in bytes)",
                                           SCON_MCA_BASE_VAR_TYPE_INT, NULL, 0, 0,
                                           SCON_INFO_LVL_4,
                                           SCON_MCA_BASE_VAR_SCOPE_LOCAL,
-                                          &scon_pt2pt_tcp_component.tcp_rcvbuf);
+                                          &mca_pt2pt_tcp_component.tcp_rcvbuf);
 
-    scon_pt2pt_tcp_component.if_include = NULL;
+    mca_pt2pt_tcp_component.if_include = NULL;
     var_id = scon_mca_base_component_var_register(component, "if_include",
                                              "Comma-delimited list of devices and/or CIDR notation of TCP networks to use for Open MPI bootstrap communication (e.g., \"eth0,192.168.0.0/16\").  Mutually exclusive with pt2pt_tcp_if_exclude.",
                                              SCON_MCA_BASE_VAR_TYPE_STRING, NULL, 0, 0,
                                              SCON_INFO_LVL_2,
                                              SCON_MCA_BASE_VAR_SCOPE_LOCAL,
-                                             &scon_pt2pt_tcp_component.if_include);
+                                             &mca_pt2pt_tcp_component.if_include);
     (void)scon_mca_base_var_register_synonym(var_id, "scon", "pt2pt", "tcp", "include",
                                          SCON_MCA_BASE_VAR_SYN_FLAG_DEPRECATED | SCON_MCA_BASE_VAR_SYN_FLAG_INTERNAL);
 
-    scon_pt2pt_tcp_component.if_exclude = NULL;
+    mca_pt2pt_tcp_component.if_exclude = NULL;
     var_id = scon_mca_base_component_var_register(component, "if_exclude",
                                              "Comma-delimited list of devices and/or CIDR notation of TCP networks to NOT use for Open MPI bootstrap communication -- all devices not matching these specifications will be used (e.g., \"eth0,192.168.0.0/16\").  If set to a non-default value, it is mutually exclusive with pt2pt_tcp_if_include.",
                                              SCON_MCA_BASE_VAR_TYPE_STRING, NULL, 0, 0,
                                              SCON_INFO_LVL_2,
                                              SCON_MCA_BASE_VAR_SCOPE_LOCAL,
-                                             &scon_pt2pt_tcp_component.if_exclude);
+                                             &mca_pt2pt_tcp_component.if_exclude);
     (void)scon_mca_base_var_register_synonym(var_id, "scon", "pt2pt", "tcp", "exclude",
                                         SCON_MCA_BASE_VAR_SYN_FLAG_DEPRECATED | SCON_MCA_BASE_VAR_SYN_FLAG_INTERNAL);
 
     /* if_include and if_exclude need to be mutually exclusive */
-    if (NULL != scon_pt2pt_tcp_component.if_include &&
-        NULL != scon_pt2pt_tcp_component.if_exclude) {
+    if (NULL != mca_pt2pt_tcp_component.if_include &&
+        NULL != mca_pt2pt_tcp_component.if_exclude) {
         /* Return ERR_NOT_AVAILABLE so that a warning message about
            "open" failing is not printed */
         scon_show_help("help-pt2pt-tcp.txt", "include-exclude", true,
-                       scon_pt2pt_tcp_component.if_include,
-                       scon_pt2pt_tcp_component.if_exclude);
+                       mca_pt2pt_tcp_component.if_include,
+                       mca_pt2pt_tcp_component.if_exclude);
         return SCON_ERR_NOT_AVAILABLE;
     }
 
@@ -286,13 +286,13 @@ static int tcp_component_register(void)
 
     /* if ports were provided, parse the provided range */
     if (NULL != static_port_string) {
-        scon_util_parse_range_options(static_port_string, &scon_pt2pt_tcp_component.tcp_static_ports);
-        if (0 == strcmp(scon_pt2pt_tcp_component.tcp_static_ports[0], "-1")) {
-            scon_argv_free(scon_pt2pt_tcp_component.tcp_static_ports);
-            scon_pt2pt_tcp_component.tcp_static_ports = NULL;
+        scon_util_parse_range_options(static_port_string, &mca_pt2pt_tcp_component.tcp_static_ports);
+        if (0 == strcmp(mca_pt2pt_tcp_component.tcp_static_ports[0], "-1")) {
+            scon_argv_free(mca_pt2pt_tcp_component.tcp_static_ports);
+            mca_pt2pt_tcp_component.tcp_static_ports = NULL;
         }
     } else {
-        scon_pt2pt_tcp_component.tcp_static_ports = NULL;
+        mca_pt2pt_tcp_component.tcp_static_ports = NULL;
     }
 #if SCON_ENABLE_IPV6
     static_port_string6 = NULL;
@@ -305,16 +305,16 @@ static int tcp_component_register(void)
 
     /* if ports were provided, parse the provided range */
     if (NULL != static_port_string6) {
-        scon_util_parse_range_options(static_port_string6, &scon_pt2pt_tcp_component.tcp6_static_ports);
-        if (0 == strcmp(scon_pt2pt_tcp_component.tcp6_static_ports[0], "-1")) {
-            scon_argv_free(scon_pt2pt_tcp_component.tcp6_static_ports);
-            scon_pt2pt_tcp_component.tcp6_static_ports = NULL;
+        scon_util_parse_range_options(static_port_string6, &mca_pt2pt_tcp_component.tcp6_static_ports);
+        if (0 == strcmp(mca_pt2pt_tcp_component.tcp6_static_ports[0], "-1")) {
+            scon_argv_free(mca_pt2pt_tcp_component.tcp6_static_ports);
+            mca_pt2pt_tcp_component.tcp6_static_ports = NULL;
         }
     } else {
-        scon_pt2pt_tcp_component.tcp6_static_ports = NULL;
+        mca_pt2pt_tcp_component.tcp6_static_ports = NULL;
     }
-    if (NULL == scon_pt2pt_tcp_component.tcp_static_ports &&
-        NULL == scon_pt2pt_tcp_component.tcp6_static_ports) {
+    if (NULL == mca_pt2pt_tcp_component.tcp_static_ports &&
+        NULL == mca_pt2pt_tcp_component.tcp6_static_ports) {
         scon_static_ports = false;
     } else {
         scon_static_ports = true;
@@ -331,20 +331,20 @@ static int tcp_component_register(void)
     /* if ports were provided, parse the provided range */
     if (NULL != dyn_port_string) {
         /* can't have both static and dynamic ports! */
-        if (scon_pt2pt_tcp_component.tcp_static_ports) {
-            char *err = scon_argv_join(scon_pt2pt_tcp_component.tcp_static_ports, ',');
+        if (mca_pt2pt_tcp_component.tcp_static_ports) {
+            char *err = scon_argv_join(mca_pt2pt_tcp_component.tcp_static_ports, ',');
             scon_show_help("help-pt2pt-tcp.txt", "static-and-dynamic", true,
                            err, dyn_port_string);
             free(err);
             return SCON_ERROR;
         }
-        scon_util_parse_range_options(dyn_port_string, &scon_pt2pt_tcp_component.tcp_dyn_ports);
-        if (0 == strcmp(scon_pt2pt_tcp_component.tcp_dyn_ports[0], "-1")) {
-            scon_argv_free(scon_pt2pt_tcp_component.tcp_dyn_ports);
-            scon_pt2pt_tcp_component.tcp_dyn_ports = NULL;
+        scon_util_parse_range_options(dyn_port_string, &mca_pt2pt_tcp_component.tcp_dyn_ports);
+        if (0 == strcmp(mca_pt2pt_tcp_component.tcp_dyn_ports[0], "-1")) {
+            scon_argv_free(mca_pt2pt_tcp_component.tcp_dyn_ports);
+            mca_pt2pt_tcp_component.tcp_dyn_ports = NULL;
         }
     } else {
-        scon_pt2pt_tcp_component.tcp_dyn_ports = NULL;
+        mca_pt2pt_tcp_component.tcp_dyn_ports = NULL;
     }
 
 #if SCON_ENABLE_IPV6
@@ -360,11 +360,11 @@ static int tcp_component_register(void)
         /* can't have both static and dynamic ports! */
         if (scon_static_ports) {
             char *err4=NULL, *err6=NULL;
-            if (NULL != scon_pt2pt_tcp_component.tcp_static_ports) {
-                err4 = scon_argv_join(scon_pt2pt_tcp_component.tcp_static_ports, ',');
+            if (NULL != mca_pt2pt_tcp_component.tcp_static_ports) {
+                err4 = scon_argv_join(mca_pt2pt_tcp_component.tcp_static_ports, ',');
             }
-            if (NULL != scon_pt2pt_tcp_component.tcp6_static_ports) {
-                err6 = scon_argv_join(scon_pt2pt_tcp_component.tcp6_static_ports, ',');
+            if (NULL != mca_pt2pt_tcp_component.tcp6_static_ports) {
+                err6 = scon_argv_join(mca_pt2pt_tcp_component.tcp6_static_ports, ',');
             }
             scon_show_help("help-pt2pt-tcp.txt", "static-and-dynamic-ipv6", true,
                            (NULL == err4) ? "N/A" : err4,
@@ -378,77 +378,77 @@ static int tcp_component_register(void)
             }
             return SCON_ERROR;
         }
-        scon_util_parse_range_options(dyn_port_string6, &scon_pt2pt_tcp_component.tcp6_dyn_ports);
-        if (0 == strcmp(scon_pt2pt_tcp_component.tcp6_dyn_ports[0], "-1")) {
-            scon_argv_free(scon_pt2pt_tcp_component.tcp6_dyn_ports);
-            scon_pt2pt_tcp_component.tcp6_dyn_ports = NULL;
+        scon_util_parse_range_options(dyn_port_string6, &mca_pt2pt_tcp_component.tcp6_dyn_ports);
+        if (0 == strcmp(mca_pt2pt_tcp_component.tcp6_dyn_ports[0], "-1")) {
+            scon_argv_free(mca_pt2pt_tcp_component.tcp6_dyn_ports);
+            mca_pt2pt_tcp_component.tcp6_dyn_ports = NULL;
         }
     } else {
-        scon_pt2pt_tcp_component.tcp6_dyn_ports = NULL;
+        mca_pt2pt_tcp_component.tcp6_dyn_ports = NULL;
     }
 #endif // SCON_ENABLE_IPV6
 
-    scon_pt2pt_tcp_component.disable_ipv4_family = false;
+    mca_pt2pt_tcp_component.disable_ipv4_family = false;
     (void)scon_mca_base_component_var_register(component, "disable_ipv4_family",
                                           "Disable the IPv4 interfaces",
                                           SCON_MCA_BASE_VAR_TYPE_BOOL, NULL, 0, 0,
                                           SCON_INFO_LVL_4,
                                           SCON_MCA_BASE_VAR_SCOPE_READONLY,
-                                          &scon_pt2pt_tcp_component.disable_ipv4_family);
+                                          &mca_pt2pt_tcp_component.disable_ipv4_family);
 
 #if SCON_ENABLE_IPV6
-    scon_pt2pt_tcp_component.disable_ipv6_family = false;
+    mca_pt2pt_tcp_component.disable_ipv6_family = false;
     (void)scon_mca_base_component_var_register(component, "disable_ipv6_family",
                                           "Disable the IPv6 interfaces",
                                           SCON_MCA_BASE_VAR_TYPE_BOOL, NULL, 0, 0,
                                           SCON_INFO_LVL_4,
                                           SCON_MCA_BASE_VAR_SCOPE_READONLY,
-                                          &scon_pt2pt_tcp_component.disable_ipv6_family);
+                                          &mca_pt2pt_tcp_component.disable_ipv6_family);
 #endif // SCON_ENABLE_IPV6
 
     // Default to keepalives every 60 seconds
-    scon_pt2pt_tcp_component.keepalive_time = 60;
+    mca_pt2pt_tcp_component.keepalive_time = 60;
     (void)scon_mca_base_component_var_register(component, "keepalive_time",
                                           "Idle time in seconds before starting to send keepalives (keepalive_time <= 0 disables keepalive functionality)",
                                           SCON_MCA_BASE_VAR_TYPE_INT, NULL, 0, 0,
                                           SCON_INFO_LVL_5,
                                           SCON_MCA_BASE_VAR_SCOPE_READONLY,
-                                          &scon_pt2pt_tcp_component.keepalive_time);
+                                          &mca_pt2pt_tcp_component.keepalive_time);
 
     // Default to keepalive retry interval time of 5 seconds
-    scon_pt2pt_tcp_component.keepalive_intvl = 5;
+    mca_pt2pt_tcp_component.keepalive_intvl = 5;
     (void)scon_mca_base_component_var_register(component, "keepalive_intvl",
                                           "Time between successive keepalive pings when peer has not responded, in seconds (ignored if keepalive_time <= 0)",
                                           SCON_MCA_BASE_VAR_TYPE_INT, NULL, 0, 0,
                                           SCON_INFO_LVL_5,
                                           SCON_MCA_BASE_VAR_SCOPE_READONLY,
-                                          &scon_pt2pt_tcp_component.keepalive_intvl);
+                                          &mca_pt2pt_tcp_component.keepalive_intvl);
 
     // Default to retrying a keepalive 3 times before declaring the
     // peer kaput
-    scon_pt2pt_tcp_component.keepalive_probes = 3;
+    mca_pt2pt_tcp_component.keepalive_probes = 3;
     (void)scon_mca_base_component_var_register(component, "keepalive_probes",
                                           "Number of keepalives that can be missed before declaring error (ignored if keepalive_time <= 0)",
                                           SCON_MCA_BASE_VAR_TYPE_INT, NULL, 0, 0,
                                           SCON_INFO_LVL_5,
                                           SCON_MCA_BASE_VAR_SCOPE_READONLY,
-                                          &scon_pt2pt_tcp_component.keepalive_probes);
+                                          &mca_pt2pt_tcp_component.keepalive_probes);
 
-    scon_pt2pt_tcp_component.retry_delay = 0;
+    mca_pt2pt_tcp_component.retry_delay = 0;
     (void)scon_mca_base_component_var_register(component, "retry_delay",
                                           "Time (in sec) to wait before trying to connect to peer again",
                                           SCON_MCA_BASE_VAR_TYPE_INT, NULL, 0, 0,
                                           SCON_INFO_LVL_4,
                                           SCON_MCA_BASE_VAR_SCOPE_READONLY,
-                                          &scon_pt2pt_tcp_component.retry_delay);
+                                          &mca_pt2pt_tcp_component.retry_delay);
 
-    scon_pt2pt_tcp_component.max_recon_attempts = 10;
+    mca_pt2pt_tcp_component.max_recon_attempts = 10;
     (void)scon_mca_base_component_var_register(component, "max_recon_attempts",
                                           "Max number of times to attempt connection before giving up (-1 -> never give up)",
                                           SCON_MCA_BASE_VAR_TYPE_INT, NULL, 0, 0,
                                           SCON_INFO_LVL_4,
                                           SCON_MCA_BASE_VAR_SCOPE_READONLY,
-                                          &scon_pt2pt_tcp_component.max_recon_attempts);
+                                          &mca_pt2pt_tcp_component.max_recon_attempts);
 
     return SCON_SUCCESS;
 }
@@ -467,20 +467,20 @@ static int tcp_component_query(scon_mca_base_module_t **module, int *priority)
     int kindex;
 
     scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
-                        "pt2pt:tcp: component_available called");
+                        "pt2pt:tcp: component_query called");
 
     /* if interface include was given, construct a list
      * of those interfaces which match the specifications - remember,
      * the includes could be given as named interfaces, IP addrs, or
      * subnet+mask
      */
-    if (NULL != scon_pt2pt_tcp_component.if_include) {
-        interfaces = split_and_resolve(&scon_pt2pt_tcp_component.if_include,
+    if (NULL != mca_pt2pt_tcp_component.if_include) {
+        interfaces = split_and_resolve(&mca_pt2pt_tcp_component.if_include,
                                        "include");
         including = true;
         excluding = false;
-    } else if (NULL != scon_pt2pt_tcp_component.if_exclude) {
-        interfaces = split_and_resolve(&scon_pt2pt_tcp_component.if_exclude,
+    } else if (NULL != mca_pt2pt_tcp_component.if_exclude) {
+        interfaces = split_and_resolve(&mca_pt2pt_tcp_component.if_exclude,
                                        "exclude");
         including = false;
         excluding = true;
@@ -574,7 +574,7 @@ static int tcp_component_query(scon_mca_base_module_t **module, int *priority)
                                 SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                                 scon_net_get_hostname((struct sockaddr*) &my_ss),
                                 (AF_INET == my_ss.ss_family) ? "V4" : "V6");
-            scon_argv_append_nosize(&scon_pt2pt_tcp_component.ipv4conns, scon_net_get_hostname((struct sockaddr*) &my_ss));
+            scon_argv_append_nosize(&mca_pt2pt_tcp_component.ipv4conns, scon_net_get_hostname((struct sockaddr*) &my_ss));
         } else if (AF_INET6 == my_ss.ss_family) {
 #if SCON_ENABLE_IPV6
             scon_output_verbose(10, scon_pt2pt_base_framework.framework_output,
@@ -582,7 +582,7 @@ static int tcp_component_query(scon_mca_base_module_t **module, int *priority)
                                 SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                                 scon_net_get_hostname((struct sockaddr*) &my_ss),
                                 (AF_INET == my_ss.ss_family) ? "V4" : "V6");
-            scon_argv_append_nosize(&scon_pt2pt_tcp_component.ipv6conns, scon_net_get_hostname((struct sockaddr*) &my_ss));
+            scon_argv_append_nosize(&mca_pt2pt_tcp_component.ipv6conns, scon_net_get_hostname((struct sockaddr*) &my_ss));
 #endif // SCON_ENABLE_IPV6
         } else {
             scon_output_verbose(10, scon_pt2pt_base_framework.framework_output,
@@ -597,15 +597,15 @@ static int tcp_component_query(scon_mca_base_module_t **module, int *priority)
         scon_argv_free(interfaces);
     }
 
-    if (0 == scon_argv_count(scon_pt2pt_tcp_component.ipv4conns)
+    if (0 == scon_argv_count(mca_pt2pt_tcp_component.ipv4conns)
 #if SCON_ENABLE_IPV6
-        && 0 == scon_argv_count(scon_pt2pt_tcp_component.ipv6conns)
+        && 0 == scon_argv_count(mca_pt2pt_tcp_component.ipv6conns)
 #endif
         ) {
         if (including) {
-            scon_show_help("help-pt2pt-tcp.txt", "no-included-found", true, scon_pt2pt_tcp_component.if_include);
+            scon_show_help("help-pt2pt-tcp.txt", "no-included-found", true, mca_pt2pt_tcp_component.if_include);
         } else if (excluding) {
-            scon_show_help("help-pt2pt-tcp.txt", "excluded-all", true, scon_pt2pt_tcp_component.if_exclude);
+            scon_show_help("help-pt2pt-tcp.txt", "excluded-all", true, mca_pt2pt_tcp_component.if_exclude);
         }
         return SCON_ERR_NOT_AVAILABLE;
     }
@@ -613,7 +613,7 @@ static int tcp_component_query(scon_mca_base_module_t **module, int *priority)
     /* set the module event base - this is where we would spin off a separate
      * progress thread if so desired */
    //scon_pt2pt_tcp_module.ev_base = scon_globals.evbase;
-    *priority = scon_pt2pt_tcp_component.super.priority;
+    *priority = mca_pt2pt_tcp_component.super.priority;
     *module = &scon_pt2pt_tcp_module.base.super;
     return SCON_SUCCESS;
 }
@@ -622,7 +622,7 @@ static void cleanup(int sd, short args, void *cbdata)
 {
     scon_list_item_t * item;
     bool *active = (bool*)cbdata;
-    while (NULL != (item = scon_list_remove_first(&scon_pt2pt_tcp_component.listeners))) {
+    while (NULL != (item = scon_list_remove_first(&mca_pt2pt_tcp_component.listeners))) {
         SCON_RELEASE(item);
     }
     if (NULL != active) {
@@ -643,11 +643,11 @@ static void tcp_component_shutdown(void)
                         "%s TCP SHUTDOWN",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME));
 #if 0
-    if (scon_pt2pt_tcp_component.listen_thread_active) {
-        scon_pt2pt_tcp_component.listen_thread_active = false;
+    if (mca_pt2pt_tcp_component.listen_thread_active) {
+        mca_pt2pt_tcp_component.listen_thread_active = false;
         /* tell the thread to exit */
-        write(scon_pt2pt_tcp_component.stop_thread[1], &i, sizeof(int));
-        scon_thread_join(&scon_pt2pt_tcp_component.listen_thread, NULL);
+        write(mca_pt2pt_tcp_component.stop_thread[1], &i, sizeof(int));
+        scon_thread_join(&mca_pt2pt_tcp_component.listen_thread, NULL);
     } else {
         scon_output_verbose(2, scon_pt2pt_base_framework.framework_output,
                         "listening thread not active");
@@ -655,7 +655,7 @@ static void tcp_component_shutdown(void)
 #endif
     scon_event_t ev;
     active = true;
-    scon_event_set(scon_globals.evbase, &ev, -1,
+    scon_event_set(scon_pt2pt_base.pt2pt_evbase, &ev, -1,
                    SCON_EV_WRITE, cleanup, &active);
     scon_event_set_priority(&ev, SCON_ERROR_PRI);
     scon_event_active(&ev, SCON_EV_WRITE, 1);
@@ -699,17 +699,17 @@ static char* component_get_addr(void)
 {
     char *cptr=NULL, *tmp, *tp;
 
-    if (!scon_pt2pt_tcp_component.disable_ipv4_family &&
-        NULL != scon_pt2pt_tcp_component.ipv4conns) {
-        tmp = scon_argv_join(scon_pt2pt_tcp_component.ipv4conns, ',');
-        tp = scon_argv_join(scon_pt2pt_tcp_component.ipv4ports, ',');
+    if (!mca_pt2pt_tcp_component.disable_ipv4_family &&
+        NULL != mca_pt2pt_tcp_component.ipv4conns) {
+        tmp = scon_argv_join(mca_pt2pt_tcp_component.ipv4conns, ',');
+        tp = scon_argv_join(mca_pt2pt_tcp_component.ipv4ports, ',');
         asprintf(&cptr, "tcp://%s:%s", tmp, tp);
         free(tmp);
         free(tp);
     }
 #if SCON_ENABLE_IPV6
-    if (!scon_pt2pt_tcp_component.disable_ipv6_family &&
-        NULL != scon_pt2pt_tcp_component.ipv6conns) {
+    if (!mca_pt2pt_tcp_component.disable_ipv6_family &&
+        NULL != mca_pt2pt_tcp_component.ipv6conns) {
         char *tmp2;
 
         /* Fixes #2498
@@ -723,8 +723,8 @@ static char* component_get_addr(void)
          * an implementation may use an optional version flag to indicate such a format
          * explicitly rather than rely on heuristic determination.
          */
-        tmp = scon_argv_join(scon_pt2pt_tcp_component.ipv6conns, ',');
-        tp = scon_argv_join(scon_pt2pt_tcp_component.ipv6ports, ',');
+        tmp = scon_argv_join(mca_pt2pt_tcp_component.ipv6conns, ',');
+        tp = scon_argv_join(mca_pt2pt_tcp_component.ipv6ports, ',');
         if (NULL == cptr) {
             /* no ipv4 stuff */
             asprintf(&cptr, "tcp6://[%s]:%s", tmp, tp);
@@ -827,18 +827,18 @@ static int component_set_addr(scon_proc_t *peer,
             if (0 == strcasecmp(addrs[j], "localhost")) {
 #if SCON_ENABLE_IPV6
                 if (AF_INET6 == af_family) {
-                    if (NULL == scon_pt2pt_tcp_component.ipv6conns ||
-                        NULL == scon_pt2pt_tcp_component.ipv6conns[0]) {
+                    if (NULL == mca_pt2pt_tcp_component.ipv6conns ||
+                        NULL == mca_pt2pt_tcp_component.ipv6conns[0]) {
                         continue;
                     }
-                    host = scon_pt2pt_tcp_component.ipv6conns[0];
+                    host = mca_pt2pt_tcp_component.ipv6conns[0];
                 } else {
 #endif // SCON_ENABLE_IPV6
-                    if (NULL == scon_pt2pt_tcp_component.ipv4conns ||
-                        NULL == scon_pt2pt_tcp_component.ipv4conns[0]) {
+                    if (NULL == mca_pt2pt_tcp_component.ipv4conns ||
+                        NULL == mca_pt2pt_tcp_component.ipv4conns[0]) {
                         continue;
                     }
-                    host = scon_pt2pt_tcp_component.ipv4conns[0];
+                    host = mca_pt2pt_tcp_component.ipv4conns[0];
 #if SCON_ENABLE_IPV6
                 }
 #endif
@@ -906,13 +906,18 @@ void scon_pt2pt_tcp_component_set_module(int fd, short args, void *cbdata)
      * are in the same event base as the pt2pt base, so we can
      * directly access its storage
      */
-    memcpy(&ui64, (char*)&pop->peer, sizeof(uint64_t));
+    //memcpy(&ui64, (char*)&pop->peer, sizeof(uint64_t));
+    scon_util_convert_process_name_to_uint64(&ui64, &pop->peer);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
                                                          ui64, (void**)&bpr) || NULL == bpr) {
         bpr = SCON_NEW(scon_pt2pt_base_peer_t);
     }
-    scon_bitmap_set_bit(&bpr->addressable, scon_pt2pt_tcp_component.super.idx);
-    bpr->component = &scon_pt2pt_tcp_component.super;
+    scon_bitmap_set_bit(&bpr->addressable, mca_pt2pt_tcp_component.super.idx);
+    bpr->module = &scon_pt2pt_tcp_module;
+    scon_output(0, "mca_pt2pt_tcp_component_set_module %s setting base hash table %p, key %llu, value %p",
+                SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                (void*)&scon_pt2pt_base.peers,
+                ui64, (void*) bpr);
     if (SCON_SUCCESS != (rc = scon_hash_table_set_value_uint64(&scon_pt2pt_base.peers,
                                                                ui64, bpr))) {
         SCON_ERROR_LOG(rc);
@@ -934,12 +939,14 @@ void scon_pt2pt_tcp_component_lost_connection(int fd, short args, void *cbdata)
                         SCON_PRINT_PROC(&pop->peer));
 
     /* Mark that we no longer support this peer */
-    memcpy(&ui64, (char*)&pop->peer, sizeof(uint64_t));
+   // memcpy(&ui64, (char*)&pop->peer, sizeof(uint64_t));
+    scon_util_convert_process_name_to_uint64(&ui64, &pop->peer);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
                                                          ui64, (void**)&bpr) || NULL == bpr) {
         bpr = SCON_NEW(scon_pt2pt_base_peer_t);
     }
-    scon_bitmap_clear_bit(&bpr->addressable, scon_pt2pt_tcp_component.super.idx);
+    scon_bitmap_clear_bit(&bpr->addressable, mca_pt2pt_tcp_component.super.idx);
+
     if (SCON_SUCCESS != (rc = scon_hash_table_set_value_uint64(&scon_pt2pt_base.peers,
                                                                ui64, NULL))) {
         SCON_ERROR_LOG(rc);
@@ -963,12 +970,13 @@ void scon_pt2pt_tcp_component_no_route(int fd, short args, void *cbdata)
                         SCON_PRINT_PROC(&mop->hop));
 
     /* mark that we cannot reach this hop */
-    memcpy(&ui64, (char*)&(mop->hop), sizeof(uint64_t));
+    //memcpy(&ui64, (char*)&(mop->hop), sizeof(uint64_t));
+    scon_util_convert_process_name_to_uint64(&ui64, &mop->hop);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
                                                          ui64, (void**)&bpr) || NULL == bpr) {
         bpr = SCON_NEW(scon_pt2pt_base_peer_t);
     }
-    scon_bitmap_clear_bit(&bpr->addressable, scon_pt2pt_tcp_component.super.idx);
+    scon_bitmap_clear_bit(&bpr->addressable, mca_pt2pt_tcp_component.super.idx);
     if (SCON_SUCCESS != (rc = scon_hash_table_set_value_uint64(&scon_pt2pt_base.peers,
                                                                ui64, NULL))) {
         SCON_ERROR_LOG(rc);
@@ -1006,7 +1014,8 @@ void scon_pt2pt_tcp_component_hop_unknown(int fd, short args, void *cbdata)
     }
 
    /* mark that this component cannot reach this hop */
-    memcpy(&ui64, (char*)&(mop->hop), sizeof(uint64_t));
+   // memcpy(&ui64, (char*)&(mop->hop), sizeof(uint64_t));
+    scon_util_convert_process_name_to_uint64(&ui64, &mop->hop);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
                                                          ui64, (void**)&bpr) ||
         NULL == bpr) {
@@ -1023,10 +1032,11 @@ void scon_pt2pt_tcp_component_hop_unknown(int fd, short args, void *cbdata)
         SCON_RELEASE(mop);
         return;
     }
-    scon_bitmap_clear_bit(&bpr->addressable, scon_pt2pt_tcp_component.super.idx);
+    scon_bitmap_clear_bit(&bpr->addressable, mca_pt2pt_tcp_component.super.idx);
 
     /* mark that this component cannot reach this destination either */
-    memcpy(&ui64, (char*)&(mop->snd->hdr.dst), sizeof(uint64_t));
+    //memcpy(&ui64, (char*)&(mop->snd->hdr.dst), sizeof(uint64_t));
+     scon_util_convert_process_name_to_uint64(&ui64, &mop->snd->hdr.dst);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
                                                          ui64, (void**)&bpr) ||
         NULL == bpr) {
@@ -1036,7 +1046,7 @@ void scon_pt2pt_tcp_component_hop_unknown(int fd, short args, void *cbdata)
         SCON_RELEASE(mop);
         return;
     }
-    scon_bitmap_clear_bit(&bpr->addressable, scon_pt2pt_tcp_component.super.idx);
+    scon_bitmap_clear_bit(&bpr->addressable, mca_pt2pt_tcp_component.super.idx);
 
     /* post the message to the pt2pt so it can see
      * if another component can transfer it

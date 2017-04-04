@@ -95,8 +95,8 @@ static void set_keepalive(int sd)
 #if defined(TCP_KEEPALIVE)
     /* set the idle time */
     if (setsockopt(sd, IPPROTO_TCP, TCP_KEEPALIVE,
-                   &scon_pt2pt_tcp_component.keepalive_time,
-                   sizeof(scon_pt2pt_tcp_component.keepalive_time)) < 0) {
+                   &mca_pt2pt_tcp_component.keepalive_time,
+                   sizeof(mca_pt2pt_tcp_component.keepalive_time)) < 0) {
         scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
                             "[%s:%d] setsockopt(TCP_KEEPALIVE) failed: %s (%d)",
                             __FILE__, __LINE__,
@@ -107,8 +107,8 @@ static void set_keepalive(int sd)
 #elif defined(TCP_KEEPIDLE)
     /* set the idle time */
     if (setsockopt(sd, IPPROTO_TCP, TCP_KEEPIDLE,
-                   &scon_pt2pt_tcp_component.keepalive_time,
-                   sizeof(scon_pt2pt_tcp_component.keepalive_time)) < 0) {
+                   &mca_pt2pt_tcp_component.keepalive_time,
+                   sizeof(mca_pt2pt_tcp_component.keepalive_time)) < 0) {
         scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
                             "[%s:%d] setsockopt(TCP_KEEPIDLE) failed: %s (%d)",
                             __FILE__, __LINE__,
@@ -120,8 +120,8 @@ static void set_keepalive(int sd)
 #if defined(TCP_KEEPINTVL)
     /* set the keepalive interval */
     if (setsockopt(sd, IPPROTO_TCP, TCP_KEEPINTVL,
-                   &scon_pt2pt_tcp_component.keepalive_intvl,
-                   sizeof(scon_pt2pt_tcp_component.keepalive_intvl)) < 0) {
+                   &mca_pt2pt_tcp_component.keepalive_intvl,
+                   sizeof(mca_pt2pt_tcp_component.keepalive_intvl)) < 0) {
         scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
                             "[%s:%d] setsockopt(TCP_KEEPINTVL) failed: %s (%d)",
                             __FILE__, __LINE__,
@@ -133,8 +133,8 @@ static void set_keepalive(int sd)
 #if defined(TCP_KEEPCNT)
     /* set the miss rate */
     if (setsockopt(sd, IPPROTO_TCP, TCP_KEEPCNT,
-                   &scon_pt2pt_tcp_component.keepalive_probes,
-                   sizeof(scon_pt2pt_tcp_component.keepalive_probes)) < 0) {
+                   &mca_pt2pt_tcp_component.keepalive_probes,
+                   sizeof(mca_pt2pt_tcp_component.keepalive_probes)) < 0) {
         scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
                             "[%s:%d] setsockopt(TCP_KEEPCNT) failed: %s (%d)",
                             __FILE__, __LINE__,
@@ -162,8 +162,8 @@ void scon_pt2pt_tcp_set_socket_options(int sd)
 #endif
 
 #if defined(SO_SNDBUF)
-    if (scon_pt2pt_tcp_component.tcp_sndbuf > 0 &&
-        setsockopt(sd, SOL_SOCKET, SO_SNDBUF, (char *)&scon_pt2pt_tcp_component.tcp_sndbuf, sizeof(int)) < 0) {
+    if (mca_pt2pt_tcp_component.tcp_sndbuf > 0 &&
+        setsockopt(sd, SOL_SOCKET, SO_SNDBUF, (char *)&mca_pt2pt_tcp_component.tcp_sndbuf, sizeof(int)) < 0) {
         scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
                             "[%s:%d] setsockopt(SO_SNDBUF) failed: %s (%d)",
                             __FILE__, __LINE__,
@@ -172,8 +172,8 @@ void scon_pt2pt_tcp_set_socket_options(int sd)
     }
 #endif
 #if defined(SO_RCVBUF)
-    if (scon_pt2pt_tcp_component.tcp_rcvbuf > 0 &&
-        setsockopt(sd, SOL_SOCKET, SO_RCVBUF, (char *)&scon_pt2pt_tcp_component.tcp_rcvbuf, sizeof(int)) < 0) {
+    if (mca_pt2pt_tcp_component.tcp_rcvbuf > 0 &&
+        setsockopt(sd, SOL_SOCKET, SO_RCVBUF, (char *)&mca_pt2pt_tcp_component.tcp_rcvbuf, sizeof(int)) < 0) {
         scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
                             "[%s:%d] setsockopt(SO_RCVBUF) failed: %s (%d)",
                             __FILE__, __LINE__,
@@ -182,7 +182,7 @@ void scon_pt2pt_tcp_set_socket_options(int sd)
     }
 #endif
 
-    if (0 < scon_pt2pt_tcp_component.keepalive_time) {
+    if (0 < mca_pt2pt_tcp_component.keepalive_time) {
         set_keepalive(sd);
     }
 }
@@ -192,7 +192,8 @@ scon_pt2pt_tcp_peer_t* scon_pt2pt_tcp_peer_lookup(const scon_proc_t *name)
     scon_pt2pt_tcp_peer_t *peer;
     uint64_t ui64;
 
-    memcpy(&ui64, (char*)name, sizeof(uint64_t));
+    //memcpy(&ui64, (char*)name, sizeof(uint64_t));
+    scon_util_convert_process_name_to_uint64(&ui64, name);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_tcp_module.peers, ui64, (void**)&peer)) {
         return NULL;
     }

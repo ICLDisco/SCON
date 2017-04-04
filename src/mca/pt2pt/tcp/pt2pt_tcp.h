@@ -66,31 +66,8 @@ void scon_pt2pt_tcp_resend_nb_fn_t(scon_send_t *msg);
 typedef void (*scon_pt2pt_tcp_module_resend_nb_fn_t)(struct scon_pt2pt_tcp_msg_error_t *mop);
 /* Module definition */
 
-/*typedef void (*scon_pt2pt_tcp_module_init_fn_t)(void);
-typedef void (*scon_pt2pt_tcp_module_fini_fn_t)(void);
-typedef void (*scon_pt2pt_tcp_module_accept_connection_fn_t)(const int accepted_fd,
-                                                          const struct sockaddr *addr);
-typedef void (*scon_pt2pt_tcp_module_set_peer_fn_t)(const scon_proc_t* name,
-                                                 const uint16_t af_family,
-                                                 const char *net, const char *ports);
-typedef void (*scon_pt2pt_tcp_module_ping_fn_t)(const scon_proc_t *proc);
-typedef void (*scon_pt2pt_tcp_module_send_nb_fn_t)(scon_send_t *msg);
-typedef void (*scon_pt2pt_tcp_module_resend_nb_fn_t)(struct scon_pt2pt_tcp_msg_error_t *mop);
-typedef void (*scon_pt2pt_tcp_module_ft_event_fn_t)(int state);
 
 typedef struct {
-    scon_pt2pt_tcp_module_init_fn_t               init;
-    scon_pt2pt_tcp_module_fini_fn_t               finalize;
-    scon_pt2pt_tcp_module_accept_connection_fn_t  accept_connection;
-    scon_pt2pt_tcp_module_set_peer_fn_t           set_peer;
-    scon_pt2pt_tcp_module_ping_fn_t               ping;
-    scon_pt2pt_tcp_module_send_nb_fn_t            send_nb;
-    scon_pt2pt_tcp_module_resend_nb_fn_t          resend;
-    scon_pt2pt_tcp_module_ft_event_fn_t           ft_event;
-} scon_pt2pt_tcp_module_api_t;*/
-
-typedef struct {
-    //scon_pt2pt_tcp_module_api_t  api;
     scon_pt2pt_module_t        base;
     scon_event_base_t          *ev_base;      /* event base for the module progress thread */
     bool                       ev_active;

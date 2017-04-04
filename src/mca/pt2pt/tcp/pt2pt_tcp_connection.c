@@ -186,7 +186,7 @@ void scon_pt2pt_tcp_peer_try_connect(int fd, short args, void *cbdata)
                                 scon_net_get_port((struct sockaddr*)&addr->addr));
             continue;
         }
-        if (scon_pt2pt_tcp_component.max_retries < addr->retries) {
+        if (mca_pt2pt_tcp_component.max_retries < addr->retries) {
             scon_output_verbose(PT2PT_TCP_DEBUG_CONNECT, scon_pt2pt_base_framework.framework_output,
                                 "%s pt2pt_tcp_peer_try_connect: %s:%d retries exceeded",
                                 SCON_PRINT_PROC(SCON_PROC_MY_NAME),
@@ -219,7 +219,7 @@ void scon_pt2pt_tcp_peer_try_connect(int fd, short args, void *cbdata)
                connection.  Handle that case in a semi-rational
                way by trying twice before giving up */
             if (ECONNABORTED == scon_socket_errno) {
-                if (addr->retries < scon_pt2pt_tcp_component.max_retries) {
+                if (addr->retries < mca_pt2pt_tcp_component.max_retries) {
                     scon_output_verbose(PT2PT_TCP_DEBUG_CONNECT, scon_pt2pt_base_framework.framework_output,
                                         "%s connection aborted by OS to %s - retrying",
                                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
@@ -246,9 +246,9 @@ void scon_pt2pt_tcp_peer_try_connect(int fd, short args, void *cbdata)
         /* it could be that the intended recipient just hasn't
          * started yet. if requested, wait awhile and try again
          * unless/until we hit the maximum number of retries */
-        if (0 < scon_pt2pt_tcp_component.retry_delay) {
-            if (scon_pt2pt_tcp_component.max_recon_attempts < 0 ||
-                peer->num_retries < scon_pt2pt_tcp_component.max_recon_attempts) {
+        if (0 < mca_pt2pt_tcp_component.retry_delay) {
+            if (mca_pt2pt_tcp_component.max_recon_attempts < 0 ||
+                peer->num_retries < mca_pt2pt_tcp_component.max_recon_attempts) {
                 struct timeval tv;
                 /* reset the addr states */
                 SCON_LIST_FOREACH(addr, &peer->addrs, scon_pt2pt_tcp_addr_t) {
@@ -256,7 +256,7 @@ void scon_pt2pt_tcp_peer_try_connect(int fd, short args, void *cbdata)
                     addr->retries = 0;
                 }
                 /* give it awhile and try again */
-                tv.tv_sec = scon_pt2pt_tcp_component.retry_delay;
+                tv.tv_sec = mca_pt2pt_tcp_component.retry_delay;
                 tv.tv_usec = 0;
                 ++peer->num_retries;
                 SCON_RETRY_TCP_CONN_STATE(peer, scon_pt2pt_tcp_peer_try_connect, &tv);
@@ -623,7 +623,7 @@ int scon_pt2pt_tcp_peer_recv_connect_ack(scon_pt2pt_tcp_peer_t* pr,
     size_t credsize;
     scon_pt2pt_tcp_hdr_t hdr;
     scon_pt2pt_tcp_peer_t *peer;
-    uint64_t *ui64;
+    uint64_t ui64;
 
     scon_output_verbose(PT2PT_TCP_DEBUG_CONNECT, scon_pt2pt_base_framework.framework_output,
                         "%s RECV CONNECT ACK FROM %s ON SOCKET %d",
@@ -707,19 +707,27 @@ int scon_pt2pt_tcp_peer_recv_connect_ack(scon_pt2pt_tcp_peer_t* pr,
     if (NULL == peer) {
         peer = scon_pt2pt_tcp_peer_lookup(&hdr.origin);
         if (NULL == peer) {
+            scon_output(0, "%s scon_pt2pt_tcp_recv_connect: connection from new peer",
+                                SCON_PRINT_PROC(SCON_PROC_MY_NAME));
             scon_output_verbose(PT2PT_TCP_DEBUG_CONNECT, scon_pt2pt_base_framework.framework_output,
                                 "%s scon_pt2pt_tcp_recv_connect: connection from new peer",
                                 SCON_PRINT_PROC(SCON_PROC_MY_NAME));
             peer = SCON_NEW(scon_pt2pt_tcp_peer_t);
-            peer->name = hdr.origin;
+            strncpy(peer->name.job_name, hdr.origin.job_name, SCON_MAX_JOBLEN);
+            peer->name.rank = hdr.origin.rank;
             peer->state = SCON_PT2PT_TCP_ACCEPTING;
-            ui64 = (uint64_t*)(&peer->name);
-            if (SCON_SUCCESS != scon_hash_table_set_value_uint64(&scon_pt2pt_tcp_module.peers, (*ui64), peer)) {
+
+            scon_util_convert_process_name_to_uint64(&ui64, &peer->name);
+            if (SCON_SUCCESS != scon_hash_table_set_value_uint64(&scon_pt2pt_tcp_module.peers, ui64, peer)) {
                 SCON_RELEASE(peer);
                 CLOSE_THE_SOCKET(sd);
                 return SCON_ERR_OUT_OF_RESOURCE;
             }
         } else {
+            scon_output(0, "%s scon_pt2pt_tcp_recv_connect: connection from  peer %s state = %d",
+                                SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                                SCON_PRINT_PROC(&peer->name),
+                                 peer->state);
             /* check for a race condition - if I was in the process of
              * creating a connection to the peer, or have already established
              * such a connection, then we need to reject this connection. We will
@@ -1130,6 +1138,7 @@ bool scon_pt2pt_tcp_peer_accept(scon_pt2pt_tcp_peer_t* peer)
         if (PT2PT_TCP_DEBUG_CONNECT <= scon_output_get_verbosity(scon_pt2pt_base_framework.framework_output)) {
             scon_pt2pt_tcp_peer_dump(peer, "accepted");
         }
+        scon_pt2pt_tcp_peer_dump(peer, "accepted");
         return true;
     }
 
