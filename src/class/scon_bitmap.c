@@ -76,8 +76,7 @@ int scon_bitmap_set_max_size (scon_bitmap_t *bm, int max_size)
 }
 
 
-int
-scon_bitmap_init(scon_bitmap_t *bm, int size)
+SCON_EXPORT int scon_bitmap_init(scon_bitmap_t *bm, int size)
 {
     /*
      * Only if the caller set the maximum size before initializing,
@@ -104,7 +103,7 @@ scon_bitmap_init(scon_bitmap_t *bm, int size)
 }
 
 
-int
+SCON_EXPORT int
 scon_bitmap_set_bit(scon_bitmap_t *bm, int bit)
 {
     int index, offset, new_size;
@@ -147,7 +146,7 @@ scon_bitmap_set_bit(scon_bitmap_t *bm, int bit)
 }
 
 
-int
+SCON_EXPORT int
 scon_bitmap_clear_bit(scon_bitmap_t *bm, int bit)
 {
     int index, offset;
@@ -164,7 +163,7 @@ scon_bitmap_clear_bit(scon_bitmap_t *bm, int bit)
 }
 
 
-bool
+SCON_EXPORT bool
 scon_bitmap_is_set_bit(scon_bitmap_t *bm, int bit)
 {
     int index, offset;
