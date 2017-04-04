@@ -25,7 +25,7 @@ static scon_topology_module_t* binomtree_get_module(void);
 /**
  * component definition
  */
-SCON_EXPORT scon_topology_component_t scon_topology_binomtree_component = {
+SCON_EXPORT scon_topology_component_t mca_topology_binomtree_component = {
     /* First, the mca_base_component_t struct containing meta
        information about the component itself */
     .base_version =

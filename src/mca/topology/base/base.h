@@ -36,6 +36,9 @@ void scon_topology_base_convert_topoid_to_procid( scon_proc_t *route,
         unsigned int route_rank,
         scon_proc_t *target);
 
+void scon_topology_base_xcast_routing(scon_list_t *routes,
+                                      scon_list_t *children);
+
 #define SCON_TOPO_ID_INVALID INT_MAX;
 END_C_DECLS
 

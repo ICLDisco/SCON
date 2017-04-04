@@ -121,7 +121,7 @@ static int radix_update_route(scon_topology_t *topo,
 static scon_proc_t radix_get_nexthop(scon_topology_t *topo,
                              scon_proc_t *target)
 {
-    scon_proc_t *route;
+    scon_proc_t route;
     scon_list_item_t *item;
     scon_topo_t *child;
     unsigned int route_rank;
@@ -166,15 +166,14 @@ static scon_proc_t radix_get_nexthop(scon_topology_t *topo,
     route_rank = topo->my_topo.myparent_id;
 
  found:
-    route = (scon_proc_t*) malloc(sizeof(scon_proc_t));
-    scon_topology_base_convert_topoid_to_procid( route, route_rank, target);
+    scon_topology_base_convert_topoid_to_procid( &route, route_rank, target);
     scon_output_verbose(2, scon_topology_base_framework.framework_output,
                         "radix_topology:get route - route to %s from %s is %s",
                          SCON_PRINT_PROC(target),
                          SCON_PRINT_PROC(SCON_PROC_MY_NAME),
-                         SCON_PRINT_PROC(route));
+                         SCON_PRINT_PROC(&route));
 
-    return *route;
+    return route;
 }
 
 static int radix_route_lost(scon_topology_t *topo,
@@ -234,13 +233,13 @@ static void radix_tree(int rank, int *num_children, int num_procs,
     NInLevel=1;
 
     while ( Sum < (rank+1) ) {
-        NInLevel *= scon_topology_radixtree_component.radix;
+        NInLevel *= mca_topology_radixtree_component.radix;
         Sum += NInLevel;
     }
 
     /* our children start at our rank + num_in_level */
     peer = rank + NInLevel;
-    for (i = 0; i < scon_topology_radixtree_component.radix; i++) {
+    for (i = 0; i < mca_topology_radixtree_component.radix; i++) {
         if (peer < num_procs) {
             child = SCON_NEW(scon_topo_t);
             child->my_id = peer;
@@ -263,7 +262,7 @@ static void radix_tree(int rank, int *num_children, int num_procs,
                 SCON_RELEASE(child);
             }
             /* search for this child's relatives */
-            radix_tree(peer, NULL, num_procs, NULL, relations);
+            radix_tree(peer, num_children, num_procs, NULL, relations);
         }
         peer += NInLevel;
     }
@@ -277,10 +276,11 @@ static void radix_update_topology(scon_topology_t *topo, int num_nodes)
     int num_children = 0;
     int Level,Sum,NInLevel,Ii;
     int NInPrevLevel;
+
     /* clear the list of children if any are already present */
-    while (NULL != (item = scon_list_remove_first(&topo->my_peers))) {
+    /*while (NULL != (item = scon_list_remove_first(&topo->my_peers))) {
         SCON_RELEASE(item);
-    }
+    } */
 
     num_children = 0;
 
@@ -292,12 +292,12 @@ static void radix_update_topology(scon_topology_t *topo, int num_nodes)
 
     while ( Sum < (Ii+1) ) {
         Level++;
-        NInLevel *= scon_topology_radixtree_component.radix;
+        NInLevel *= mca_topology_radixtree_component.radix;
         Sum += NInLevel;
     }
     Sum -= NInLevel;
-
-    NInPrevLevel = NInLevel/scon_topology_radixtree_component.radix;
+    scon_output(0, "radix_update_topology: radix = %d", mca_topology_radixtree_component.radix);
+    NInPrevLevel = NInLevel/mca_topology_radixtree_component.radix;
 
     if( 0 == Ii ) {
         topo->my_topo.myparent_id = -1;
@@ -305,7 +305,7 @@ static void radix_update_topology(scon_topology_t *topo, int num_nodes)
         topo->my_topo.myparent_id = (Ii-Sum) % NInPrevLevel;
         topo->my_topo.myparent_id += (Sum - NInPrevLevel);
     }
-
+    scon_output(0, "radix_update_topology: Ii = %d, myparent_id = %d", Ii, topo->my_topo.myparent_id);
     /* compute my direct children and the bitmap that shows which vpids
      * lie underneath their branch
      */
@@ -331,7 +331,7 @@ static void radix_update_topology(scon_topology_t *topo, int num_nodes)
 static void radix_get_routing_list(scon_topology_t *topo,
                              scon_list_t *coll)
 {
-    //scon_topology_base_xcast_routing(coll, &topo->my_peers);
+    scon_topology_base_xcast_routing(&topo->my_peers, coll);
 }
 
 static size_t radix_num_routes(scon_topology_t *topo)
