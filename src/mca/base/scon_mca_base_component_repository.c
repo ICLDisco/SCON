@@ -416,7 +416,7 @@ int scon_mca_base_component_repository_open(scon_mca_base_framework_t *framework
        Malloc out enough space for it. */
 
     do {
-        ret = asprintf (&struct_name, "scon_%s_%s_component", ri->ri_type, ri->ri_name);
+        ret = asprintf (&struct_name, "mca_%s_%s_component", ri->ri_type, ri->ri_name);
         if (0 > ret) {
             ret = SCON_ERR_OUT_OF_RESOURCE;
             break;
