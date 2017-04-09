@@ -72,8 +72,7 @@ int scon_util_convert_process_name_to_string(char **name_string,
 int scon_util_convert_string_to_process_name(scon_proc_t *name,
         const char* name_string);
 
-int scon_util_convert_process_name_to_uint64(uint64_t *procid,
-        const scon_proc_t *proc);
+int scon_util_convert_process_name_to_uint64(const scon_proc_t *proc);
 
 END_C_DECLS
 #endif

@@ -236,7 +236,7 @@ int scon_pmix_value_unload(scon_value_t *sv,
         case PMIX_BYTE_OBJECT:
             sv->type = SCON_BYTE_OBJECT;
             if (NULL != pv->data.bo.bytes && 0 < pv->data.bo.size) {
-                sv->data.bo.bytes = (uint8_t*)malloc(pv->data.bo.size);
+                sv->data.bo.bytes = (char*)malloc(pv->data.bo.size);
                 memcpy(sv->data.bo.bytes, pv->data.bo.bytes, pv->data.bo.size);
                 sv->data.bo.size = (int)pv->data.bo.size;
             } else {

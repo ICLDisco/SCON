@@ -202,10 +202,6 @@ static void match_posted_recv(scon_posted_recv_t *rcv,
     while (item != scon_list_get_end(&scon->unmatched_msgs)) {
         next = scon_list_get_next(item);
         msg = (scon_recv_t*)item;
-        scon_output(0, "checking recv msg for tag %d from %s on scon %d",
-                    rcv->tag,
-                    SCON_PRINT_PROC(&rcv->peer),
-                    scon->handle);
         scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
                             "%s checking recv for %s against unmatched msg from %s on scon %d",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),

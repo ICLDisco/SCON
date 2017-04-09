@@ -305,7 +305,6 @@ static void radix_update_topology(scon_topology_t *topo, int num_nodes)
         topo->my_topo.myparent_id = (Ii-Sum) % NInPrevLevel;
         topo->my_topo.myparent_id += (Sum - NInPrevLevel);
     }
-    scon_output(0, "radix_update_topology: Ii = %d, myparent_id = %d", Ii, topo->my_topo.myparent_id);
     /* compute my direct children and the bitmap that shows which vpids
      * lie underneath their branch
      */

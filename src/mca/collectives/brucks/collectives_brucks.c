@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <math.h>
 #include "src/buffer_ops/buffer_ops.h"
+#include "src/buffer_ops/types.h"
 #include "src/buffer_ops/internal.h"
 #include "src/class/scon_bitmap.h"
 #include "src/util/bit_ops.h"
@@ -132,7 +133,7 @@ static int brucks_allgather_send_dist(scon_collectives_tracker_t *coll,
     int rc;
 
     send_buf = (scon_buffer_t*) malloc(sizeof(scon_buffer_t));
-
+    scon_buffer_construct(send_buf);
     /* pack the signature */
     if (SCON_SUCCESS != (rc = scon_bfrop.pack(send_buf, &coll->sig, 1, SCON_COLLECTIVES_SIGNATURE))) {
         SCON_ERROR_LOG(rc);
@@ -369,6 +370,7 @@ static void brucks_allgather_recv_dist(int status,
             brucks_finalize_coll(coll, rc);
             return;
         }
+        scon_buffer_construct(coll->buffers[distance]);
         if (SCON_SUCCESS != (rc = scon_bfrop.copy_payload(coll->buffers[distance], buffer))) {
             SCON_RELEASE(sig);
             SCON_ERROR_LOG(rc);
@@ -383,6 +385,9 @@ static void brucks_allgather_recv_dist(int status,
 static int brucks_finalize_coll(scon_collectives_tracker_t *coll, int ret)
 {
     scon_allgather_t *allgather = (scon_allgather_t *) coll->req;
+    scon_output(0, "%s brucks_finalize_coll:brucks allgather/barrier collective complete on scon %d",
+                SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                coll->sig->scon_handle);
     scon_output_verbose(5,  scon_collectives_base_framework.framework_output,
                         "%s brucks allgather/barrier collective complete on scon %d",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
@@ -395,6 +400,10 @@ static int brucks_finalize_coll(scon_collectives_tracker_t *coll, int ret)
                                 allgather->info,
                                 allgather->ninfo,
                                 allgather->cbdata);
+    }
+    else {
+        scon_output(0, "%s brucks_finalize_coll: allgather cbfunc is null",
+                    SCON_PRINT_PROC(SCON_PROC_MY_NAME));
     }
     scon_list_remove_item(&scon_collectives_base.ongoing, &coll->super);
     SCON_RELEASE(allgather);

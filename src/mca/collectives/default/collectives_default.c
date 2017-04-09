@@ -652,8 +652,8 @@ static void barrier_release(scon_status_t status,
     /* execute the callback : TO DO we need to differentiate between a barrier and
     * allgather here */
     allgather = (scon_allgather_t*)coll->req;
-    scon_output(0, "%s barrier release: calling allgather req %p coll->req= %p coll->nreported = %d ",
-                SCON_PRINT_PROC(SCON_PROC_MY_NAME), allgather, coll->nreported);
+    scon_output(0, "%s barrier release: calling allgather coll->req= %p coll->nreported = %lu ",
+                SCON_PRINT_PROC(SCON_PROC_MY_NAME), (void*)allgather, coll->nreported);
     if (NULL != allgather && NULL != allgather->cbfunc) {
         scon_output(0, "%s barrier release: calling allgather cbfunc with status = %d",
                        SCON_PRINT_PROC(SCON_PROC_MY_NAME),

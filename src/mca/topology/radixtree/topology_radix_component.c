@@ -21,7 +21,7 @@
 #include "topology_radix.h"
 
 static scon_topology_module_t* radix_get_module(void);
-
+static int topology_radix_component_register(void);
 /**
  * component definition
  */
@@ -39,6 +39,7 @@ scon_topology_radixtree_component_t mca_topology_radixtree_component = {
             SCON_MCA_BASE_MAKE_VERSION(component, SCON_MAJOR_VERSION,
             SCON_MINOR_VERSION,
             SCON_RELEASE_VERSION),
+            .scon_mca_register_component_params = topology_radix_component_register,
         },
         .get_module = radix_get_module
     },

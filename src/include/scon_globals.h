@@ -75,7 +75,7 @@ SCON_EXPORT extern scon_proc_t scon_proc_wildcard;
 /* lets make 0 to indicate non existent scon for legacy reasons*/
 #define SCON_HANDLE_INVALID        0
 #define SCON_HANDLE_NEW            0XFFFFFFFE
-#define SCON_INDEX_UNDEFINED       0xFFFFFFFF
+#define SCON_INDEX_UNDEFINED       INT_MAX
 
 /* this is specific to scon, will be set during SCON create by setting the appropriate flags,
    lets assume rank 0 is master for now */

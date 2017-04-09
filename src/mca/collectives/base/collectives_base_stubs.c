@@ -29,6 +29,7 @@ static void collectives_base_process_xcast (int fd, short flags, void *cbdata)
     size_t i = 0;
     scon = scon_comm_base_get_scon(req->post.xcast.scon_handle);
     xcast = SCON_NEW(scon_xcast_t);
+    scon_collectives_module_t *xcast_module;
     if(req->post.xcast.nprocs == 0) {
         xcast->nprocs = scon_list_get_size(&scon->members);
         xcast->procs = (scon_proc_t*)malloc(xcast->nprocs *
@@ -58,7 +59,17 @@ static void collectives_base_process_xcast (int fd, short flags, void *cbdata)
                         " %s calling collectives xcast for tag %d, nprocs =%d, on scon=%d",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                         xcast->tag, (int)xcast->nprocs, xcast->scon_handle);
-    scon->collective_module->xcast(xcast);
+    /* not all collective modules support xcast so check it */
+    if (NULL != scon->collective_module->xcast)
+    {
+        scon->collective_module->xcast(xcast);
+    }
+    else
+    {
+        xcast_module=scon_collectives_base_get_module("default");
+        xcast_module->init(scon->handle);
+        xcast_module->xcast(xcast);
+    }
     SCON_RELEASE(req);
 }
 
@@ -76,8 +87,6 @@ static void collectives_base_process_allgather (int fd, short flags, void *cbdat
     scon = scon_comm_base_get_scon(req->post.allgather.scon_handle);
     sig = SCON_NEW(scon_collectives_signature_t);
     sig->scon_handle = scon->handle;
-    scon_output(0, "collectives_base_process_allgather: scon %d nprocs =%d", scon->handle,
-                req->post.allgather.nprocs);
     if(req->post.allgather.nprocs == 0) {
         sig->nprocs = scon_list_get_size(&scon->members);
         sig->procs = (scon_proc_t*)malloc(sig->nprocs *
@@ -135,7 +144,7 @@ static void collectives_base_process_allgather (int fd, short flags, void *cbdat
                         " %s calling allgather with  nprocs =%lu, on scon=%d buf =%p",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                         req->post.allgather.nprocs, req->post.allgather.scon_handle,
-                        req->post.allgather.buf);
+                        (void*)req->post.allgather.buf);
     scon->collective_module->allgather(coll, req->post.allgather.buf);
     memcpy(allgather, &req->post.allgather, sizeof(scon_allgather_t));
     coll->req = (void*)allgather;
@@ -219,10 +228,10 @@ SCON_EXPORT scon_collectives_tracker_t* scon_collectives_base_get_tracker(
                                                bool create)
 {
     scon_collectives_tracker_t *coll;
-    size_t n, i;
+    size_t n;
     bool match = true;
     scon_comm_scon_t *scon = scon_comm_base_get_scon(sig->scon_handle);
-    scon_output(0, "searching for tracker for scon %d, seq num =%d num trackers  =%d",
+    scon_output(0, "searching for tracker for scon %d, seq num =%d num trackers=%lu",
                   sig->scon_handle, sig->seq_num,
                   scon_list_get_size(&scon_collectives_base.ongoing));
     /* search the existing tracker list to see if this already exists */
@@ -235,7 +244,7 @@ SCON_EXPORT scon_collectives_tracker_t* scon_collectives_base_get_tracker(
             for(n = 0; n < sig->nprocs; n++) {
                 if (SCON_EQUAL != scon_util_compare_name_fields(SCON_NS_CMP_ALL,
                         &sig->procs[n], &coll->sig->procs[n])) {
-                    scon_output(0, "%s collectives_base_get_tracker failed to match %d proc %s with %s",
+                    scon_output(0, "%s collectives_base_get_tracker failed to match %lu proc %s with %s",
                                 SCON_PRINT_PROC(SCON_PROC_MY_NAME), n,
                                 SCON_PRINT_PROC(&sig->procs[n]),
                                 SCON_PRINT_PROC(&coll->sig->procs[n]));
@@ -287,27 +296,17 @@ SCON_EXPORT scon_collectives_tracker_t* scon_collectives_base_get_tracker(
     return coll;
 }
 
-void scon_collectives_base_mark_distance_recv(scon_collectives_tracker_t *coll,
+SCON_EXPORT void scon_collectives_base_mark_distance_recv(scon_collectives_tracker_t *coll,
                                                uint32_t distance)
 {
     scon_bitmap_set_bit (&coll->distance_mask_recv, distance);
 }
-unsigned int scon_collectives_base_check_distance_recv(scon_collectives_tracker_t *coll,
+SCON_EXPORT unsigned int scon_collectives_base_check_distance_recv(scon_collectives_tracker_t *coll,
                                                         uint32_t distance)
 {
     return scon_bitmap_is_set_bit (&coll->distance_mask_recv, distance);
 }
 
-static void scon_collectives_baseallgather_send_complete_callback (
-    int status,
-    scon_handle_t scon_handle,
-    scon_proc_t* peer,
-    scon_buffer_t* buffer,
-    scon_msg_tag_t tag,
-    void* cbdata)
-{
-    /** TO DO : comm allgather send callback **/
-}
 /* stub functions */
 SCON_EXPORT int collectives_base_api_xcast(scon_handle_t scon_handle,
                                scon_proc_t procs[],

@@ -105,6 +105,7 @@ scon_pt2pt_tcp_component_t mca_pt2pt_tcp_component = {
         .scon_mca_open_component = tcp_component_open,
         .scon_mca_close_component = tcp_component_close,
         .scon_mca_query_component = tcp_component_query,
+        .scon_mca_register_component_params = tcp_component_register,
 
     },
     .priority = 80,
@@ -673,6 +674,7 @@ static void tcp_component_shutdown(void)
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME));
 }
 
+#if 0
 static int component_send(scon_send_t *msg)
 {
     scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
@@ -694,6 +696,7 @@ static int component_send(scon_send_t *msg)
     //scon_pt2pt_tcp_module.api.send_nb(msg);
     return SCON_SUCCESS;
 }
+#endif
 
 static char* component_get_addr(void)
 {
@@ -893,7 +896,7 @@ static bool component_is_reachable(scon_proc_t *peer)
 void scon_pt2pt_tcp_component_set_module(int fd, short args, void *cbdata)
 {
     scon_pt2pt_tcp_peer_op_t *pop = (scon_pt2pt_tcp_peer_op_t*)cbdata;
-    uint64_t ui64;
+    uint64_t proc_name_ui64;
     int rc;
     scon_pt2pt_base_peer_t *bpr;
 
@@ -907,19 +910,19 @@ void scon_pt2pt_tcp_component_set_module(int fd, short args, void *cbdata)
      * directly access its storage
      */
     //memcpy(&ui64, (char*)&pop->peer, sizeof(uint64_t));
-    scon_util_convert_process_name_to_uint64(&ui64, &pop->peer);
+    proc_name_ui64 = scon_util_convert_process_name_to_uint64(&pop->peer);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
-                                                         ui64, (void**)&bpr) || NULL == bpr) {
+                                                         proc_name_ui64, (void**)&bpr) || NULL == bpr) {
         bpr = SCON_NEW(scon_pt2pt_base_peer_t);
     }
     scon_bitmap_set_bit(&bpr->addressable, mca_pt2pt_tcp_component.super.idx);
-    bpr->module = &scon_pt2pt_tcp_module;
+    bpr->module = (scon_pt2pt_module_t*)&scon_pt2pt_tcp_module;
     scon_output(0, "mca_pt2pt_tcp_component_set_module %s setting base hash table %p, key %llu, value %p",
                 SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                 (void*)&scon_pt2pt_base.peers,
-                ui64, (void*) bpr);
+                proc_name_ui64, (void*) bpr);
     if (SCON_SUCCESS != (rc = scon_hash_table_set_value_uint64(&scon_pt2pt_base.peers,
-                                                               ui64, bpr))) {
+                                                               proc_name_ui64, bpr))) {
         SCON_ERROR_LOG(rc);
     }
 
@@ -929,7 +932,7 @@ void scon_pt2pt_tcp_component_set_module(int fd, short args, void *cbdata)
 void scon_pt2pt_tcp_component_lost_connection(int fd, short args, void *cbdata)
 {
     scon_pt2pt_tcp_peer_op_t *pop = (scon_pt2pt_tcp_peer_op_t*)cbdata;
-    uint64_t ui64;
+    uint64_t proc_name_ui64;
     scon_pt2pt_base_peer_t *bpr;
     int rc;
 
@@ -939,16 +942,15 @@ void scon_pt2pt_tcp_component_lost_connection(int fd, short args, void *cbdata)
                         SCON_PRINT_PROC(&pop->peer));
 
     /* Mark that we no longer support this peer */
-   // memcpy(&ui64, (char*)&pop->peer, sizeof(uint64_t));
-    scon_util_convert_process_name_to_uint64(&ui64, &pop->peer);
+    proc_name_ui64 = scon_util_convert_process_name_to_uint64(&pop->peer);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
-                                                         ui64, (void**)&bpr) || NULL == bpr) {
+                                                         proc_name_ui64, (void**)&bpr) || NULL == bpr) {
         bpr = SCON_NEW(scon_pt2pt_base_peer_t);
     }
     scon_bitmap_clear_bit(&bpr->addressable, mca_pt2pt_tcp_component.super.idx);
 
     if (SCON_SUCCESS != (rc = scon_hash_table_set_value_uint64(&scon_pt2pt_base.peers,
-                                                               ui64, NULL))) {
+                                                               proc_name_ui64, NULL))) {
         SCON_ERROR_LOG(rc);
     }
     /* TO DO */
@@ -960,7 +962,7 @@ void scon_pt2pt_tcp_component_lost_connection(int fd, short args, void *cbdata)
 void scon_pt2pt_tcp_component_no_route(int fd, short args, void *cbdata)
 {
     scon_pt2pt_tcp_msg_error_t *mop = (scon_pt2pt_tcp_msg_error_t*)cbdata;
-    uint64_t ui64;
+    uint64_t proc_name_ui64;
     int rc;
     scon_pt2pt_base_peer_t *bpr;
     scon_comm_scon_t *scon = scon_comm_base_get_scon(mop->rmsg->scon_handle);
@@ -970,15 +972,14 @@ void scon_pt2pt_tcp_component_no_route(int fd, short args, void *cbdata)
                         SCON_PRINT_PROC(&mop->hop));
 
     /* mark that we cannot reach this hop */
-    //memcpy(&ui64, (char*)&(mop->hop), sizeof(uint64_t));
-    scon_util_convert_process_name_to_uint64(&ui64, &mop->hop);
+    proc_name_ui64 = scon_util_convert_process_name_to_uint64( &mop->hop);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
-                                                         ui64, (void**)&bpr) || NULL == bpr) {
+                                                         proc_name_ui64, (void**)&bpr) || NULL == bpr) {
         bpr = SCON_NEW(scon_pt2pt_base_peer_t);
     }
     scon_bitmap_clear_bit(&bpr->addressable, mca_pt2pt_tcp_component.super.idx);
     if (SCON_SUCCESS != (rc = scon_hash_table_set_value_uint64(&scon_pt2pt_base.peers,
-                                                               ui64, NULL))) {
+                                                               proc_name_ui64, NULL))) {
         SCON_ERROR_LOG(rc);
     }
 
@@ -997,7 +998,7 @@ void scon_pt2pt_tcp_component_no_route(int fd, short args, void *cbdata)
 void scon_pt2pt_tcp_component_hop_unknown(int fd, short args, void *cbdata)
 {
     scon_pt2pt_tcp_msg_error_t *mop = (scon_pt2pt_tcp_msg_error_t*)cbdata;
-    uint64_t ui64;
+    uint64_t proc_name_ui64;
     scon_send_t *snd;
     scon_comm_scon_t *scon = scon_comm_base_get_scon(mop->snd->msg->scon_handle);
     scon_pt2pt_base_peer_t *bpr;
@@ -1014,10 +1015,9 @@ void scon_pt2pt_tcp_component_hop_unknown(int fd, short args, void *cbdata)
     }
 
    /* mark that this component cannot reach this hop */
-   // memcpy(&ui64, (char*)&(mop->hop), sizeof(uint64_t));
-    scon_util_convert_process_name_to_uint64(&ui64, &mop->hop);
+    proc_name_ui64 =scon_util_convert_process_name_to_uint64(&mop->hop);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
-                                                         ui64, (void**)&bpr) ||
+                                                         proc_name_ui64, (void**)&bpr) ||
         NULL == bpr) {
         /* the overall pt2pt has no knowledge of this hop. Only
          * way this could happen is if the peer contacted us
@@ -1035,10 +1035,9 @@ void scon_pt2pt_tcp_component_hop_unknown(int fd, short args, void *cbdata)
     scon_bitmap_clear_bit(&bpr->addressable, mca_pt2pt_tcp_component.super.idx);
 
     /* mark that this component cannot reach this destination either */
-    //memcpy(&ui64, (char*)&(mop->snd->hdr.dst), sizeof(uint64_t));
-     scon_util_convert_process_name_to_uint64(&ui64, &mop->snd->hdr.dst);
+     proc_name_ui64 = scon_util_convert_process_name_to_uint64(&mop->snd->hdr.dst);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
-                                                         ui64, (void**)&bpr) ||
+                                                         proc_name_ui64, (void**)&bpr) ||
         NULL == bpr) {
         scon_output(0, "%s ERROR: message to %s requires routing and the pt2pt has no knowledge of this process",
                     SCON_PRINT_PROC(SCON_PROC_MY_NAME),

@@ -40,7 +40,7 @@ SCON_EXPORT extern scon_pt2pt_base_t scon_pt2pt_base;
 
 typedef struct {
     scon_object_t super;
-    struct scon_pt2pt_base_module_t *module;
+    scon_pt2pt_module_t *module;
     scon_bitmap_t addressable;
 } scon_pt2pt_base_peer_t;
 SCON_EXPORT SCON_CLASS_DECLARATION(scon_pt2pt_base_peer_t);
