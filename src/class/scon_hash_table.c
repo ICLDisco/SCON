@@ -30,7 +30,7 @@
 #include "src/class/scon_hash_table.h"
 
 #include "include/scon.h"
-
+#include "src/util/name_fns.h"
 /*
  * scon_hash_table_t
  */
@@ -432,7 +432,6 @@ scon_hash_table_get_value_uint64(scon_hash_table_t * ht, uint64_t key, void * *v
             return SCON_ERROR;
     }
 #endif
-
     ht->ht_type_methods = &scon_hash_type_methods_uint64;
     for (ii = key%capacity; ; ii += 1) {
         if (ii == capacity) { ii = 0; }
@@ -455,7 +454,6 @@ scon_hash_table_set_value_uint64(scon_hash_table_t * ht, uint64_t key, void * va
     int rc;
     size_t ii, capacity = ht->ht_capacity;
     scon_hash_element_t * elt;
-
 #if SCON_ENABLE_DEBUG
     if(capacity == 0) {
         scon_output(0, "scon_hash_table_set_value_uint64:"

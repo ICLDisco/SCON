@@ -50,7 +50,7 @@ void pt2pt_base_process_send (int fd, short flags, void *cbdata)
     scon_proc_t hop;
     scon_recv_t *rcv;
     scon_pt2pt_base_peer_t *pr;
-    uint64_t ui64;
+    uint64_t proc_name_ui64;
     scon_value_t *val = NULL;
     char *uri = NULL;
     size_t uri_sz;
@@ -105,13 +105,26 @@ void pt2pt_base_process_send (int fd, short flags, void *cbdata)
     peer_handle = scon_base_get_handle(scon, &peer);
     /* before farwording the request to the module lets make sure that we have this
        peer's contact information */
-    hop = scon->topology_module->api.get_nexthop(&scon->topology_module->topology,
+    /* if this a collectives message then we don't want to route */
+    if((SCON_MSG_TAG_ALLGATHER_BRUCKS == req->post.send.tag) ||
+       (SCON_MSG_TAG_BARRIER_BRUCKS == req->post.send.tag) ||
+       (SCON_MSG_TAG_ALLGATHER_RCD == req->post.send.tag) ||
+       (SCON_MSG_TAG_BARRIER_RCD == req->post.send.tag) )
+    {
+        scon_output_verbose(2, scon_pt2pt_base_framework.framework_output,
+                            "%s pt2pt_base_process_send :  message tag %d sending direct",
+                            SCON_PRINT_PROC(SCON_PROC_MY_NAME), req->post.send.tag);
+        hop.rank = peer.rank;
+        strncpy(hop.job_name, peer.job_name, SCON_MAX_JOBLEN);
+    }
+    else
+        hop = scon->topology_module->api.get_nexthop(&scon->topology_module->topology,
             &peer);
-    // memcpy(&ui64, (char*)&hop, sizeof(uint64_t));
-    scon_util_convert_process_name_to_uint64(&ui64, &hop);
+    proc_name_ui64 = scon_util_convert_process_name_to_uint64(&hop);
     if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
-            ui64, (void**)&pr) || NULL == pr) {
-        scon_output(0,  "%s pt2pt:base:send unknown peer %s",
+            proc_name_ui64, (void**)&pr) || NULL == pr) {
+        scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
+                           "%s pt2pt:base:send unknown peer %s",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                             SCON_PRINT_PROC(&hop));
         scon_pmix_get(&hop, SCON_PMIX_PROC_URI, NULL, 0, &val);
@@ -121,7 +134,7 @@ void pt2pt_base_process_send (int fd, short flags, void *cbdata)
             if (NULL != uri) {
                 scon_pt2pt_base_set_contact_info(uri);
                 if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_base.peers,
-                        ui64, (void**)&pr) ||
+                        proc_name_ui64, (void**)&pr) ||
                         NULL == pr) {
                     /* cannot proceed further, fail the req */
                     SCON_ERROR_LOG(SCON_ERR_ADDRESSEE_UNKNOWN);

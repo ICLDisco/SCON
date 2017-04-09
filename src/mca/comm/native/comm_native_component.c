@@ -238,11 +238,10 @@ static void native_create_barrier_complete_callback (scon_status_t status,
 * (6) The member processes store the final scon ids and complete the create request*/
 static void native_process_create (int fd, short flags, void *cbdata)
 {
-    int ret, index;
+    int ret;
     scon_comm_scon_t *scon1;
     scon_comm_scon_t *scon = (scon_comm_scon_t *) cbdata;
     scon_req_t *req = (scon_req_t*)scon->req;
-    scon_value_t val;
     scon_buffer_t *allgather_buf;
     //scon_comm_scon_t *scon = scon_comm_base_get_scon(req->post.create.scon_handle);
     /* check the scon type fail if not single job all ranks */
@@ -257,12 +256,9 @@ static void native_process_create (int fd, short flags, void *cbdata)
    /* index = scon_pointer_array_add (&comm_base.scons, scon);
     scon->handle = (index + 1) % MAX_SCONS;*/
     scon_comm_base_add_scon(scon);
-    scon_output(0, "added scon %d to array",  scon->handle);
     /* Get our address and publish it via PMIX */
     scon1 = scon_comm_base_get_scon(scon->handle);
     scon_pt2pt_base_get_contact_info(&scon_globals.my_uri);
-    scon_output(0, "%s my uri =%s", SCON_PRINT_PROC(SCON_PROC_MY_NAME),
-                scon_globals.my_uri);
     if(SCON_SUCCESS != (ret = scon_pmix_put_string(SCON_PMIX_PROC_URI, scon_globals.my_uri))) {
         scon_output(0, "%s PMIX put of proc uri %s failed ",
                     SCON_PRINT_PROC(SCON_PROC_MY_NAME), scon_globals.my_uri);
@@ -273,7 +269,7 @@ static void native_process_create (int fd, short flags, void *cbdata)
     /* setup the topology for the selected topology module**/
     if((NULL == scon->topology_module)) {
         ret = SCON_ERR_TOPO_UNSUPPORTED;
-        scon_output( 0, "scon topology module not set correctly %p", scon->topology_module );
+        scon_output( 0, "scon topology module not set correctly");
         SCON_ERROR_LOG(ret);
         goto error;
     }
@@ -281,7 +277,6 @@ static void native_process_create (int fd, short flags, void *cbdata)
 
     scon->topology_module->api.update_topology (&scon->topology_module->topology,
                                                 scon->nmembers);
-    scon_output(0, "%s my topology updated ", SCON_PRINT_PROC(SCON_PROC_MY_NAME));
     allgather_buf = (scon_buffer_t*) malloc (sizeof(scon_buffer_t));
     scon_buffer_construct(allgather_buf);
     if (SCON_SUCCESS != (ret = scon_bfrop.pack(allgather_buf, &scon->handle,

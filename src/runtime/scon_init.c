@@ -74,8 +74,8 @@ SCON_EXPORT scon_status_t scon_init(scon_info_t info[],
 
     /* initialize the output system */
     if (!scon_output_init()) {
-        fprintf(stderr, "scon_output_init() failed -- process will likely abort (%s:%d, returned %d instead of SCON_SUCCESS)\n",
-                __FILE__, __LINE__, ret);
+        fprintf(stderr, "scon_output_init() failed -- process will likely abort (%s:%d,)\n",
+                __FILE__, __LINE__);
         return SCON_ERROR;
     }
     fprintf(stderr, "scon_output_init() success --  (%s:%d,)\n",
@@ -97,7 +97,7 @@ SCON_EXPORT scon_status_t scon_init(scon_info_t info[],
     }
     /* keyval lex-based parser */
     if (SCON_SUCCESS != (ret = scon_util_keyval_parse_init())) {
-        scon_output(0, "scon_util_keyval_parse_init error!",  __FILE__, __LINE__);
+        scon_output(0, "scon_util_keyval_parse_init error! (%s:%d,)",  __FILE__, __LINE__);
         error = "scon_util_keyval_parse_init";
         goto return_error;
     }
@@ -105,7 +105,7 @@ SCON_EXPORT scon_status_t scon_init(scon_info_t info[],
     /* Setup the parameter system */
     if (SCON_SUCCESS != (ret = scon_mca_base_var_init())) {
         error = "mca_base_var_init";
-        scon_output(0, "mca_base_var_init error!",  __FILE__, __LINE__);
+        scon_output(0, "mca_base_var_init error! (%s:%d,)",  __FILE__, __LINE__);
         goto return_error;
     }
 
@@ -174,7 +174,7 @@ SCON_EXPORT scon_status_t scon_init(scon_info_t info[],
                     scon_globals.myid = me;
                    // scon_bfrop.copy((void**)&scon_globals.myid, &info[n].value.data.proc, SCON_PROC);
                     scon_output(0, "found info SCON_MY_ID, set my rank to namespace to %s, my rank to %d",
-                             SCON_PRINT_PROC(SCON_PROC_MY_NAME) );
+                             SCON_PROC_MY_NAME->job_name, SCON_PROC_MY_NAME->rank );
                     break;
                 }
                 if (0 == strncmp(SCON_JOB_RANKS, info[n].key, SCON_MAX_KEYLEN)) {

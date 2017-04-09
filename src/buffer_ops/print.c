@@ -867,11 +867,13 @@ scon_status_t scon_bfrop_print_status(char **output, char *prefix,
         case SCON_PROC:
         if (NULL == src->data.proc) {
             rc = asprintf(output, "%sSCON_VALUE: Data type: SCON_PROC\tNULL", prefx);
-            scon_output(0, "print proc input is null, printing output=%s", output);
+            scon_output_verbose(20, scon_globals.debug_output,
+                                "print proc input is null, printing output=%s", *output);
         } else {
             rc = asprintf(output, "%sSCON_VALUE: Data type: SCON_PROC\t%s:%lu",
                           prefx, src->data.proc->job_name, (unsigned long)src->data.proc->rank);
-            scon_output(0, "print proc: printing it as output=%s", output);
+            scon_output_verbose(20, scon_globals.debug_output,
+                                "print proc: printing it as output=%s", *output);
         }
         break;
         case SCON_BYTE_OBJECT:

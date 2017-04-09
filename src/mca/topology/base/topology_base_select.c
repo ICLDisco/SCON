@@ -53,6 +53,9 @@ scon_topology_module_t * scon_topology_base_get_module(char *component_name)
     SCON_LIST_FOREACH(cli, &scon_topology_base_framework.framework_components,
                        scon_mca_base_component_list_item_t) {
         topo_comp = (scon_topology_component_t *) cli->cli_component;
+        scon_output_verbose(5, scon_topology_base_framework.framework_output,
+                            "scon_topology_base_get_module returning module for %s",
+                            component_name);
         if (0 == strncmp(component_name, topo_comp->base_version.scon_mca_component_name,
                      SCON_MCA_BASE_MAX_COMPONENT_NAME_LEN)) {
             return topo_comp->get_module();

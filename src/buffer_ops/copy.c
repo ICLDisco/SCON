@@ -1123,7 +1123,7 @@ scon_status_t scon_bfrop_copy_array(scon_info_array_t **dest,
 
     *dest = (scon_info_array_t*)malloc(sizeof(scon_info_array_t));
     (*dest)->size = src->size;
-    (*dest)->array = (scon_info_t*)malloc(src->size * sizeof(scon_info_t));
+    (*dest)->array = (struct scon_info_t*)malloc(src->size * sizeof(scon_info_t));
     d1 = (scon_info_t*)(*dest)->array;
     s1 = (scon_info_t*)src->array;
     memcpy(d1, s1, src->size * sizeof(scon_info_t));

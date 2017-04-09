@@ -101,10 +101,6 @@ static int open_components(scon_mca_base_framework_t *framework)
     if (SCON_SUCCESS != ret) {
         return ret;
     }
-    scon_output ( 0,
-                         "mca: base: components_open: opening %s components",
-                         framework->framework_name);
-
     /* Announce */
     scon_output_verbose (SCON_MCA_BASE_VERBOSE_COMPONENT, output_id,
                          "mca: base: components_open: opening %s components",
@@ -113,9 +109,6 @@ static int open_components(scon_mca_base_framework_t *framework)
     /* Traverse the list of components */
     SCON_LIST_FOREACH_SAFE(cli, next, components, scon_mca_base_component_list_item_t) {
         const scon_mca_base_component_t *component = cli->cli_component;
-        scon_output (0,
-                             "mca: base: components_open: found loaded component %s",
-                             component->scon_mca_component_name);
         scon_output_verbose (SCON_MCA_BASE_VERBOSE_COMPONENT, output_id,
                              "mca: base: components_open: found loaded component %s",
                              component->scon_mca_component_name);
@@ -123,10 +116,6 @@ static int open_components(scon_mca_base_framework_t *framework)
         if (NULL != component->scon_mca_open_component) {
             /* Call open if register didn't call it already */
             ret = component->scon_mca_open_component();
-            scon_output (0,
-                                 "mca: base: components_open: "
-                                 "component %s open function returned %d",
-                                 component->scon_mca_component_name, ret);
             if (SCON_SUCCESS == ret) {
                 scon_output_verbose (SCON_MCA_BASE_VERBOSE_COMPONENT, output_id,
                                      "mca: base: components_open: "

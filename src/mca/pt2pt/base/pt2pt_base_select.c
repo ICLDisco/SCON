@@ -111,7 +111,7 @@ SCON_EXPORT int scon_pt2pt_base_select(void)
             scon_list_append(&scon_pt2pt_base.actives, &c2->super);
         }
     }
-    scon_output(0, "mca:pt2pt:select:num available pt2pt components %d",
+    scon_output(0, "mca:pt2pt:select:num available pt2pt components %lu",
                 scon_list_get_size(&scon_pt2pt_base.actives));
     if (0 == scon_list_get_size(&scon_pt2pt_base.actives)) {
         /* no support available means we really cannot run unless

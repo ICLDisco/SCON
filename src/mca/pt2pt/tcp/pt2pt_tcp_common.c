@@ -190,11 +190,10 @@ void scon_pt2pt_tcp_set_socket_options(int sd)
 scon_pt2pt_tcp_peer_t* scon_pt2pt_tcp_peer_lookup(const scon_proc_t *name)
 {
     scon_pt2pt_tcp_peer_t *peer;
-    uint64_t ui64;
-
-    //memcpy(&ui64, (char*)name, sizeof(uint64_t));
-    scon_util_convert_process_name_to_uint64(&ui64, name);
-    if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_tcp_module.peers, ui64, (void**)&peer)) {
+    uint64_t proc_name_ui64;
+    proc_name_ui64 = scon_util_convert_process_name_to_uint64(name);
+    if (SCON_SUCCESS != scon_hash_table_get_value_uint64(&scon_pt2pt_tcp_module.peers,
+            proc_name_ui64, (void**)&peer)) {
         return NULL;
     }
     return peer;

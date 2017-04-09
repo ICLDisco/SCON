@@ -163,15 +163,14 @@ int scon_util_convert_process_name_to_string(char **name_string,
     return SCON_SUCCESS;
 }
 
-SCON_EXPORT  int scon_util_convert_process_name_to_uint64(uint64_t *procid,
+SCON_EXPORT  int scon_util_convert_process_name_to_uint64(
                                              const scon_proc_t *proc)
 {
      /* convert job name to string using strtol and add process rank */
-    uint64_t u64;
-    u64 = strtoul(proc->job_name, NULL, 10);
-    u64 += proc->rank;
-    *procid = u64;
-    return SCON_SUCCESS;
+    uint64_t proc_name_ui64;
+    proc_name_ui64 = strtoul(proc->job_name, NULL, 10);
+    proc_name_ui64 += proc->rank;
+    return proc_name_ui64;
 }
 /* instantiate scon_proc_list_t class */
 static void proc_list_cons(scon_proc_list_t *ptr)

@@ -166,13 +166,13 @@ OBJ_CLASS_DECLARATION(scon_pt2pt_ofi_peer_t);
 SCON_MODULE_DECLSPEC extern mca_pt2pt_component_t mca_pt2pt_ofi_component;
 extern scon_pt2pt_ofi_module_t scon_pt2pt_ofi;
 
-int scon_pt2pt_ofi_send_buffer_nb(struct scon_pt2pt_base_module_t *mod,
+int scon_pt2pt_ofi_send_buffer_nb(struct scon_pt2pt_module_t *mod,
                                 scon_proc_t* peer,
                                 struct scon_buffer_t* buffer,
                                 scon_msg_tag_t tag,
                                 scon_pt2pt_buffer_callback_fn_t cbfunc,
                                 void* cbdata);
-int scon_pt2pt_ofi_send_nb(struct scon_pt2pt_base_module_t *mod,
+int scon_pt2pt_ofi_send_nb(struct scon_pt2pt_module_t *mod,
                          scon_process_name_t* peer,
                          struct iovec* iov,
                          int count,

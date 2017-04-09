@@ -113,6 +113,7 @@ int scon_mca_base_component_find (const char *directory, scon_mca_base_framework
         ret = scon_mca_base_component_parse_requested (framework->framework_selection, &include_mode,
                                                        &requested_component_names);
         if (SCON_SUCCESS != ret) {
+            scon_output(0, "scon_mca_base_component_find return error = %d", ret);
             return ret;
         }
     }
@@ -180,7 +181,6 @@ int scon_mca_base_components_filter (scon_mca_base_framework_t *framework, uint3
     assert (NULL != components);
 
     if (0 == filter_flags && NULL == framework->framework_selection) {
-        scon_output(0, "scon_mca_base_components_filter : return success");
         return SCON_SUCCESS;
     }
 
@@ -326,7 +326,6 @@ static int component_find_check (scon_mca_base_framework_t *framework, char **re
     scon_mca_base_component_list_item_t *cli;
 
     if (NULL == requested_component_names) {
-        scon_output(0, "component_find_check : returned success");
         return SCON_SUCCESS;
     }
 

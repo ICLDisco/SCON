@@ -336,7 +336,7 @@ static void binom_update_topology(scon_topology_t *topo, int num_nodes)
 static void binom_get_routing_list(scon_topology_t *topo,
                              scon_list_t *coll)
 {
-
+    scon_topology_base_xcast_routing(&topo->my_peers, coll);
 }
 
 static size_t binom_num_routes(scon_topology_t *topo)

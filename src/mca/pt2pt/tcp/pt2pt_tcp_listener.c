@@ -76,13 +76,16 @@
 /* To do :: need to make this per SCON? */
 bool scon_static_ports = false;
 static void connection_event_handler(int incoming_sd, short flags, void* cbdata);
-static void* listen_thread(scon_object_t *obj);
+static void connection_event_handler(int sd, short flags, void* cbdata);
+
 static int create_listen(void);
 #if SCON_ENABLE_IPV6
 static int create_listen6(void);
 #endif
+/*
+static void* listen_thread(scon_object_t *obj);
 static void connection_handler(int sd, short flags, void* cbdata);
-static void connection_event_handler(int sd, short flags, void* cbdata);
+*/
 
 /*
  * Component initialization - create a module for each available
@@ -515,6 +518,7 @@ static int create_listen6(void)
 }
 #endif
 
+#if 0
 /*
  * The listen thread created when listen_mode is threaded.  Accepts
  * incoming connections and places them in a queue for further
@@ -725,7 +729,7 @@ static void connection_handler(int sd, short flags, void* cbdata)
     SCON_RELEASE(new_connection);
 
 }
-
+#endif
 /*
  * Handler for accepting connections from the event library
  */

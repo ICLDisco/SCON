@@ -623,7 +623,7 @@ int scon_pt2pt_tcp_peer_recv_connect_ack(scon_pt2pt_tcp_peer_t* pr,
     size_t credsize;
     scon_pt2pt_tcp_hdr_t hdr;
     scon_pt2pt_tcp_peer_t *peer;
-    uint64_t ui64;
+    uint64_t proc_name_ui64;
 
     scon_output_verbose(PT2PT_TCP_DEBUG_CONNECT, scon_pt2pt_base_framework.framework_output,
                         "%s RECV CONNECT ACK FROM %s ON SOCKET %d",
@@ -707,8 +707,6 @@ int scon_pt2pt_tcp_peer_recv_connect_ack(scon_pt2pt_tcp_peer_t* pr,
     if (NULL == peer) {
         peer = scon_pt2pt_tcp_peer_lookup(&hdr.origin);
         if (NULL == peer) {
-            scon_output(0, "%s scon_pt2pt_tcp_recv_connect: connection from new peer",
-                                SCON_PRINT_PROC(SCON_PROC_MY_NAME));
             scon_output_verbose(PT2PT_TCP_DEBUG_CONNECT, scon_pt2pt_base_framework.framework_output,
                                 "%s scon_pt2pt_tcp_recv_connect: connection from new peer",
                                 SCON_PRINT_PROC(SCON_PROC_MY_NAME));
@@ -717,14 +715,15 @@ int scon_pt2pt_tcp_peer_recv_connect_ack(scon_pt2pt_tcp_peer_t* pr,
             peer->name.rank = hdr.origin.rank;
             peer->state = SCON_PT2PT_TCP_ACCEPTING;
 
-            scon_util_convert_process_name_to_uint64(&ui64, &peer->name);
-            if (SCON_SUCCESS != scon_hash_table_set_value_uint64(&scon_pt2pt_tcp_module.peers, ui64, peer)) {
+            proc_name_ui64 = scon_util_convert_process_name_to_uint64(&peer->name);
+            if (SCON_SUCCESS != scon_hash_table_set_value_uint64(&scon_pt2pt_tcp_module.peers, proc_name_ui64, peer)) {
                 SCON_RELEASE(peer);
                 CLOSE_THE_SOCKET(sd);
                 return SCON_ERR_OUT_OF_RESOURCE;
             }
         } else {
-            scon_output(0, "%s scon_pt2pt_tcp_recv_connect: connection from  peer %s state = %d",
+            scon_output_verbose(PT2PT_TCP_DEBUG_CONNECT, scon_pt2pt_base_framework.framework_output,
+                                "%s scon_pt2pt_tcp_recv_connect: connection from  peer %s state = %d",
                                 SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                                 SCON_PRINT_PROC(&peer->name),
                                  peer->state);

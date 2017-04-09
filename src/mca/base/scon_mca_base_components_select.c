@@ -45,8 +45,6 @@ int scon_mca_base_select(const char *type_name, int output_id,
 
     *best_module = NULL;
     *best_component = NULL;
-     scon_output(0, "mca:base:select: Auto-selecting %s components",
-                 type_name);
      scon_output_verbose (SCON_MCA_BASE_VERBOSE_COMPONENT, output_id,
                          "mca:base:select: Auto-selecting %s components",
                          type_name);
@@ -57,9 +55,6 @@ int scon_mca_base_select(const char *type_name, int output_id,
      */
     SCON_LIST_FOREACH(cli, components_available, scon_mca_base_component_list_item_t) {
         component = (scon_mca_base_component_t *) cli->cli_component;
-        scon_output(0, "mca:base:select: Auto-selecting %s components trying component %s",
-                    type_name, component->scon_mca_component_name);
-
         /*
          * If there is a query function then use it.
          */
@@ -133,9 +128,6 @@ int scon_mca_base_select(const char *type_name, int output_id,
                                   NULL);
         return SCON_ERR_NOT_FOUND;
     }
-    scon_output (0,
-                 "mca:base:select:(%5s) Selected component [%s]",
-                  type_name, (*best_component)->scon_mca_component_name);
     scon_output_verbose (SCON_MCA_BASE_VERBOSE_COMPONENT, output_id,
                          "mca:base:select:(%5s) Selected component [%s]",
                          type_name, (*best_component)->scon_mca_component_name);
