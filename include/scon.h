@@ -1,12 +1,12 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil -*- */
 /*
- * Copyright (c) 2015 Intel, Inc. All rights reserved.
+ * Copyright (c) 2016 - 2017 Intel, Inc. All rights reserved.
  *
  * $COPYRIGHT$
  *
  * Additional copyrights may follow
  *
- * scon.h - open hpc scalable overlay network  interface
+ * scon.h -  scalable overlay network  interface
  * $HEADER$
  */
 #ifndef SCON_H

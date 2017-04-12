@@ -1,8 +1,6 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil -*- */
 /*
- * Copyright (c) 2013-2016 Intel, Inc. All rights reserved
- * Copyright (c) 2016      Research Organization for Information Science
- *                         and Technology (RIST). All rights reserved.
+ * Copyright (c) 2016-2017 Intel, Inc. All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -43,7 +41,6 @@
  *
  * Additional copyrights may follow
  *
- * Copyright (c) 2016      IBM Corporation.  All rights reserved.
  *
  * $HEADER$
  */
