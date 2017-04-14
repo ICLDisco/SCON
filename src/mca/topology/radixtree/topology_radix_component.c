@@ -43,7 +43,7 @@ scon_topology_radixtree_component_t mca_topology_radixtree_component = {
         },
         .get_module = radix_get_module
     },
-    .radix = 64,
+    .radix = 16,
 };
 
 

@@ -186,7 +186,7 @@ SCON_EXPORT int scon_mca_base_framework_open (struct scon_mca_base_framework_t *
     return ret;
 }
 
-int scon_mca_base_framework_close (struct scon_mca_base_framework_t *framework) {
+SCON_EXPORT int scon_mca_base_framework_close (struct scon_mca_base_framework_t *framework) {
     bool is_open = scon_mca_base_framework_is_open (framework);
     bool is_registered = scon_mca_base_framework_is_registered (framework);
     int ret, group_id;

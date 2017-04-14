@@ -78,16 +78,12 @@ SCON_EXPORT scon_status_t scon_init(scon_info_t info[],
                 __FILE__, __LINE__);
         return SCON_ERROR;
     }
-    fprintf(stderr, "scon_output_init() success --  (%s:%d,)\n",
-            __FILE__, __LINE__);
     /* initialize install dirs code */
     if (SCON_SUCCESS != (ret = scon_mca_base_framework_open(&scon_sinstalldirs_base_framework, 0))) {
         fprintf(stderr, "scon_sinstalldirs_base_open() failed -- process will likely abort (%s:%d, returned %d instead of SCON_SUCCESS)\n",
                 __FILE__, __LINE__, ret);
         return ret;
     }
-    fprintf(stderr, "scon_sinstalldirs_base_open() success --  (%s:%d,)\n",
-            __FILE__, __LINE__);
     /* initialize the help system */
     scon_show_help_init();
 
@@ -172,9 +168,6 @@ SCON_EXPORT scon_status_t scon_init(scon_info_t info[],
                 if (0 == strncmp(SCON_MY_ID, info[n].key, SCON_MAX_KEYLEN)) {
                     scon_value_unload(&info[n].value, (void**)&me, &sz, SCON_PROC);
                     scon_globals.myid = me;
-                   // scon_bfrop.copy((void**)&scon_globals.myid, &info[n].value.data.proc, SCON_PROC);
-                    scon_output(0, "found info SCON_MY_ID, set my rank to namespace to %s, my rank to %d",
-                             SCON_PROC_MY_NAME->job_name, SCON_PROC_MY_NAME->rank );
                     break;
                 }
                 if (0 == strncmp(SCON_JOB_RANKS, info[n].key, SCON_MAX_KEYLEN)) {

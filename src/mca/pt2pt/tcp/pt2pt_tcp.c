@@ -158,11 +158,6 @@ void scon_pt2pt_tcp_fini(void)
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                         scon_net_get_hostname(addr),
                         scon_net_get_port(addr));
-    scon_output(0, "%s scon_pt2pt_tcp_accept_connection: %s:%d\n",
-                        SCON_PRINT_PROC(SCON_PROC_MY_NAME),
-                        scon_net_get_hostname(addr),
-                        scon_net_get_port(addr));
-
    /* setup socket options */
     scon_pt2pt_tcp_set_socket_options(accepted_fd);
 
@@ -376,7 +371,7 @@ static void process_send(int fd, short args, void *cbdata)
                             "%s process_send :  message tag %d sending direct",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME), op->msg->tag);
         hop.rank = op->msg->dst.rank;
-        strncpy(op->msg->dst.job_name, op->msg->dst.job_name, SCON_MAX_JOBLEN);
+        strncpy(hop.job_name, op->msg->dst.job_name, SCON_MAX_JOBLEN);
     }
     else
         hop = scon->topology_module->api.get_nexthop(&scon->topology_module->topology,
@@ -392,10 +387,6 @@ static void process_send(int fd, short args, void *cbdata)
          */
         scon_output_verbose(2, scon_pt2pt_base_framework.framework_output,
                             "%s:[%s:%d] hop %s unknown",
-                            SCON_PRINT_PROC(SCON_PROC_MY_NAME),
-                            __FILE__, __LINE__,
-                            SCON_PRINT_PROC(&hop));
-        scon_output(0,   "%s:[%s:%d] hop %s unknown",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                             __FILE__, __LINE__,
                             SCON_PRINT_PROC(&hop));

@@ -60,21 +60,38 @@ SCON_MCA_BASE_FRAMEWORK_DECLARE(scon, collectives, "Collectives framework",
                                 0);
 
 /* object instances */
+static void xcon (scon_xcast_t *p)
+{
+}
 SCON_CLASS_INSTANCE (scon_xcast_t,
                      scon_list_item_t,
-                     NULL, NULL);
-
+                     xcon, NULL);
+static void bcon(scon_barrier_t *p)
+{
+}
 SCON_CLASS_INSTANCE (scon_barrier_t,
                      scon_list_item_t,
-                     NULL, NULL);
+                     bcon, NULL);
 
+static void acon (scon_allgather_t *p)
+{
+    p->buf = NULL;
+    p->cbfunc = NULL;
+    p->procs = NULL;
+    p->nprocs = 0;
+    p->info = NULL;
+    p->ninfo =0 ;
+}
 SCON_CLASS_INSTANCE (scon_allgather_t,
                      scon_list_item_t,
-                     NULL, NULL);
+                     acon, NULL);
 
+static void ccon(scon_coll_req_t *p)
+{
+}
 SCON_CLASS_INSTANCE (scon_coll_req_t,
                      scon_object_t,
-                     NULL, NULL);
+                     ccon, NULL);
 
 static void sigcon(scon_collectives_signature_t *s)
 {

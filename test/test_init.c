@@ -18,6 +18,8 @@ static scon_handle_t handle;
 void create_cbfunc (scon_status_t status,
                     scon_handle_t scon_handle,
                     void *cbdata);
+void delete_cbfunc (scon_status_t status,
+                    void *cbdata);
 void create_cbfunc (scon_status_t status,
                    scon_handle_t scon_handle,
                    void *cbdata)
@@ -27,6 +29,13 @@ void create_cbfunc (scon_status_t status,
     create = true;
 }
 
+void delete_cbfunc (scon_status_t status,
+                    void *cbdata)
+{
+    printf("\n %d********* succesfully deleted SCON ****** \n", handle);
+    create =false;
+
+}
 int main(int argc, char **argv)
 {
     int rc;
@@ -56,6 +65,12 @@ int main(int argc, char **argv)
       sleep(1);
    // printf("scon create returned handle = %d create =%d \n", handle, create);
     }
+    printf("scon create done! deleting and finalizing the lib next \n");
+    scon_delete(handle, delete_cbfunc, NULL, NULL, 0);
+    while(create) {
+        sleep(1);
+    }
+    scon_finalize();
     SCON_INFO_FREE(info, ninfo);
     SCON_PROC_FREE(my_name, 1);
    //TEST_ERROR (("\n scon init returned %d", rc));

@@ -35,8 +35,9 @@ SCON_EXPORT int scon_pt2pt_base_select(void)
      */
     SCON_LIST_FOREACH(cli, &scon_pt2pt_base_framework.framework_components, scon_mca_base_component_list_item_t) {
         component = (scon_pt2pt_base_component_t *) cli->cli_component;
-        scon_output (0, "mca:pt2pt:select: looking at component %s",
-                     component->base_version.scon_mca_component_name);
+        scon_output_verbose(2, scon_pt2pt_base_framework.framework_output,
+                            "mca:pt2pt:select: looking at component %s",
+                            component->base_version.scon_mca_component_name);
         /*
          * If there is a query function then use it.
          */
@@ -111,7 +112,8 @@ SCON_EXPORT int scon_pt2pt_base_select(void)
             scon_list_append(&scon_pt2pt_base.actives, &c2->super);
         }
     }
-    scon_output(0, "mca:pt2pt:select:num available pt2pt components %lu",
+    scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
+                       "mca:pt2pt:select:num available pt2pt components %lu",
                 scon_list_get_size(&scon_pt2pt_base.actives));
     if (0 == scon_list_get_size(&scon_pt2pt_base.actives)) {
         /* no support available means we really cannot run unless

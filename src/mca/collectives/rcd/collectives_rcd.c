@@ -339,22 +339,21 @@ static void rcd_allgather_recv_dist(int status,
 
 static int rcd_finalize_coll(scon_collectives_tracker_t *coll, int ret)
 {
-    scon_allgather_t *allgather = (scon_allgather_t *) coll->req;
     scon_output_verbose(5,  scon_collectives_base_framework.framework_output,
                         "%s rcd allgather/barrier collective complete on scon %d",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                         coll->sig->scon_handle);
     /** TO DO : handle barrier also here **/
     /* execute the callback */
-    if ((NULL != allgather) && (NULL != allgather->cbfunc)) {
-        allgather->cbfunc(ret, coll->sig->scon_handle, allgather->procs,
-                                allgather->nprocs,  &coll->bucket,
-                                allgather->info,
-                                allgather->ninfo,
-                                allgather->cbdata);
+    if ((NULL !=  coll->req) && (NULL !=  coll->req->post.allgather.cbfunc)) {
+         coll->req->post.allgather.cbfunc(ret, coll->sig->scon_handle,  coll->req->post.allgather.procs,
+                                 coll->req->post.allgather.nprocs,  &coll->bucket,
+                                 coll->req->post.allgather.info,
+                                 coll->req->post.allgather.ninfo,
+                                 coll->req->post.allgather.cbdata);
     }
     scon_list_remove_item(&scon_collectives_base.ongoing, &coll->super);
-    SCON_RELEASE(allgather);
+    SCON_RELEASE(coll->req);
     SCON_RELEASE(coll);
     return SCON_SUCCESS;
 }

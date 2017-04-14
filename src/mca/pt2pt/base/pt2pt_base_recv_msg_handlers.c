@@ -215,8 +215,9 @@ static void match_posted_recv(scon_posted_recv_t *rcv,
         if (SCON_EQUAL == scon_util_compare_name_fields(mask, &msg->sender, &rcv->peer) &&
             msg->tag == rcv->tag) {
             /* setup the event */
-            scon_output(0, "matched recv message with unmatched msg on scon %d tag %d",
-                           rcv->tag, rcv->scon_handle);
+            scon_output_verbose(2, scon_pt2pt_base_framework.framework_output,
+                                "matched recv message with unmatched msg on scon %d tag %d",
+                                 rcv->tag, rcv->scon_handle);
             scon_event_set(scon_globals.evbase, &msg->ev, -1,
                                SCON_EV_WRITE,
                                pt2pt_base_process_recv_msg, msg);
