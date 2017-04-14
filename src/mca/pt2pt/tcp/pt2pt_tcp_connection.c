@@ -1095,7 +1095,8 @@ void scon_pt2pt_tcp_peer_dump(scon_pt2pt_tcp_peer_t* peer, const char* msg)
         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
         SCON_PRINT_PROC(&(peer->name)),
         msg, src, dst, nodelay, sndbuf, rcvbuf, flags);
-    scon_output(0, "%s", buff);
+    scon_output_verbose(PT2PT_TCP_DEBUG_CONNECT, scon_pt2pt_base_framework.framework_output,
+                        "%s", buff);
 }
 
 /*

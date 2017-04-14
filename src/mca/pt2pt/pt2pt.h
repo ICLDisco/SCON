@@ -160,11 +160,12 @@ typedef struct scon_pt2pt_base_component_1_0_0_t scon_pt2pt_base_component_t;
 #define SCON_MSG_TAG_XCAST                 5
 #define SCON_MSG_TAG_ALLGATHER_DIRECT      6
 #define SCON_MSG_TAG_BARRIER_DIRECT        7
-#define SCON_MSG_TAG_COLL_RELEASE          8
+#define SCON_MSG_TAG_ALLGATHER_RELEASE     8
 #define SCON_MSG_TAG_ALLGATHER_BRUCKS      9
 #define SCON_MSG_TAG_BARRIER_BRUCKS        10
 #define SCON_MSG_TAG_ALLGATHER_RCD         11
 #define SCON_MSG_TAG_BARRIER_RCD           12
+#define SCON_MSG_TAG_BARRIER_RELEASE       13
 /** RECV MSG FLAGS */
 #define SCON_MSG_PERSISTENT                1
 

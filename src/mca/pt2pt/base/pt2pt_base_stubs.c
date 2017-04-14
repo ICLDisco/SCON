@@ -220,8 +220,9 @@ SCON_EXPORT int pt2pt_base_api_recv_nb (scon_handle_t scon_handle,
 {
     scon_comm_scon_t *scon;
     scon_recv_req_t *req;
-    scon_output(0, "scon_native_recv_nb recv posted message on scon %d tag %d to rank %d",
-                scon_handle, tag, peer->rank);
+    scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
+                        "scon_native_recv_nb recv posted message on scon %d tag %d to rank %d",
+                         scon_handle, tag, peer->rank);
     /* get the scon object*/
     if( NULL == (scon = scon_comm_base_get_scon(scon_handle)))
     {

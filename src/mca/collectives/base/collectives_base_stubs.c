@@ -35,7 +35,7 @@ static void collectives_base_process_xcast (int fd, short flags, void *cbdata)
         xcast->procs = (scon_proc_t*)malloc(xcast->nprocs *
                          sizeof(scon_proc_t));
         SCON_LIST_FOREACH(sm, &scon->members, scon_member_t) {
-            strncpy(sm->name.job_name, xcast->procs[i].job_name, SCON_MAX_JOBLEN);
+            strncpy(xcast->procs[i].job_name, sm->name.job_name, SCON_MAX_JOBLEN);
             xcast->procs[i].rank = sm->name.rank;
             ++i;
         }
@@ -46,7 +46,7 @@ static void collectives_base_process_xcast (int fd, short flags, void *cbdata)
         xcast->procs = (scon_proc_t*)malloc(xcast->nprocs *
                                             sizeof(scon_proc_t));
         for(i = 0; i < xcast->nprocs; i++) {
-            strncpy(req->post.xcast.procs[i].job_name, xcast->procs[i].job_name, SCON_MAX_JOBLEN);
+            strncpy(xcast->procs[i].job_name, req->post.xcast.procs[i].job_name,  SCON_MAX_JOBLEN);
             xcast->procs[i].rank = req->post.xcast.procs[i].rank;
         }
     }
@@ -83,7 +83,6 @@ static void collectives_base_process_allgather (int fd, short flags, void *cbdat
     void *seq_number;
     int ret;
     size_t i = 0;
-    scon_allgather_t *allgather = SCON_NEW(scon_allgather_t);
     scon = scon_comm_base_get_scon(req->post.allgather.scon_handle);
     sig = SCON_NEW(scon_collectives_signature_t);
     sig->scon_handle = scon->handle;
@@ -140,15 +139,13 @@ static void collectives_base_process_allgather (int fd, short flags, void *cbdat
     * already found. The allgather module is responsible
     * for releasing it upon completion of the collective */
     coll = scon_collectives_base_get_tracker(sig, true);
+    coll->req = req;
     scon_output_verbose(5, scon_collectives_base_framework.framework_output,
                         " %s calling allgather with  nprocs =%lu, on scon=%d buf =%p",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                         req->post.allgather.nprocs, req->post.allgather.scon_handle,
                         (void*)req->post.allgather.buf);
     scon->collective_module->allgather(coll, req->post.allgather.buf);
-    memcpy(allgather, &req->post.allgather, sizeof(scon_allgather_t));
-    coll->req = (void*)allgather;
-    SCON_RELEASE(req);
 }
 
 static void collectives_base_process_barrier (int fd, short flags, void *cbdata)
@@ -169,18 +166,17 @@ static void collectives_base_process_barrier (int fd, short flags, void *cbdata)
         sig->procs = (scon_proc_t*)malloc(sig->nprocs *
                                                 sizeof(scon_proc_t));
         SCON_LIST_FOREACH(sm, &scon->members, scon_member_t) {
-            strncpy(sm->name.job_name, sig->procs[i].job_name, SCON_MAX_JOBLEN);
+            strncpy( sig->procs[i].job_name, sm->name.job_name, SCON_MAX_JOBLEN);
             sig->procs[i].rank = sm->name.rank;
             ++i;
         }
-
     }
     else {
         sig->nprocs = req->post.barrier.nprocs;
         sig->procs = (scon_proc_t*)malloc(sig->nprocs *
                                                 sizeof(scon_proc_t));
         for(i = 0; i < sig->nprocs; i++) {
-            strncpy(req->post.barrier.procs[i].job_name, sig->procs[i].job_name, SCON_MAX_JOBLEN);
+            strncpy(sig->procs[i].job_name, req->post.barrier.procs[i].job_name,  SCON_MAX_JOBLEN);
             sig->procs[i].rank = req->post.barrier.procs[i].rank;
         }
     }
@@ -214,13 +210,12 @@ static void collectives_base_process_barrier (int fd, short flags, void *cbdata)
     * already found. The allgather module is responsible
     * for releasing it upon completion of the collective */
     coll = scon_collectives_base_get_tracker(sig, true);
-    coll->req = &req->post.barrier;
+    coll->req = req;
     scon_output_verbose(5, scon_collectives_base_framework.framework_output,
-                        " %s calling allgather with  nprocs =%lu, on scon=%d",
+                        " %s calling barrier with  nprocs =%lu, on scon=%d",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                          coll->sig->nprocs, req->post.barrier.scon_handle);
     scon->collective_module->barrier(coll);
-    SCON_RELEASE(req);
 }
 /* helper functions */
 SCON_EXPORT scon_collectives_tracker_t* scon_collectives_base_get_tracker(
@@ -231,9 +226,11 @@ SCON_EXPORT scon_collectives_tracker_t* scon_collectives_base_get_tracker(
     size_t n;
     bool match = true;
     scon_comm_scon_t *scon = scon_comm_base_get_scon(sig->scon_handle);
-    scon_output(0, "searching for tracker for scon %d, seq num =%d num trackers=%lu",
-                  sig->scon_handle, sig->seq_num,
-                  scon_list_get_size(&scon_collectives_base.ongoing));
+    scon_output_verbose(5,  scon_collectives_base_framework.framework_output,
+                        "%s searching for tracker for scon %d, seq num =%d num trackers=%lu",
+                        SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                        sig->scon_handle, sig->seq_num,
+                        scon_list_get_size(&scon_collectives_base.ongoing));
     /* search the existing tracker list to see if this already exists */
     SCON_LIST_FOREACH(coll, &scon_collectives_base.ongoing, scon_collectives_tracker_t) {
 
@@ -284,8 +281,9 @@ SCON_EXPORT scon_collectives_tracker_t* scon_collectives_base_get_tracker(
     }*/
     /*add this tracker to the list */
     scon_list_append(&scon_collectives_base.ongoing, &coll->super);
-    scon_output(0, "%s scon_collectives_base_get_tracker, completed tracker setup calling num_routes",
-                 SCON_PRINT_PROC(SCON_PROC_MY_NAME));
+    scon_output_verbose(5, scon_collectives_base_framework.framework_output,
+                        "%s scon_collectives_base_get_tracker, completed tracker setup calling num_routes",
+                         SCON_PRINT_PROC(SCON_PROC_MY_NAME));
     /* To do  nexpected may not always be equal to the number of participants */
     if(NULL != scon->topology_module) {
         /* include ourselves too + number of procs under me*/
@@ -423,9 +421,6 @@ SCON_EXPORT int collectives_base_api_allgather(scon_handle_t scon_handle,
         req->post.allgather.cbdata = cbdata;
         req->post.allgather.info = info;
         req->post.allgather.ninfo = ninfo;
-        scon_output(0, "collectives_base_api_allgather:%s collectives_base_api_barrier scon %d ",
-                    SCON_PRINT_PROC(SCON_PROC_MY_NAME),
-                    scon->handle);
         scon_output_verbose(1, scon_collectives_base_framework.framework_output,
                             "%s collectives_base_api_barrier scon %d ",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),
@@ -434,8 +429,6 @@ SCON_EXPORT int collectives_base_api_allgather(scon_handle_t scon_handle,
         scon_event_set(scon_globals.evbase, &req->ev, -1, SCON_EV_WRITE, collectives_base_process_allgather, req);
         scon_event_set_priority(&req->ev, SCON_MSG_PRI);
         scon_event_active(&req->ev, SCON_EV_WRITE, 1);
-        scon_output(0, "%s collectives_base_api_allgather - set event done",
-                            SCON_PRINT_PROC(SCON_PROC_MY_NAME));
         scon_output_verbose(5, scon_collectives_base_framework.framework_output,
                             "%s collectives_base_api_allgather - set event done",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME));

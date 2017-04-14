@@ -169,10 +169,11 @@ static void process_uri(char *uri)
                                                          proc_name_ui64, (void**)&pr) ||
         NULL == pr) {
         pr = SCON_NEW(scon_pt2pt_base_peer_t);
-        scon_output(0, "process_uri %s setting hash table %p, key %llu, value %p",
-                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
-                         (void*)&scon_pt2pt_base.peers,
-                         proc_name_ui64, (void*) pr);
+        scon_output(5, scon_pt2pt_base_framework.framework_output,
+                    "process_uri %s setting hash table %p, key %llu, value %p",
+                     SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+                     (void*)&scon_pt2pt_base.peers,
+                     proc_name_ui64, (void*) pr);
         if (SCON_SUCCESS != (rc = scon_hash_table_set_value_uint64(&scon_pt2pt_base.peers,
                                   proc_name_ui64, (void*)pr))) {
             SCON_ERROR_LOG(rc);

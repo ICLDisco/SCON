@@ -30,40 +30,6 @@
 #include "src/class/scon_bitmap.h"
 #include "src/class/scon_list.h"
 BEGIN_C_DECLS
-/* Define a collective signature so we don't need to
- * track global collective id's */
-typedef struct {
-    scon_object_t super;
-    scon_handle_t scon_handle;
-    scon_proc_t *procs;
-    size_t nprocs;
-    uint32_t seq_num;
-} scon_collectives_signature_t;
-SCON_EXPORT SCON_CLASS_DECLARATION(scon_collectives_signature_t);
-
-/* Internal component object for tracking ongoing
- * allgather  operations */
-typedef struct {
-    scon_list_item_t super;
-    /* collective's signature */
-    scon_collectives_signature_t *sig;
-    /* collection bucket */
-    scon_buffer_t bucket;
-    /** my index in the participant array */
-    unsigned long my_rank;
-    /* number of buckets expected */
-    size_t nexpected;
-    /* number reported in */
-    size_t nreported;
-    /* distance masks for receive */
-    scon_bitmap_t distance_mask_recv;
-    /* received buckets */
-    scon_buffer_t ** buffers;
-    /* all gather or barrier req */
-    void *req;
-} scon_collectives_tracker_t;
-SCON_EXPORT SCON_CLASS_DECLARATION(scon_collectives_tracker_t);
-
 /* scon xcast req */
 typedef struct {
     scon_list_item_t super;
@@ -147,6 +113,40 @@ typedef struct {
     }post;
 } scon_coll_req_t;
 SCON_EXPORT SCON_CLASS_DECLARATION(scon_coll_req_t);
+
+/* Define a collective signature so we don't need to
+ * track global collective id's */
+typedef struct {
+    scon_object_t super;
+    scon_handle_t scon_handle;
+    scon_proc_t *procs;
+    size_t nprocs;
+    uint32_t seq_num;
+} scon_collectives_signature_t;
+SCON_EXPORT SCON_CLASS_DECLARATION(scon_collectives_signature_t);
+
+/* Internal component object for tracking ongoing
+ * allgather  operations */
+typedef struct {
+    scon_list_item_t super;
+    /* collective's signature */
+    scon_collectives_signature_t *sig;
+    /* collection bucket */
+    scon_buffer_t bucket;
+    /** my index in the participant array */
+    unsigned long my_rank;
+    /* number of buckets expected */
+    size_t nexpected;
+    /* number reported in */
+    size_t nreported;
+    /* distance masks for receive */
+    scon_bitmap_t distance_mask_recv;
+    /* received buckets */
+    scon_buffer_t ** buffers;
+    /* all gather or barrier req */
+    scon_coll_req_t *req;
+} scon_collectives_tracker_t;
+SCON_EXPORT SCON_CLASS_DECLARATION(scon_collectives_tracker_t);
 
 /**
 * module init

@@ -84,7 +84,8 @@ SCON_EXPORT void scon_comm_base_add_scon(scon_comm_scon_t *scon)
 SCON_EXPORT void scon_comm_base_remove_scon(scon_comm_scon_t *scon)
 {
     int remove_index = scon->handle - 1;
-    scon_output(0, "removing scon %d", scon->handle);
+    scon_output_verbose(1, scon_comm_base_framework.framework_output,
+                        "removing scon %d", scon->handle);
     scon_pointer_array_set_item (&comm_base.scons, remove_index, NULL);
 
 }

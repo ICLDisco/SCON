@@ -296,7 +296,9 @@ static void radix_update_topology(scon_topology_t *topo, int num_nodes)
         Sum += NInLevel;
     }
     Sum -= NInLevel;
-    scon_output(0, "radix_update_topology: radix = %d", mca_topology_radixtree_component.radix);
+    scon_output_verbose(2, scon_topology_base_framework.framework_output,
+                        "radix_update_topology: radix = %d",
+                        mca_topology_radixtree_component.radix);
     NInPrevLevel = NInLevel/mca_topology_radixtree_component.radix;
 
     if( 0 == Ii ) {

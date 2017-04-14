@@ -384,7 +384,7 @@ static void brucks_allgather_recv_dist(int status,
 
 static int brucks_finalize_coll(scon_collectives_tracker_t *coll, int ret)
 {
-    scon_allgather_t *allgather = (scon_allgather_t *) coll->req;
+    scon_coll_req_t *req = coll->req;
     scon_output(0, "%s brucks_finalize_coll:brucks allgather/barrier collective complete on scon %d",
                 SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                 coll->sig->scon_handle);
@@ -394,19 +394,19 @@ static int brucks_finalize_coll(scon_collectives_tracker_t *coll, int ret)
                         coll->sig->scon_handle);
     /** TO DO : handle barrier also here **/
     /* execute the callback */
-    if ((NULL != allgather) && (NULL != allgather->cbfunc)) {
-        allgather->cbfunc(ret, coll->sig->scon_handle, allgather->procs,
-                                allgather->nprocs,  &coll->bucket,
-                                allgather->info,
-                                allgather->ninfo,
-                                allgather->cbdata);
+    if ((NULL != req) && (NULL != req->post.allgather.cbfunc)) {
+        req->post.allgather.cbfunc(ret, coll->sig->scon_handle, req->post.allgather.procs,
+                               req->post.allgather.nprocs,  &coll->bucket,
+                               req->post.allgather.info,
+                               req->post.allgather.ninfo,
+                               req->post.allgather.cbdata);
     }
     else {
         scon_output(0, "%s brucks_finalize_coll: allgather cbfunc is null",
                     SCON_PRINT_PROC(SCON_PROC_MY_NAME));
     }
     scon_list_remove_item(&scon_collectives_base.ongoing, &coll->super);
-    SCON_RELEASE(allgather);
+    SCON_RELEASE(req);
     SCON_RELEASE(coll);
     return SCON_SUCCESS;
 }
