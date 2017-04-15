@@ -103,7 +103,7 @@ int main(int argc, char **argv)
     scon_msg_tag_t tag = 1000;
     scon_buffer_t *buf;
     if(SCON_SUCCESS != (rc = scon_init(NULL, 0))) {
-        printf(0, "scon_init returned error %d", rc);
+        printf("scon_init returned error %d", rc);
         return -1;
     }
     handle = scon_create(NULL,0,

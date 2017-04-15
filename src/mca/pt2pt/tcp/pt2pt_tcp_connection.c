@@ -136,7 +136,6 @@ void scon_pt2pt_tcp_peer_try_connect(int fd, short args, void *cbdata)
     int rc;
     scon_socklen_t addrlen = 0;
     scon_pt2pt_tcp_addr_t *addr;
-    char *host;
     scon_pt2pt_tcp_send_t *snd;
     bool connected = false;
 
@@ -265,7 +264,7 @@ void scon_pt2pt_tcp_peer_try_connect(int fd, short args, void *cbdata)
         }
         /* no address succeeded, so we cannot reach this peer */
         peer->state = SCON_PT2PT_TCP_FAILED;
-        host = scon_net_get_hostname((struct sockaddr*)&(peer->active_addr->addr));
+        //host = scon_net_get_hostname((struct sockaddr*)&(peer->active_addr->addr));
         /* use an scon_output here instead of show_help as we may well
          * not be connected to the HNP at this point */
       /*  scon_output(scon_clean_output,
@@ -621,8 +620,6 @@ int scon_pt2pt_tcp_peer_recv_connect_ack(scon_pt2pt_tcp_peer_t* pr,
 {
     char *msg;
     char *version;
-    char *cred;
-    size_t credsize;
     scon_pt2pt_tcp_hdr_t hdr;
     scon_pt2pt_tcp_peer_t *peer;
     uint64_t proc_name_ui64;
@@ -812,9 +809,9 @@ int scon_pt2pt_tcp_peer_recv_connect_ack(scon_pt2pt_tcp_peer_t* pr,
                         SCON_PRINT_PROC(&peer->name));
 
     /* check security token */
-    cred = (char*)(msg + strlen(version) + 1);
+     /* cred = (char*)(msg + strlen(version) + 1);
     credsize = hdr.nbytes - strlen(version) - 1;
-  /*  if (SCON_SUCCESS != (rc = scon_sec.authenticate(cred, credsize, &peer->auth_method))) {
+    if (SCON_SUCCESS != (rc = scon_sec.authenticate(cred, credsize, &peer->auth_method))) {
         char *hostname;
         hostname = scon_get_proc_hostname(&peer->name);
         scon_show_help("help-pt2pt-tcp.txt", "authent-fail", true,

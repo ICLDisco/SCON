@@ -30,7 +30,7 @@
 static int native_open(void);
 static int native_close(void);
 static int native_query(scon_mca_base_module_t **module, int *priority);
-static scon_comm_module_t* comm_native_get_module();
+static scon_comm_module_t* comm_native_get_module(void);
 static int native_getinfo ( scon_handle_t scon_handle,
                           scon_info_t **info,
                           size_t *ninfo);
@@ -41,7 +41,7 @@ static int native_create ( scon_proc_t procs[],
                          size_t ninfo,
                          scon_create_cbfunc_t cbfunc,
                          void *cbdata);
-static int native_finalize();
+static int native_finalize(void);
 static int native_delete (scon_handle_t scon_handle,
                         scon_op_cbfunc_t cbfunc,
                         void *cbdata,
@@ -89,7 +89,7 @@ static int native_close()
     return SCON_SUCCESS;
 }
 
-static scon_comm_module_t* comm_native_get_module()
+static scon_comm_module_t* comm_native_get_module(void)
 {
     return &native_module;
 }
@@ -239,7 +239,6 @@ static void native_create_barrier_complete_callback (scon_status_t status,
 static void native_process_create (int fd, short flags, void *cbdata)
 {
     int ret;
-    scon_comm_scon_t *scon1;
     scon_comm_scon_t *scon = (scon_comm_scon_t *) cbdata;
     scon_req_t *req = (scon_req_t*)scon->req;
     scon_buffer_t *allgather_buf;
@@ -256,8 +255,6 @@ static void native_process_create (int fd, short flags, void *cbdata)
    /* index = scon_pointer_array_add (&comm_base.scons, scon);
     scon->handle = (index + 1) % MAX_SCONS;*/
     scon_comm_base_add_scon(scon);
-    /* Get our address and publish it via PMIX */
-    scon1 = scon_comm_base_get_scon(scon->handle);
     scon_pt2pt_base_get_contact_info(&scon_globals.my_uri);
     if(SCON_SUCCESS != (ret = scon_pmix_put_string(SCON_PMIX_PROC_URI, scon_globals.my_uri))) {
         scon_output(0, "%s PMIX put of proc uri %s failed ",
@@ -531,7 +528,7 @@ static int native_delete (scon_handle_t scon_handle,
 /**
  * native_finalize
  */
-static int native_finalize()
+static int native_finalize(void)
 {
     /* close frameworks */
     scon_output_verbose(0, scon_comm_base_framework.framework_output,

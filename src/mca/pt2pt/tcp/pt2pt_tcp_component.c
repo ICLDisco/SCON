@@ -918,7 +918,7 @@ void scon_pt2pt_tcp_component_set_module(int fd, short args, void *cbdata)
     scon_bitmap_set_bit(&bpr->addressable, mca_pt2pt_tcp_component.super.idx);
     bpr->module = (scon_pt2pt_module_t*)&scon_pt2pt_tcp_module;
     scon_output_verbose(2, scon_pt2pt_base_framework.framework_output,
-                       "mca_pt2pt_tcp_component_set_module %s setting base hash table %p, key %llu, value %p",
+                       "mca_pt2pt_tcp_component_set_module %s setting base hash table %p, key %lu, value %p",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                         (void*)&scon_pt2pt_base.peers,
                         proc_name_ui64, (void*) bpr);

@@ -112,7 +112,7 @@ int main(int argc, char **argv)
     /* init scon lib */
     printf("\n initializing SCON library \n");
     if(SCON_SUCCESS != (rc = scon_init(NULL,0))) {
-        printf(0, "scon_init returned error %d", rc);
+        printf( "scon_init returned error %d", rc);
         return -1;
     }
     /* create SCON */
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
     SCON_INFO_LOAD(&info[0], SCON_NUM_MEMBERS, &nmembers, SCON_UINT32);
     scon_get_info(handle, &info, &nqueries);
     nmembers = info[0].value.data.uint32;
-    printf(" %s testing send/recv on scon %d nmembers = %d", SCON_PRINT_PROC(SCON_PROC_MY_NAME),
+    scon_output(0,  " %s testing send/recv on scon %d nmembers = %d", SCON_PRINT_PROC(SCON_PROC_MY_NAME),
            handle, info[0].value.data.uint32);
     /* set up my send and recv peers */
     send_peer.rank = (SCON_PROC_MY_NAME->rank + 1) %  nmembers;

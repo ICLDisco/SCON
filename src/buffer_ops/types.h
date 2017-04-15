@@ -60,7 +60,7 @@ typedef struct {
     scon_list_t ranges;
 } scon_regex_value_t;
 
-SCON_EXPORT static inline void scon_buffer_construct (scon_buffer_t* buffer)
+static inline void scon_buffer_construct (scon_buffer_t* buffer)
 {
     /** set the default buffer type */
     buffer->type = SCON_BFROP_BUFFER_NON_DESC;
@@ -70,7 +70,7 @@ SCON_EXPORT static inline void scon_buffer_construct (scon_buffer_t* buffer)
     buffer->bytes_allocated = buffer->bytes_used = 0;
 }
 
-SCON_EXPORT static inline void scon_buffer_destruct (scon_buffer_t* buffer)
+static inline void scon_buffer_destruct (scon_buffer_t* buffer)
 {
     if (NULL != buffer->base_ptr) {
         free (buffer->base_ptr);

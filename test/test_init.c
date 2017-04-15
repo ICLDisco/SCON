@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     printf( "\n initializing SCON lib");
     /* call SCON init */
     if(SCON_SUCCESS != (rc = scon_init(NULL,0))) {
-        printf(0, "\n scon_init returned error %d", rc);
+        printf("\n scon_init returned error %d", rc);
         return -1;
     }
     printf("\n initialized SCON lib, creating SCON ");
