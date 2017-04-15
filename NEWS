@@ -1,4 +1,4 @@
-Copyright (c) 2015-2016 Intel, Inc.  All rights reserved.
+Copyright (c) 2015-2017 Intel, Inc.  All rights reserved.
 $COPYRIGHT$
 
 Additional copyrights may follow
@@ -11,15 +11,30 @@ This file contains the main features as well as overviews of specific
 bug fixes (and other actions) for each version of SCON begining with
 version 1.0.
 
-As more fully described in the "Software Version Number" section in
-the README file, SCON typically maintains two separate version
-series simultaneously - the current release and one that is locked
-to only bug fixes.  Since these series are semi-independent of each
-other, a single NEWS-worthy item might apply to different series. For
-example, a bug might be fixed in the master, and then moved to the
-current release as well as the "stable" bug fix release branch.
-
 
 Master (not on release branches yet)
 ------------------------------------
+
+Master at Milestone 1 supports the following features:
+
+SCON APIs: scon_init, scon_create, scon_send_nb, scon_recv_nb, scon_get_info, scon_xcast, scon_allgather, scon_barrier, scon_delete and scon_finalize
+
+Supported Topologies: Radixtree and binomial tree, Debruijn mesh included in source but not tested. Defaults to Radixtree topology with radix =4.
+
+Collectives: Supports xcast, barrier and allgather collectives. Defaults to tree based xcast and allgather and barrier algorithms. Recursive doubling
+and Brucks algorithm for allgather implemented but not tested.
+
+Point to Point: Supports only TCP on ethernet.
+
+Configuration: Basic configuration supported, single job SCON with PMIx assisted wireup is only supported.
+
+Debug: MCA params support available to facilitate component level logging.
+
+Test: Test programs available in test directory. Limited testing done - verified scalability of upto 256 members on 16 Nodes. Limited by the
+test environment.
+
+
+
+
+
 

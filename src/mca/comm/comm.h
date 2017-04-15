@@ -60,7 +60,7 @@ typedef int (*scon_comm_base_module_create_fn_t) (scon_proc_t procs[],
  *                all available scons.
  */
 typedef int (*scon_comm_base_module_get_info_fn_t) ( scon_handle_t scon_handle,
-                                                scon_info_t info[],
+                                                scon_info_t **info,
                                                 size_t *ninfo);
 
 /**

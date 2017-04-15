@@ -60,7 +60,17 @@ scon_pt2pt_module_t * scon_pt2pt_base_get_module(char *comp_name);
                        SCON_PRINT_PROC(SCON_PROC_MY_NAME),           \
                         __FILE__, __LINE__);                         \
     cd =  SCON_NEW(scon_send_req_t);                                 \
-    cd->post.send = *m;                                             \
+    cd->post.send.scon_handle = m->scon_handle;                     \
+    strncpy(cd->post.send.origin.job_name, m->origin.job_name,      \
+               SCON_MAX_JOBLEN);                                    \
+    cd->post.send.origin.rank = m->origin.rank;                     \
+    cd->post.send.buf = m->buf;                                     \
+    cd->post.send.tag = m->tag;                                     \
+    cd->post.send.dst.rank = m->dst.rank;                           \
+    cd->post.send.cbfunc = m->cbfunc;                               \
+    cd->post.send.cbdata = m->cbdata;                               \
+    strncpy(cd->post.send.dst.job_name, m->dst.job_name,            \
+        SCON_MAX_JOBLEN);                                           \
     scon_event_set(scon_pt2pt_base.pt2pt_evbase, &cd->ev, -1,        \
                    SCON_EV_WRITE,                                    \
                    pt2pt_base_process_send, cd);                     \

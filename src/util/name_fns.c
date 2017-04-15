@@ -48,8 +48,8 @@
 SCON_EXPORT char* scon_util_print_name_args(const scon_proc_t *name)
 {
     char *output = NULL;
-    int ret = SCON_SUCCESS;
-    ret= scon_bfrop.print(&output, NULL, (scon_proc_t*)name, SCON_PROC);
+    if(NULL != name)
+        scon_bfrop.print(&output, NULL, (scon_proc_t*)name, SCON_PROC);
     return output;
 }
 

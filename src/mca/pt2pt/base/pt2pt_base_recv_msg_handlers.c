@@ -177,13 +177,12 @@ static void pt2pt_base_complete_recv_msg (scon_recv_t **recv_msg)
     /* we get here if no matching recv was found - we then hold
      * the message until such a recv is issued
      */
-     scon_output_verbose(5, scon_pt2pt_base_framework.framework_output,
+     scon_output_verbose(0, scon_pt2pt_base_framework.framework_output,
                             "%s message received bytes from %s for tag %d on scon %d Not Matched adding to unmatched msgs",
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                             SCON_PRINT_PROC(&msg->sender),
                             msg->tag,
                             msg->scon_handle);
-     scon_output(0, "message not matched on scon %d tag %d adding to queue", msg->scon_handle, msg->tag);
      scon_list_append(&scon->unmatched_msgs, &msg->super);
 }
 

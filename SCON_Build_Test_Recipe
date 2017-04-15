@@ -1,13 +1,4 @@
-
-Copyright (c) 2017 Intel, Inc. All rights reserved.
-$COPYRIGHT$
-
-Additional copyrights may follow
-
-$HEADER$
-
-
-******SCON Build and Install Recipe *****
+SCON Build and Install Recipe
 
 The following steps are required to build and install SCON for the first drop.
 
@@ -37,7 +28,7 @@ scon_mca_<framework>_<component>.la libraries. The include directory should cont
 
 
 
-****TESTING SCON******
+TESTING SCON
 Step 1: Cd to <pmix-reference-server_install_dir>/bin dir and run psrvr
      a: Obtained an allocation if needed (salloc -N <num_nodes>)
      b: run psrvr daemon by either specifying a hostfile or listing the hosts on the cmd line:
@@ -61,7 +52,7 @@ Step 2: Open a new terminal and cd to <SCON>/test (the SCON source dir/test>
 
 
 
-*****PMIx Reference Server Install Instructions ****
+PMIx Reference Server Install Instructions
 Step 1: git clone https://github.com/pmix/pmix-reference-server.git or download the latest source tar ball.
 
 Step2 : Build pmix-reference-server following its build recipe. Below are the highlevel steps:
@@ -87,5 +78,4 @@ Step3 : Verify the install by running the pmix-reference-server examples in the 
      h: Verify that a job with the specified ranks is launched and the  client app is executed.
      Note: For this to work on localhost setup env var PMIX_SERVER_TMPDIR to the tmp dir path/dvm before running prun.
         export PMIX_SERVER_TMPDIR=<tmp_DIR>/dvm.
-
 

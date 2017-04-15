@@ -122,12 +122,11 @@ SCON_EXPORT scon_status_t scon_init(scon_info_t info[],
         goto return_error;
     }
     /* setup the globals structure */
-  /*  SCON_PROC_CREATE(scon_globals.myid, 1);
-    scon_globals.myid->rank = SCON_RANK_UNDEF;*/
     SCON_CONSTRUCT(&scon_globals.scons, scon_list_t);
     /* get our effective id's */
     scon_globals.uid = geteuid();
     scon_globals.gid = getegid();
+    SCON_PROC_CREATE(scon_globals.myid, 1);
     /* see if debug is requested */
     if (NULL != (evar = getenv("SCON_DEBUG"))) {
         debug_level = strtol(evar, NULL, 10);
@@ -135,7 +134,7 @@ SCON_EXPORT scon_status_t scon_init(scon_info_t info[],
         scon_output_set_verbosity(scon_globals.debug_output, debug_level);
     }
     /* scan incoming info for directives */
-    if (NULL != info) {
+    if (0 != ninfo) {
         for (n=0; n < ninfo; n++) {
             if (0 == strcmp(SCON_EVENT_BASE, info[n].key)) {
                 scon_globals.evbase = (scon_event_base_t*)info[n].value.data.ptr;
@@ -158,7 +157,6 @@ SCON_EXPORT scon_status_t scon_init(scon_info_t info[],
     if not provided as envs, user may provide as input in the info array*/
     if( (NULL != (nspace = getenv("SCON_MY_NAMESPACE"))) &&
             NULL != ((rank_evar = getenv("SCON_MY_RANK")))) {
-        SCON_PROC_CREATE(scon_globals.myid, 1);
         strncpy(scon_globals.myid->job_name, nspace, SCON_MAX_NSLEN);
         scon_globals.myid->rank = strtol(rank_evar, NULL, 10);
     } else {
@@ -167,6 +165,7 @@ SCON_EXPORT scon_status_t scon_init(scon_info_t info[],
             for (n=0; n < ninfo; n++) {
                 if (0 == strncmp(SCON_MY_ID, info[n].key, SCON_MAX_KEYLEN)) {
                     scon_value_unload(&info[n].value, (void**)&me, &sz, SCON_PROC);
+                    SCON_PROC_FREE(scon_globals.myid, 1);
                     scon_globals.myid = me;
                     break;
                 }
@@ -228,7 +227,7 @@ SCON_EXPORT scon_status_t scon_get_info (scon_handle_t scon_handle,
                              scon_info_t **info,
                              size_t *ninfo)
 {
-    return SCON_ERR_NOT_IMPLEMENTED;
+    return scon_comm_module.getinfo(scon_handle,  info, ninfo);
 }
 
 SCON_EXPORT scon_status_t scon_send_nb (scon_handle_t scon_handle,

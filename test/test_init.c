@@ -8,18 +8,23 @@
  * $HEADER$
  */
 //#include "test_common.h"
-#include "scon.h"
-#include "scon_common.h"
 #include <stdio.h>
 #include <unistd.h>
+
+#include "scon.h"
+#include "scon_common.h"
+
+#include "src/util/output.h"
+#include "src/util/name_fns.h"
 static bool create = false;
 static scon_handle_t handle;
-
+/** calback function declarations **/
 void create_cbfunc (scon_status_t status,
                     scon_handle_t scon_handle,
                     void *cbdata);
 void delete_cbfunc (scon_status_t status,
                     void *cbdata);
+/* create complete callback */
 void create_cbfunc (scon_status_t status,
                    scon_handle_t scon_handle,
                    void *cbdata)
@@ -29,6 +34,7 @@ void create_cbfunc (scon_status_t status,
     create = true;
 }
 
+/* delete complete callback */
 void delete_cbfunc (scon_status_t status,
                     void *cbdata)
 {
@@ -36,43 +42,50 @@ void delete_cbfunc (scon_status_t status,
     create =false;
 
 }
+
 int main(int argc, char **argv)
 {
     int rc;
     scon_info_t *info;
-    size_t  ninfo = 2;
-    scon_proc_t *my_name;
-    SCON_PROC_CREATE(my_name,1);
-    my_name->rank = 0;
-    unsigned int nmembers = 2;
-    strncpy(my_name->job_name, "testscon",9);
-    SCON_INFO_CREATE(info, ninfo);
-   // TEST_ERROR(("\n first test initializing SCON "));
-    printf("set my name = %s, my rank = %d", my_name->job_name, my_name->rank);
-    SCON_INFO_LOAD(&info[0], SCON_MY_ID, my_name, SCON_PROC);
-    SCON_INFO_LOAD(&info[1], SCON_JOB_RANKS, &nmembers, SCON_UINT32);
-    if(SCON_SUCCESS != (rc = scon_init(info,ninfo))) {
-        printf(0, "scon_init returned error %d", rc);
+    size_t  ninfo = 1;
+    size_t nqueries = 1;
+    unsigned int nmembers = 0;
+    printf( "\n initializing SCON lib");
+    /* call SCON init */
+    if(SCON_SUCCESS != (rc = scon_init(NULL,0))) {
+        printf(0, "\n scon_init returned error %d", rc);
         return -1;
     }
+    printf("\n initialized SCON lib, creating SCON ");
     handle = scon_create(NULL,0,
                      NULL,
                      0,
                      create_cbfunc,
                      NULL);
-    printf("scon create returned handle = %d create =%d \n", handle, create);
+    /* wait until create completes */
     while(!create) {
       sleep(1);
    // printf("scon create returned handle = %d create =%d \n", handle, create);
     }
-    printf("scon create done! deleting and finalizing the lib next \n");
+    SCON_INFO_CREATE(info, ninfo);
+    SCON_INFO_LOAD(&info[0], SCON_NUM_MEMBERS, &nmembers, SCON_UINT32);
+    /* get num numbers */
+    scon_get_info(handle, &info, &nqueries);
+    /* to do: use unload value api instead of direct copy */
+    nmembers = info[0].value.data.uint32;
+
+    scon_output(0, "%s scon %d created with %d members done",
+               SCON_PRINT_PROC(SCON_PROC_MY_NAME), handle, info[0].value.data.uint32 );
+    /* delete the SCON */
     scon_delete(handle, delete_cbfunc, NULL, NULL, 0);
+    /* wait for delete to complete */
     while(create) {
         sleep(1);
     }
+    scon_output(0, "%s SCON %d deleted, calling finalize",
+                SCON_PRINT_PROC(SCON_PROC_MY_NAME), handle);
     scon_finalize();
     SCON_INFO_FREE(info, ninfo);
-    SCON_PROC_FREE(my_name, 1);
-   //TEST_ERROR (("\n scon init returned %d", rc));
+    printf("\n test success: exiting");
     return 0;
 }
