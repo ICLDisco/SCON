@@ -1053,8 +1053,10 @@ void scon_pt2pt_tcp_component_hop_unknown(int fd, short args, void *cbdata)
      */
     SCON_PT2PT_TCP_HDR_NTOH(&mop->snd->hdr);
     snd = SCON_NEW(scon_send_t);
-    snd->dst = mop->snd->hdr.dst;
-    snd->origin = mop->snd->hdr.origin;
+    snd->dst.rank = mop->snd->hdr.dst.rank;
+    strncpy(snd->dst.job_name, mop->snd->hdr.dst.job_name, SCON_MAX_JOBLEN);
+    strncpy(snd->origin.job_name, mop->snd->hdr.origin.job_name, SCON_MAX_JOBLEN);
+    snd->origin.rank = mop->snd->hdr.origin.rank;
     snd->tag = mop->snd->hdr.tag;
     snd->scon_handle = mop->snd->hdr.scon_handle;
    // snd->seq_num = mop->snd->hdr.seq_num;

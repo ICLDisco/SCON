@@ -695,7 +695,7 @@ int scon_buffer_unload(scon_buffer_t *buffer, void **payload,
 }
 
 
-int scon_buffer_load(scon_buffer_t *buffer, void *payload,
+SCON_EXPORT int scon_buffer_load(scon_buffer_t *buffer, void *payload,
                   int32_t bytes_used)
 {
     /* check to see if the buffer has been initialized */

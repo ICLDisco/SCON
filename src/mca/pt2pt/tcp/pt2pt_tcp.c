@@ -358,7 +358,7 @@ static void process_send(int fd, short args, void *cbdata)
     scon_proc_t hop;
 
     scon_output_verbose(2, scon_pt2pt_base_framework.framework_output,
-                        "%s:[%s:%d] processing send to peer %s:%d",
+                        "%s:[%s:%d] processing send to peer %s %d",
                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                         __FILE__, __LINE__,
                         SCON_PRINT_PROC(&op->msg->dst), op->msg->tag);
@@ -401,7 +401,7 @@ static void process_send(int fd, short args, void *cbdata)
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                             SCON_PRINT_PROC(&peer->name));
         SCON_PT2PT_TCP_QUEUE_SEND(op->msg, peer);
-        goto cleanup;
+        return;
     }
 
     /* add the message to the queue for sending after the

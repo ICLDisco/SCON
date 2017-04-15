@@ -73,8 +73,8 @@ typedef struct {
 
 #define SCON_PT2PT_TCP_HDR_NTOH(h)              \
     (h)->scon_handle = ntohl((h)->scon_handle);   \
-    SCON_PROCESS_NAME_NTOH((h)->origin);        \
-    SCON_PROCESS_NAME_NTOH((h)->dst);           \
+    (h)->origin.rank = ntohl((h)->origin.rank); \
+    (h)->dst.rank = ntohl((h)->dst.rank);        \
     (h)->type = ntohl((h)->type);               \
     (h)->tag = ntohl((h)->tag);                 \
     (h)->nbytes = ntohl((h)->nbytes);
@@ -83,9 +83,9 @@ typedef struct {
  * Convert the message header to network byte order
  */
 #define SCON_PT2PT_TCP_HDR_HTON(h)              \
-    (h)->scon_handle = htonl ((h)->scon_handle);   \
-    SCON_PROCESS_NAME_HTON((h)->origin);        \
-    SCON_PROCESS_NAME_HTON((h)->dst);           \
+    (h)->scon_handle = htonl ((h)->scon_handle); \
+    (h)->origin.rank = htonl((h)->origin.rank);   \
+    (h)->dst.rank = htonl((h)->dst.rank);           \
     (h)->type = htonl((h)->type);               \
     (h)->tag = htonl((h)->tag);                 \
     (h)->nbytes = htonl((h)->nbytes);

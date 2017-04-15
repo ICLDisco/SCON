@@ -43,7 +43,7 @@ scon_topology_radixtree_component_t mca_topology_radixtree_component = {
         },
         .get_module = radix_get_module
     },
-    .radix = 16,
+    .radix = 4,
 };
 
 
@@ -51,7 +51,7 @@ static int topology_radix_component_register(void)
 {
     scon_mca_base_component_t *c = &mca_topology_radixtree_component.super.base_version;
 
-    mca_topology_radixtree_component.radix = 64;
+    mca_topology_radixtree_component.radix = 4;
     (void) scon_mca_base_component_var_register(c, "tree radix" ,
                                            "Radix to be used for topology radix tree",
                                            SCON_MCA_BASE_VAR_TYPE_INT, NULL, 0, 0,

@@ -59,7 +59,8 @@
 #include "src/util/net.h"
 #include "src/util/error.h"
 #include "src/class/scon_hash_table.h"
-
+#include "src/buffer_ops/types.h"
+#include "src/buffer_ops/buffer_ops.h"
 #include "src/util/name_fns.h"
 #include "src/include/scon_globals.h"
 #include "src/mca/topology/topology.h"
@@ -69,6 +70,7 @@
 #include "src/mca/pt2pt/tcp/pt2pt_tcp_peer.h"
 #include "src/mca/pt2pt/tcp/pt2pt_tcp_common.h"
 #include "src/mca/pt2pt/tcp/pt2pt_tcp_connection.h"
+
 
 static int send_bytes(scon_pt2pt_tcp_peer_t* peer)
 {
@@ -508,8 +510,16 @@ void scon_pt2pt_tcp_recv_handler(int sd, short flags, void *cbdata)
                                         SCON_PRINT_PROC(SCON_PROC_MY_NAME),
                                         SCON_PRINT_PROC(&peer->recv_msg->hdr.dst));
                     snd = SCON_NEW(scon_send_t);
-                    snd->dst = peer->recv_msg->hdr.dst;
-                    snd->origin = peer->recv_msg->hdr.origin;
+                    snd->buf = malloc(sizeof(scon_buffer_t));
+                    scon_buffer_construct(snd->buf);
+                    scon_buffer_load(snd->buf, (void*) peer->recv_msg->data, peer->recv_msg->hdr.nbytes);
+                    snd->dst.rank = peer->recv_msg->hdr.dst.rank;
+                    strncpy(snd->dst.job_name, peer->recv_msg->hdr.dst.job_name,
+                            SCON_MAX_JOBLEN);
+
+                    snd->origin.rank = peer->recv_msg->hdr.origin.rank;
+                    strncpy(snd->origin.job_name, peer->recv_msg->hdr.origin.job_name,
+                            SCON_MAX_JOBLEN);
                     snd->tag = peer->recv_msg->hdr.tag;
                     snd->scon_handle = peer->recv_msg->hdr.scon_handle;
                    // snd->data = peer->recv_msg->data;

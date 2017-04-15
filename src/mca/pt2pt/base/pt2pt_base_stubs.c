@@ -193,6 +193,7 @@ SCON_EXPORT int pt2pt_base_api_send_nb (scon_handle_t scon_handle,
           an event */
         req = SCON_NEW(scon_send_req_t);
         req->post.send.scon_handle = scon->handle;
+        req->post.send.origin = *SCON_PROC_MY_NAME;
         req->post.send.buf = buf;
         req->post.send.tag = tag;
         req->post.send.dst = *peer;

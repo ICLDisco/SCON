@@ -32,7 +32,7 @@ static int native_close(void);
 static int native_query(scon_mca_base_module_t **module, int *priority);
 static scon_comm_module_t* comm_native_get_module();
 static int native_getinfo ( scon_handle_t scon_handle,
-                          scon_info_t info[],
+                          scon_info_t **info,
                           size_t *ninfo);
 static int native_init(scon_info_t info[], size_t ninfo) ;
 static int native_create ( scon_proc_t procs[],
@@ -352,7 +352,8 @@ static void native_process_delete (int fd, short flags, void *cbdata)
  * native init
  */
 static int native_init(scon_info_t info[], size_t ninfo) {
-    int ret, i ;
+    int ret ;
+    size_t i;
     char *error = NULL;
     char topo_mod_list[SCON_MAX_STRING_VALUELEN];
     char coll_mod_list[SCON_MAX_STRING_VALUELEN];
@@ -362,7 +363,7 @@ static int native_init(scon_info_t info[], size_t ninfo) {
     * Need to process all the info keys and open only requested frameworks and
     * return error if requested modules are not available
     **** END TO DO ****/
-    for(i = 0; i< (int) ninfo; i++) {
+    for(i = 0; i<  ninfo; i++) {
         /* for now we only support topo keys so return error if
            anyother key is specified */
         if(0 == strncmp(info[i].key, SCON_TOPO_MOD_LIST, SCON_MAX_KEYLEN)) {
@@ -468,10 +469,25 @@ static int native_create ( scon_proc_t procs[],
 
 
 static int native_getinfo ( scon_handle_t scon_handle,
-                   scon_info_t info[],
+                   scon_info_t **info,
                    size_t *ninfo)
 {
-    return SCON_ERROR;
+    unsigned int i;
+    scon_comm_scon_t *scon;
+    if( NULL == (scon = scon_comm_base_get_scon(scon_handle)))
+    {
+        return SCON_ERR_NOT_FOUND;
+    }
+    /* only limited infos are supported at this time */
+    for(i = 0; i< *ninfo; i++) {
+        if(0 == strncmp(info[i]->key, SCON_NUM_MEMBERS, SCON_MAX_KEYLEN)) {
+            scon_value_load(&info[i]->value, (void *)&scon->nmembers, SCON_UINT32);
+            continue;
+        }
+        /* to do check & return additional info keys*/
+        return SCON_ERR_QUERY_NOT_SUPPORTED;
+    }
+    return SCON_SUCCESS;
 }
 
 /**

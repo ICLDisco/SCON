@@ -357,8 +357,10 @@ static int tcp_peer_send_connect_ack(scon_pt2pt_tcp_peer_t* peer)
                         "%s SEND CONNECT ACK", SCON_PRINT_PROC(SCON_PROC_MY_NAME));
 
     /* load the header */
-    hdr.origin = *SCON_PROC_MY_NAME;
-    hdr.dst = peer->name;
+    strncpy(hdr.origin.job_name, SCON_PROC_MY_NAME->job_name, SCON_MAX_JOBLEN);
+    hdr.origin.rank = SCON_PROC_MY_NAME->rank;
+    strncpy(hdr.dst.job_name, peer->name.job_name, SCON_MAX_JOBLEN);
+    hdr.dst.rank = peer->name.rank;
     hdr.type = SCON_PT2PT_TCP_IDENT;
     hdr.tag = 0;
 
@@ -683,8 +685,10 @@ int scon_pt2pt_tcp_peer_recv_connect_ack(scon_pt2pt_tcp_peer_t* pr,
     if (SCON_PT2PT_TCP_PROBE == hdr.type) {
         /* send a header back */
         hdr.type = SCON_PT2PT_TCP_PROBE;
-        hdr.dst = hdr.origin;
-        hdr.origin = *SCON_PROC_MY_NAME;
+        hdr.dst.rank = hdr.origin.rank;
+        strncpy(hdr.dst.job_name, hdr.origin.job_name, SCON_MAX_JOBLEN);
+        hdr.origin.rank = SCON_PROC_MY_NAME->rank;
+        strncpy(hdr.origin.job_name, SCON_PROC_MY_NAME->job_name, SCON_MAX_JOBLEN);
         SCON_PT2PT_TCP_HDR_HTON(&hdr);
         tcp_peer_send_blocking(sd, &hdr, sizeof(scon_pt2pt_tcp_hdr_t));
         CLOSE_THE_SOCKET(sd);

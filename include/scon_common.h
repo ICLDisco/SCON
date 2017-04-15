@@ -142,10 +142,10 @@ typedef int scon_status_t;
 
 #define SCON_ERR_CONFIG_MISMATCH                (SCON_ERR_BASE - 24)
 #define SCON_ERR_MULTI_JOB_NOT_SUPPORTED        (SCON_ERR_BASE - 25)
-#define SCON_ERR_WILD_CARD_NOT_SUPPORTED        (SCON_ERR_BASE - 25)
+#define SCON_ERR_WILD_CARD_NOT_SUPPORTED        (SCON_ERR_BASE - 26)
 /* used by the query system */
-#define SCON_QUERY_PARTIAL_SUCCESS              (SCON_ERR_BASE - 26)
-
+#define SCON_QUERY_PARTIAL_SUCCESS              (SCON_ERR_BASE - 27)
+#define SCON_ERR_QUERY_NOT_SUPPORTED            (SCON_ERR_BASE - 28)
 
 /* define a starting point for SCON internal error codes
  * that are never exposed outside the library */
@@ -586,7 +586,8 @@ typedef struct {
 /* SCON IDENTITY KEYS */
 #define SCON_MY_ID                 "scon.my.id"       /* my process identity scon_proc_t */
 #define SCON_NAME                  "scon.name"        /* string char * well known name given by the user to reference
-                                                        this scon */
+                                                       this scon */
+#define SCON_NUM_MEMBERS           "scon.n.members"   /* number of members - value unsigned int*/
 /*  JOB and PROC keys*/
 #define SCON_JOB_NAME              "scon.job.name"   /* job name key, value type char * - name of participating job. */
 #define SCON_JOB_ALL               "scon.job.all"  /* value type bool, set to true if all ranks of job participate in scon

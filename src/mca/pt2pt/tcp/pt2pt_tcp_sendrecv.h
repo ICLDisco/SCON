@@ -88,8 +88,8 @@ SCON_CLASS_DECLARATION(scon_pt2pt_tcp_recv_t);
             } else {                                                    \
                 /* ensure the send event is active */                   \
                 if (!(p)->send_ev_active) {                             \
-                    scon_event_add(&(p)->send_event, 0);                \
-                    (p)->send_ev_active = true;                         \
+                   scon_event_add(&(p)->send_event, 0);                \
+                   (p)->send_ev_active = true;                         \
                 }                                                       \
             }                                                           \
         }                                                               \
@@ -111,8 +111,12 @@ SCON_CLASS_DECLARATION(scon_pt2pt_tcp_recv_t);
                             SCON_PRINT_PROC(&((m)->dst)));              \
         msg = SCON_NEW(scon_pt2pt_tcp_send_t);                          \
         /* setup the header */                                          \
-        msg->hdr.origin = (m)->origin;                                  \
-        msg->hdr.dst = (m)->dst;                                        \
+        strncpy(msg->hdr.origin.job_name, (m)->origin.job_name,          \
+                  SCON_MAX_JOBLEN);                                      \
+        msg->hdr.origin.rank = (m)->origin.rank;                         \
+        strncpy(msg->hdr.dst.job_name, (m)->dst.job_name,                \
+                SCON_MAX_JOBLEN);                                       \
+        msg->hdr.dst.rank = (m)->dst.rank;                              \
         msg->hdr.type = SCON_PT2PT_TCP_USER;                            \
         msg->hdr.tag = (m)->tag;                                        \
         msg->hdr.scon_handle = (m)->scon_handle;                        \
@@ -131,12 +135,12 @@ SCON_CLASS_DECLARATION(scon_pt2pt_tcp_recv_t);
 /* queue a message to be sent by one of our modules upon completing
  * the connection process - must provide the following params:
  *
- * m - the RML message to be sent
+ * m - the pt2pt message to be sent
  * p - the final recipient
  */
 #define SCON_PT2PT_TCP_QUEUE_PENDING(m, p)                                 \
     do {                                                                \
-        scon_pt2pt_tcp_send_t *msg;                                        \
+        scon_pt2pt_tcp_send_t *msg;                                      \
         scon_output_verbose(5, scon_pt2pt_base_framework.framework_output, \
                             "%s:[%s:%d] queue pending to %s",           \
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),         \
@@ -144,8 +148,12 @@ SCON_CLASS_DECLARATION(scon_pt2pt_tcp_recv_t);
                             SCON_PRINT_PROC(&((m)->dst)));              \
         msg = SCON_NEW(scon_pt2pt_tcp_send_t);                          \
         /* setup the header */                                          \
-        msg->hdr.origin = (m)->origin;                                  \
-        msg->hdr.dst = (m)->dst;                                        \
+        strncpy(msg->hdr.origin.job_name, (m)->origin.job_name,         \
+                  SCON_MAX_JOBLEN);                                     \
+        msg->hdr.origin.rank = (m)->origin.rank;                        \
+        strncpy(msg->hdr.dst.job_name, (m)->dst.job_name,               \
+                SCON_MAX_JOBLEN);                                       \
+        msg->hdr.dst.rank = (m)->dst.rank;                              \
         msg->hdr.type = SCON_PT2PT_TCP_USER;                            \
         msg->hdr.tag = (m)->tag;                                        \
         msg->hdr.scon_handle = (m)->scon_handle;                        \
@@ -176,11 +184,15 @@ SCON_CLASS_DECLARATION(scon_pt2pt_tcp_recv_t);
                             SCON_PRINT_PROC(SCON_PROC_MY_NAME),         \
                             __FILE__, __LINE__,                         \
                             SCON_PRINT_PROC(&((p)->name)));             \
-        msg = SCON_NEW(scon_pt2pt_tcp_send_t);                              \
+        msg = SCON_NEW(scon_pt2pt_tcp_send_t);                          \
         /* setup the header */                                          \
-        msg->hdr.origin = (m)->hdr.origin;                              \
-        msg->hdr.dst = (m)->hdr.dst;                                    \
-        msg->hdr.type = SCON_PT2PT_TCP_USER;                               \
+        msg->hdr.origin.rank = (m)->hdr.origin.rank;                    \
+        strncpy(msg->hdr.origin.job_name, (m)->hdr.origin.job_name,     \
+                 SCON_MAX_JOBLEN);                                      \
+        strncpy(msg->hdr.dst.job_name, (m)->hdr.dst.job_name,           \
+               SCON_MAX_JOBLEN);                                        \
+        msg->hdr.dst.rank = (m)->hdr.dst.rank;                          \
+        msg->hdr.type = SCON_PT2PT_TCP_USER;                            \
         msg->hdr.tag = (m)->hdr.tag;                                    \
         /* point to the actual message */                               \
         msg->data = (m)->data;                                          \
@@ -258,8 +270,8 @@ SCON_CLASS_DECLARATION(scon_pt2pt_tcp_msg_error_t);
             /* protect the data */                                      \
             proxy->data = NULL;                                         \
         }                                                               \
-        strncpy(mop->hop.job_name, (h)->job_name,                     \
-                  SCON_MAX_JOBLEN);                              \
+        strncpy(mop->hop.job_name, (h)->job_name,                       \
+                  SCON_MAX_JOBLEN);                                     \
         mop->hop.rank = (h)->rank;                                      \
       /* this goes to the Pt2pt framework, so use that event base */    \
         scon_event_set(scon_pt2pt_base.pt2pt_evbase, &mop->ev, -1,                   \
